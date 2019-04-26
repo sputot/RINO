@@ -9,9 +9,9 @@ An early version is available from http://www.lix.polytechnique.fr/Labo/Sylvie.P
 
 You need g++, LAPACK and BLAS installed.
 
-Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/~xsc/software/filib.html (we used Version 3.0.2)
+Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/~xsc/software/filib.html (we used Version 3.0.2), and set variable $FILIBHOME
 
-Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME to the FADBAD++ directory
+Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME
 
 A modified of the third party package for Affine Arithmetic aaflib-0.1 (http://aaflib.sourceforge.net) has been included in the current directory, because some modifications were needed (additional functions and modifications of trigonometric functions). 
 Future plans include separating more cleanly the initial version and our modifications...
@@ -21,7 +21,7 @@ Future plans include separating more cleanly the initial version and our modific
 Go to directory aaflib-0.1 within the current package and compile by "make static". 
 
 Returning to the main directory, you can now compile by "make" and obtain the "main" executable. 
-The installation has been mostly tested on MacOS, but also on Ubuntu (some Mac specific flag may have to be removed from the Makefile) 
+The installation has been mostly tested on MacOS, but also on Ubuntu (some Mac specific flag -bind_at_load may have to be removed from the Makefile, as well as set -lgsl before -llapack and -lblas) 
 
 ## Running the analysis
 
@@ -54,6 +54,7 @@ cd output; gnuplot -p 'gnuplot_script.gp' ; cd ..
 ```
 In particular, one figure per variable, xi.png, is produced (simply named x.png when the system is 1-dim as the running example) printing all these inner and outer-approximations with respect to time. 
 
+These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" (see References below)
 
 ### Modifying / adding one's own example
 
