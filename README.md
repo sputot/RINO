@@ -27,16 +27,24 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 
 ### Running existing examples
 
-Running an existing example is performed at command line, by 
+Hopefully in the future, a parser will allow to read the models of the systems to analyze from input files. For now, they are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
+Running an existing example is then performed at command line, by 
 ```
-./main type_system nb_system
+./main system_type system_id
 ```
 where 
-- type_system is either 0 (for a system of ODEs - Ordinary Differential Equations) or 1 (for a system of DDEs - Delay Differential Equations)
-- nb_system is an integer specifying the predefined system identifier.
+- system_type is either 0 (for a system of ODEs - Ordinary Differential Equations) or 1 (for a system of DDEs - Delay Differential Equations)
+- system_id is an integer specifying the predefined system identifier.
+
+In praticular:
+  - the Brusselator example of Reference [HSCC 2017] below is run by "./main 0 2"
+  - the self-driving car example of Reference [HSCC 2019]  is run by "./main 0 6"
+  - the self-driving car example of Reference [CAV 2018]  is run by "./main 1 7" (here the model is with delays, hence the system_type 1)
+  - the crazyflie model of Reference [HSCC 2019]  is run by "./main 0 18" 
+  - the platoon examples  of Reference [CAV 2018] are run  by "./main 1 10" (5 vehicles) or "./main 1 11" (10 vehicles) 
 
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
-More documentation on how to use these (and better input mechanisms) should come...
+More documentation on how to use these (and better input mechanisms) should come.
 
 ### Visualizing results
 
@@ -54,7 +62,7 @@ cd output; gnuplot -p 'gnuplot_script.gp' ; cd ..
 ```
 In particular, one figure per variable, xi.png, is produced (simply named x.png when the system is 1-dim as the running example) printing all these inner and outer-approximations with respect to time. 
 
-These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" (see References below)
+These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below)
 
 ### Modifying / adding one's own example
 
@@ -63,9 +71,9 @@ These different type of inner and outer approximations are those described in "I
 ## Authors and References
 
 This package, written by [Sylvie Putot](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/), implements the ideas presented in:
--  Inner and Outer Reachability for the Analysis of Control Systems, by Eric Goubault and Sylvie Putot, Proceedings of the 22th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2019, Montreal [ [DOI](https://dl.acm.org/citation.cfm?id=3311794) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc19.pdf) ]
--  Inner and Outer Approximating Flowpipes for Delay Differential Equations, by Eric Goubault, Sylvie Putot and Lorenz Sahlmann, Proceedings of 30th International Conference on Computer Aided Verification, CAV 2018, Springer LNCS volume 10982 [ [DOI](https://www.springer.com/us/book/9783319961415) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/cav18.pdf) ]  
--  Forward inner-approximated reachability of non-linear continuous systems, by Eric Goubault and Sylvie Putot, Proceedings of the 20th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2017 [ [DOI](https://dl.acm.org/citation.cfm?id=3049811) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc17.pdf) ]
+-  [HSCC 2019] Inner and Outer Reachability for the Analysis of Control Systems, by Eric Goubault and Sylvie Putot, Proceedings of the 22th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2019, Montreal [ [DOI](https://dl.acm.org/citation.cfm?id=3311794) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc19.pdf) ]
+-  [CAV 2018] Inner and Outer Approximating Flowpipes for Delay Differential Equations, by Eric Goubault, Sylvie Putot and Lorenz Sahlmann, Proceedings of 30th International Conference on Computer Aided Verification, CAV 2018, Springer LNCS volume 10982 [ [DOI](https://www.springer.com/us/book/9783319961415) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/cav18.pdf) ]  
+-  [HSCC 2017] Forward inner-approximated reachability of non-linear continuous systems, by Eric Goubault and Sylvie Putot, Proceedings of the 20th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2017 [ [DOI](https://dl.acm.org/citation.cfm?id=3049811) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc17.pdf) ]
 
 ## Versions
 
