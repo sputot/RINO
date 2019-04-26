@@ -21,7 +21,7 @@ Future plans include separating more cleanly the initial version and our modific
 Go to directory aaflib-0.1 within the current package and compile by "make static". 
 
 Returning to the main directory, you can now compile by "make" and obtain the "main" executable. 
-The installation has been mostly tested on MacOS, but also on Ubuntu (some Mac specific flag -bind_at_load may have to be removed from the Makefile, as well as set -lgsl before -llapack and -lblas) 
+The installation has been mostly tested on MacOS, but should also work on Ubuntu. 
 
 ## Running the analysis
 
