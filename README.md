@@ -1,9 +1,9 @@
 # RINO
 ## Robust INner and Outer Approximated Reachability
 
-This is a verification library to compute inner and outer approximations of reachable sets for uncertain continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs.
+This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs.
 
-An early version is available from http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/software.html, cleaner version coming soon on this repository.
+It relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
 
 ## Dependencies
 
@@ -66,7 +66,7 @@ These different type of inner and outer approximations are those described in "I
 
 ### Modifying / adding one's own example
 
-...
+For now, please take inspiration for the existing examples.
 
 ## Authors and References
 
