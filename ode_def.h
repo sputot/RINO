@@ -141,6 +141,10 @@ public:
               yp[2] = interval(-2.,2.); //AAF(interval(-2.,2.)) + y[4];  // parameter Kp
               yp[3] = interval(-2.,2.); // 0;  // parameter Kd
           }
+          else if (syschoice == 8)
+          {
+              yp[0] = - y[0]*y[0]*y[0];
+          }
          else if(syschoice == 18) // HSCC 2019 paper crazyflie example
           {
               static const double p_sp = 1.0*M_PI/180.0;  // angular speed of 1 degree / sec

@@ -104,6 +104,11 @@ void define_system_dim()
             jacdim = 4;
             //     sysdim_params = 2;
         }
+        else if (syschoice ==8)
+        {
+            sysdim = 1;
+            jacdim = 1;
+        }
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
             sysdim = 14;
@@ -355,10 +360,18 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
              is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
         //    uncontrolled = 2; // utile pour l'affichage
         }
+        else if (syschoice == 8)
+        {
+            tau = 0.01;
+            t_end = 5.;
+            order = 3;
+            inputs[0] = interval(0.4,0.5);
+            is_initialcondition[0] = true;
+        }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.03;
-            t_end = 5.;
+            t_end = 2.;
             order = 3;
             
             for (int j=0 ; j<sysdim; j++) {
