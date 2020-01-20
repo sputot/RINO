@@ -1,0 +1,5 @@
+time-horizon = 2.
+delay = 1.
+starting-time = -1.
+nb-time-subdivisions = 20
+order = 2

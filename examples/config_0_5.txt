@@ -1,0 +1,12 @@
+# self-driving car 
+
+system-dimension = 2
+jacobian-dimension = 2
+sys-parameters-dimension = 2
+time-horizon = 5.
+sampling-time = 0.05
+order = 3
+inputs = [-0.1,0.1] [0,0.1]
+params = [1.9,2.1] [2.9,3.1]
+uncontrolled =
+variable =
