@@ -10,6 +10,7 @@
 #ifndef ODE_DEF_H
 #define ODE_DEF_H
 
+#include "utils.h"
 #include "filib_interval.h"
 #include "tadiff.h" 
 #include "fadiff.h"
@@ -49,8 +50,8 @@ extern int variable;  // number of non constant parameters
 extern vector<bool> is_variable; // for each parameter, constant or variable
 
 
-void define_system_dim();  // define the dimensions of your system (ODE or DDE)
 
+void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
 
 
 
@@ -64,9 +65,14 @@ vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta);
 // defining analytical solution if any for comparison
 vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0);
 
+// reading sysdim, jacdim, etc
+void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init);
+
+// d0 and t_begin and nb_subdiv are for DDEs only, rest are common to ODE and DDE
+void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv);
 
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
+void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
 
 // specific to subdivisions
 void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdivide);

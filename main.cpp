@@ -35,29 +35,14 @@ using namespace std;
 //using namespace tinyxml2;
 
 
-vector<ofstream> outFile_outer_minimal;   //  minimal outer-approximated range for each variable of the system
-vector<ofstream> outFile_outer_robust;  // robust outer-approximated range for each variable of the system
-vector<ofstream> outFile_outer;   //  maximal outer-approximated range for each variable of the system
-vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
-vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each variable of the system
-vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
-vector<ofstream> outFile_center;
-
-ofstream outFile_width_ratio;     //  min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
-ofstream outFile_meanerror_outer; // mean on xi of error between outer-approx and analytical solution if any
-ofstream outFile_meanerror_inner; // mean on xi of error between inner-approx and analytical solution if any
-ofstream outFile_meanerror_diff;  // mean on xi of error between outer-approx and inner-approx
-ofstream outFile_relmeanerror_outer; // mean on xi of error between outer-approx and analytical solution if any, over width of exact tube
-ofstream outFile_relmeanerror_inner; // mean on xi of error between inner-approx and analytical solution if any, over width of exact tube
-ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer-approx and inner-approx, over width of over-approx tube
 
 
 //using namespace fadbad;
 
-void open_outputfiles();
 void print_finalstats(clock_t begin);
 void generate_gnuplot_script();
-void read_parameters(const char * params_filename, double &tau, double &t_end, int &order, char *sys_name, char* initial_condition);
+
+
 void read_system(const char * system_filename, char *sys_name);
 
 int systype; // 0 is ODE, 1 is DDE
@@ -86,7 +71,7 @@ int main(int argc, char* argv[])
     // default is running example of CAV 2018 paper
     systype = 1; // EDO = 0, DDE = 1
     syschoice = 1;
-    if (argc == 3)
+    if (argc >= 3)
     {
         systype = atoi(argv[1]);
         syschoice = atoi(argv[2]);
@@ -101,22 +86,22 @@ int main(int argc, char* argv[])
       //  cout << "For DDEs: 1 for 1D running example, 6 for self driving car with jacdim = 2, 7 for self driving car with sysdim = 4,"<<endl;
      //   cout << "8 for selfdriving with sysdim=2, jacdim=4"<<endl;
     }
-    define_system_dim(); // defines value of sysdim: depends on syschoice
+    
     /*******************************************************************************************/
    
-    DdeFunc bf;    // contains the differential system - defined in ode_def.h
-    DdeJacFunc bbf;
-    OdeFunc obf;    // contains the differential system - defined in ode_def.h
-    
-    open_outputfiles();
+   
     
     clock_t begin = clock();
 
-    init_system(t_begin,t_end,tau,d0,nb_subdiv,order);
+    init_system(argc, argv, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
     vector<AAF> inputs_save(jacdim);
     for (int i=0 ; i<jacdim; i++)
         inputs_save[i] = inputs[i];
+    
+    DdeFunc bf;    // contains the differential system - defined in ode_def.h
+    DdeJacFunc bbf;
+    OdeFunc obf;    // contains the differential system - defined in ode_def.h
     
     /*************************************************************************** DDE ************************************************************/
     if (systype == 1) // DDE
@@ -176,10 +161,8 @@ int main(int argc, char* argv[])
             current_iteration = 0;
             
             
-            cout << "center_inputs[0]" << center_inputs[0] << endl;
-            cout << "center_inputs[1]" <<  center_inputs[1] << endl;
-            cout << inputs[0] << endl;
-            cout << inputs[1] << endl;
+    //        cout << "center_inputs[0]" << center_inputs[0] << endl;
+    //        cout << inputs[0] << endl;
             
             set_initialconditions(x,xcenter,J);  //            setId(J0);
             
@@ -315,38 +298,6 @@ void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double 
 }
 
 
-
-
-void read_parameters(const char * params_filename, double &tau, double &t_end, int &order, char * sys_name, char *initial_condition)
-{
-    const int LINESZ = 2048;
-    char buff[LINESZ];
-    char output_variables[1000];
-    
-    cout << "****** Reading system parameter from cfg file ******" << endl;
-    sprintf(sys_name,"sys"); // default name of main system to read from the xml file
-    //  ifstream inputFileStream("examples/ex_Hyst/brusselator/brusselator.cfg");
-    
-    FILE *params_file = fopen(params_filename,"r");
-    if (params_file == NULL)
-        cout << "Error reading " << params_filename << ": file not found" << endl;
-    while (fgets(buff,LINESZ,params_file)) {
-        sscanf(buff, "system = %s\n", sys_name);
-        sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
-        sscanf(buff, "time-horizon = %lf\n", &t_end);
-        sscanf(buff, "sampling-time = %lf\n", &tau);
-        sscanf(buff, "output-variables = %[^\n]\n", output_variables);
-        sscanf(buff, "order = %d\n", &order);
-    }
-    fclose(params_file);
-    cout << "system name = " << sys_name << endl;
-    cout << "initial condition = " << initial_condition << endl;
-    cout << "tau = " << tau << endl;
-    cout << "t_end = " << t_end << endl;
-    cout << "output_variables = " << output_variables << endl;
-    cout << "order = " << order << endl;
-    cout << "****** End parameter reading ******" << endl << endl;
-}
 
 
 
@@ -639,55 +590,6 @@ void generate_gnuplot_script()
 
 
 
-void open_outputfiles()
-{
-    system("mv output output_sauv");
-    system("rm -r output");
-    system("mkdir output");
-    
-    outFile_outer = vector<ofstream>(sysdim);   // output outer-approximated range for each variable of the system
-    outFile_outer_robust = vector<ofstream>(sysdim);
-    outFile_outer_minimal = vector<ofstream>(sysdim);
-    outFile_inner = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);   // output inner-approximated range for each variable of the system
-    outFile_inner_robust = vector<ofstream>(sysdim);
-    outFile_inner_minimal = vector<ofstream>(sysdim);
-    outFile_center  = vector<ofstream>(sysdim);
-    
-    stringstream file_name;
-   
-    for (int i=0 ; i<sysdim ; i++) {
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer.out";
-        outFile_outer[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer_robust.out";
-        outFile_outer_robust[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer_minimal.out";
-        outFile_outer_minimal[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "center.out";
-        outFile_center[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner.out";
-        outFile_inner[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner_robust.out";
-        outFile_inner_robust[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner_minimal.out";
-        outFile_inner_minimal[i].open(file_name.str().c_str());
-    }
-    
-    
-    outFile_width_ratio.open("output/width_ratio.out");
-    outFile_meanerror_outer.open("output/meanerror_outer.out");
-    outFile_meanerror_inner.open("output/meanerror_inner.out");
-    outFile_meanerror_diff.open("output/meanerror_diff.out");
-    outFile_relmeanerror_outer.open("output/relmeanerror_outer.out");
-    outFile_relmeanerror_inner.open("output/relmeanerror_inner.out");
-    outFile_relmeanerror_diff.open("output/relmeanerror_diff.out");
-}
 
 
 

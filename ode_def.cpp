@@ -49,8 +49,11 @@ vector<bool> is_initialcondition; // for each input, initial condition or parame
 int variable; // number of non constant parameters
 vector<bool> is_variable;  // for each parameter, constant or variable
 
+
+
+
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
-void define_system_dim()
+void define_system_dim(int argc, char* argv[])
 {
     /*************************************************************************** ODE ************************************************************/
 
@@ -184,6 +187,9 @@ void define_system_dim()
         }
     }
     
+    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
+        readfromfile_system_dim(argv[3], sysdim, jacdim, sysdim_params, nb_subdiv_init);
+    
 }
 
 
@@ -219,11 +225,142 @@ void set_initialconditions(vector<AAF> &x, vector<AAF> &xcenter, vector<vector<A
     
 }
 
+void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init)
+{
+    const int LINESZ = 2048;
+    char buff[LINESZ];
+    
+    cout << "****** Reading system dimensions from file " <<  params_filename << " ******" << endl;
+    FILE *params_file = fopen(params_filename,"r");
+    if (params_file == NULL)
+        cout << "Error reading " << params_filename << ": file not found" << endl;
+    while (fgets(buff,LINESZ,params_file)) {
+        sscanf(buff, "system-dimension = %d\n", &sysdim);
+        sscanf(buff, "jacobian-dimension = %d\n", &jacdim);
+        sscanf(buff, "sys-parameters-dimension = %d\n", &sysdim_params);
+        sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
+    }
+    fclose(params_file);
+}
+
+// d0 and t_begin are for DDEs only, rest are common to ODE and DDE
+void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv)
+{
+    const int LINESZ = 2048;
+    char buff[LINESZ];
+    char initialcondition[LINESZ];
+    const char space[2] = " ";
+    double a, b;
+    
+    cout << "****** Reading system parameter from file " <<  params_filename << " ******" << endl;
+    FILE *params_file = fopen(params_filename,"r");
+    if (params_file == NULL)
+        cout << "Error reading " << params_filename << ": file not found" << endl;
+    while (fgets(buff,LINESZ,params_file)) {
+        //     sscanf(buff, "system = %s\n", sys_name);
+        //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
+        sscanf(buff, "time-horizon = %lf\n", &t_end);
+        sscanf(buff, "sampling-time = %lf\n", &tau);
+        //      sscanf(buff, "output-variables = %[^\n]\n", output_variables);
+        sscanf(buff, "delay = %lf\n", &d0);               // for DDEs
+        sscanf(buff, "starting-time = %lf\n", &t_begin);  // for DDEs
+        sscanf(buff, "nb-time-subdivisions = %d\n", &nb_subdiv); // for DDEs : subdiv of time interval d0 : tau is deduced
+        sscanf(buff, "order = %d\n", &order);
+        if (sscanf(buff, "inputs = %s\n", initialcondition) == 1)
+        {
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i = 0;
+            while( token != NULL ) {
+                sscanf(token,"[%lf,%lf]",&a,&b);
+                inputs[i] = interval(a,b);
+           //     cout <<"input="<<inputs[i].convert_int()<<endl;
+                i++;
+                token = strtok(NULL,space);
+            }
+        }
+        if (sscanf(buff, "params = %s\n", initialcondition) == 1)
+        {
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i = 0;
+            while( token != NULL ) {
+                sscanf(token,"[%lf,%lf]",&a,&b);
+                params[i] = interval(a,b);
+                  //       cout <<"params="<<params[i].convert_int()<<endl;
+                i++;
+                token = strtok(NULL,space);
+            }
+        }
+        if (sscanf(buff, "uncontrolled = %s\n", initialcondition) == 1)
+        {
+            for (int i=0 ; i<jacdim; i++)
+                is_uncontrolled[i] = false;
+                
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i;
+            while( token != NULL ) {
+                sscanf(token,"%d",&i);
+                is_uncontrolled[i] = true;
+          //      cout <<"is_uncontrolled="<<i<<endl;
+                token = strtok(NULL,space);
+            }
+        }
+        if (sscanf(buff, "variable = %s\n", initialcondition) == 1)
+        {
+            for (int i=0 ; i<jacdim; i++)
+                is_variable[i] = false;
+                
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i;
+            while( token != NULL ) {
+                sscanf(token,"%d",&i);
+                is_variable[i] = true;
+              //  cout <<"is_variable="<<i<<endl;
+                token = strtok(NULL,space);
+            }
+        }
+        if (sscanf(buff, "initial-condition = %s\n", initialcondition) == 1)
+        {
+            for (int i=0 ; i<jacdim; i++)
+                is_initialcondition[i] = false;
+            
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i;
+            while( token != NULL ) {
+                sscanf(token,"%d",&i);
+                is_initialcondition[i] = true;
+                //  cout <<"is_variable="<<i<<endl;
+                token = strtok(NULL,space);
+            }
+        }
+    }
+    fclose(params_file);
+    
+    // cout << "system name = " << sys_name << endl;
+    //  cout << "****** End parameter reading ******" << endl << endl;
+}
+
+
+
+// the main function to define the system
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
+void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
 {
     interval temp;
     int nb_points;
+    
+    define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
+    
+    open_outputfiles(); // needs sysdim to be first defined
     
     inputs = vector<AAF>(jacdim);
     if (sysdim_params > 0)
@@ -236,9 +373,9 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
     is_variable = vector<bool>(jacdim);
     is_initialcondition = vector<bool>(jacdim);
     for (int i=0 ; i<jacdim; i++) {
-        is_uncontrolled[i] = false;
-        is_variable[i] = false;
-        is_initialcondition[i] = false; // by definition, initial conditions are controlled
+        is_uncontrolled[i] = false;  // controlled input or parameter
+        is_variable[i] = false;     // variable input or parameter
+        is_initialcondition[i] = false; // by definition, initial conditions are controlled and constant
     }
     
     if (systype == 0) // ODE
@@ -274,7 +411,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             inputs[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
             //  ix[1] = mid(3.14159/180*interval(2.5,3.5)) + interval(-0.00872664, -0.00497644); // almost fault trajectories
-            inputs[1] = 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)) + interval( -0.00497644,0.00872664); // complement = safe trajectories
+            inputs[1] = interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)) + interval( -0.00497644,0.00872664); // complement = safe trajectories
             inputs[2] = interval(0.0,0.01);
             inputs[3] = interval(0.0,0.01);
         }
@@ -287,7 +424,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             inputs[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
             //  ix[1] = mid(3.14159/180*interval(2.5,3.5)) + interval(-0.00872664, -0.00497644); // almost fault trajectories
-            inputs[1] =  3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)); // + interval( -0.00497644,0.00872664); // complement = safe trajectories
+            inputs[1] =  interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)); // + interval( -0.00497644,0.00872664); // complement = safe trajectories
             inputs[2] = interval(0.0,0.01);
             inputs[3] = interval(0.0,0.25); // interval(0.0,0.01);
             inputs[4]= interval(11.,15.); // 14.... la masse (incontrollable)
@@ -378,8 +515,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
                 is_initialcondition[j] = true;
                 inputs[j] = 0;
             }
-            inputs[3] = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            inputs[4] = interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            inputs[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            inputs[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
             inputs[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
             
             // roll yaw pitch (degree) inputs value (here we consider input as initial)
@@ -406,9 +543,6 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
           //  inputs[12] = interval(-0.1 , 0.1);
             inputs[13] = 0.0;
         }
-        
-        
-        nb_points = (t_end-t_begin)/tau+1;
     }
     if (systype == 1) // DDE
     {
@@ -570,10 +704,22 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             inputs[17] = interval(-9.2,-8.8);
             inputs[18] = interval(1.99,2.01);
         }
-        
+    }
+    
+    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
+        read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);
+    
+    
+    if (systype == 0)
+    {
+        nb_points = (t_end-t_begin)/tau+1;
+    }
+    else // systype == 1
+    {
         tau = d0/nb_subdiv;
         nb_points = ((t_end-t_begin)/d0+1)*(nb_subdiv+1);
     }
+    
     
     // common to EDO and DDE
     center_inputs = vector<AAF>(jacdim);
@@ -584,6 +730,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             uncontrolled ++;
         if (!is_uncontrolled[i] && !is_initialcondition[i])
             controlled++;
+        
         temp = inputs[i].convert_int();
         center_inputs[i] = mid(temp);
         eps[i] = temp-mid(temp);
@@ -780,7 +927,4 @@ vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0)
     }
     return res;
 }
-
-
-
 

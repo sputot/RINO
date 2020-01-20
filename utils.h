@@ -8,7 +8,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
-#include "ode_def.h"
+//#include "ode_def.h"
+
+void open_outputfiles();
 
 extern vector<ofstream> outFile_outer_minimal;   //  minimal outer-approximated range for each variable of the system
 extern vector<ofstream> outFile_outer;   // output outer-approximated range for each variable of the system
