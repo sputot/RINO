@@ -1,13 +1,14 @@
-# DDE running example 
+# DDE Szcezelina 2 2014
 
 system-dimension = 1
 jacobian-dimension = 1
 time-horizon = 2.
 delay = 1.
 starting-time = -1.
-nb-time-subdivisions = 20
-order = 2
-inputs = [0.33,1.0]
+nb-time-subdivisions = 10
+order = 3
+inputs = [0.9,1.1]
 uncontrolled = 
 variable =
 initial-condition = 
+

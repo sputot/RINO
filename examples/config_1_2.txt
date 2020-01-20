@@ -1,0 +1,14 @@
+# DDE 
+
+system-dimension = 2
+jacobian-dimension = 2
+time-horizon = 10.
+delay = 1.
+starting-time = -1.
+nb-time-subdivisions = 33
+order = 3
+inputs = [0.9,1.1] [0.9,1.1]
+uncontrolled = 
+variable =
+initial-condition = 
+

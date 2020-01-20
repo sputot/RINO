@@ -1,0 +1,14 @@
+# DDE self-driving car with interval coeff
+
+system-dimension = 4
+jacobian-dimension = 4
+time-horizon = 10.
+delay = 0.2
+starting-time = -0.2
+nb-time-subdivisions = 2
+order = 3
+inputs = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+uncontrolled = 2 3
+variable =
+initial-condition = 
+

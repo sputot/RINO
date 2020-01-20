@@ -1,0 +1,14 @@
+# DDE Xue 2017
+
+system-dimension = 7
+jacobian-dimension = 7
+time-horizon = 0.1
+delay = 0.01
+starting-time = 0.0
+nb-time-subdivisions = 1
+order = 2
+inputs = [1.1,1.2] [0.95,1.15] [1.4,1.6] [2.3,2.5] [0.9,1.1] [0.0,0.2] [0.35,0.55]
+uncontrolled = 
+variable =
+initial-condition = 
+
