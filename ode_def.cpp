@@ -56,11 +56,13 @@ vector<bool> is_variable;  // for each parameter, constant or variable
 void define_system_dim(int argc, char* argv[])
 {
     /*************************************************************************** ODE ************************************************************/
+    
+    sysdim_params = 0;
+    nb_subdiv_init = 1; // nb of initial subdivisions of the input range
 
     if (systype == 0) // ODE
     {
-        sysdim_params = 0;
-        nb_subdiv_init = 1; // nb of initial subdivisions of the input range
+      
         if (syschoice == 1)  // running example
         {
             sysdim = 1;
@@ -123,8 +125,7 @@ void define_system_dim(int argc, char* argv[])
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
     {
-        sysdim_params = 0;
-        nb_subdiv_init = 1; // nb of initial subdivisions of the input range
+        
         if (syschoice == 1)  // running example
         {
             sysdim = 1;
@@ -275,7 +276,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
                 inputs[i] = interval(a,b);
-           //     cout <<"input="<<inputs[i].convert_int()<<endl;
+                cout <<"input="<<inputs[i].convert_int()<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -346,7 +347,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
     fclose(params_file);
     
     // cout << "system name = " << sys_name << endl;
-    //  cout << "****** End parameter reading ******" << endl << endl;
+      cout << "****** End parameter reading ******" << endl << endl;
 }
 
 
@@ -360,7 +361,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
-    open_outputfiles(); // needs sysdim to be first defined
+    
     
     inputs = vector<AAF>(jacdim);
     if (sysdim_params > 0)
@@ -737,6 +738,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     }
     
     cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
+    
+    open_outputfiles(); // needs sysdim to be first defined but also controlled and uncontrolled...
     
     // for saving results
   //  cout << "(t_end-t_begin)*nb_subdiv/d0+1=" << ((t_end-t_begin)/d0+1)*(nb_subdiv+1) << endl;

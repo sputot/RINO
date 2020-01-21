@@ -687,15 +687,21 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
     cout << "print_solutionstep at t=" << tn+(s+1)*tau << ": " << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+    if (uncontrolled > 0)
+    {
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+    }
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
     cout << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
+    if (uncontrolled > 0)
+    {
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+    }
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
   
@@ -706,10 +712,12 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
             outFile_outer[i] << tn+(s+1)*tau << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
             outFile_center[i] << tn+(s+1)*tau << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
         }
-        outFile_outer_robust[i] << tn+(s+1)*tau << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
+        if (uncontrolled > 0)
+            outFile_outer_robust[i] << tn+(s+1)*tau << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
         outFile_outer_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
         outFile_inner[i] << tn+(s+1)*tau << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        outFile_inner_robust[i] << tn+(s+1)*tau << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
+        if (uncontrolled > 0)
+            outFile_inner_robust[i] << tn+(s+1)*tau << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
         outFile_inner_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
         
         // saving result

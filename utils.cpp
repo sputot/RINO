@@ -39,6 +39,7 @@ ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer-approx
 
 
 
+
 using namespace std;
 
 void open_outputfiles()
@@ -48,10 +49,12 @@ void open_outputfiles()
     system("mkdir output");
     
     outFile_outer = vector<ofstream>(sysdim);   // output outer-approximated range for each variable of the system
-    outFile_outer_robust = vector<ofstream>(sysdim);
-    outFile_outer_minimal = vector<ofstream>(sysdim);
+    if (uncontrolled > 0) {
+        outFile_outer_robust = vector<ofstream>(sysdim);
+        outFile_inner_robust = vector<ofstream>(sysdim);
+    }
     outFile_inner = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);   // output inner-approximated range for each variable of the system
-    outFile_inner_robust = vector<ofstream>(sysdim);
+    outFile_outer_minimal = vector<ofstream>(sysdim);
     outFile_inner_minimal = vector<ofstream>(sysdim);
     outFile_center  = vector<ofstream>(sysdim);
     
@@ -61,9 +64,14 @@ void open_outputfiles()
         file_name.str("");
         file_name << "output/x" << i+1 << "outer.out";
         outFile_outer[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer_robust.out";
-        outFile_outer_robust[i].open(file_name.str().c_str());
+        if (uncontrolled > 0) {
+            file_name.str("");
+            file_name << "output/x" << i+1 << "outer_robust.out";
+            outFile_outer_robust[i].open(file_name.str().c_str());
+            file_name.str("");
+            file_name << "output/x" << i+1 << "inner_robust.out";
+            outFile_inner_robust[i].open(file_name.str().c_str());
+        }
         file_name.str("");
         file_name << "output/x" << i+1 << "outer_minimal.out";
         outFile_outer_minimal[i].open(file_name.str().c_str());
@@ -73,9 +81,6 @@ void open_outputfiles()
         file_name.str("");
         file_name << "output/x" << i+1 << "inner.out";
         outFile_inner[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner_robust.out";
-        outFile_inner_robust[i].open(file_name.str().c_str());
         file_name.str("");
         file_name << "output/x" << i+1 << "inner_minimal.out";
         outFile_inner_minimal[i].open(file_name.str().c_str());

@@ -751,10 +751,12 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
         outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
         outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
         }
-        outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
+        if (uncontrolled > 0)
+            outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
         outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
         outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
+        if (uncontrolled > 0)
+            outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
         outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
         
         // saving result

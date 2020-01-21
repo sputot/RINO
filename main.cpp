@@ -422,18 +422,6 @@ void generate_gnuplot_script()
         gnuplot_script << "unset output" << endl;
     }
     
-    if ((systype == 0) && (syschoice == 4)) // ballistic example
-    {
-        system("cd output; paste x3inner.out x4inner.out > x3x4inner.out; paste x3inner_robust.out x4inner_robust.out > x3x4inner_robust.out; paste x3outer.out x4outer.out > x3x4outer.out; cd ..");
-        gnuplot_script << "set term pngcairo font \"Helvetica,20\"" << endl;
-        gnuplot_script << "set output \"x3x4.png\"" << endl;
-        gnuplot_script << "plot 'x3x4outer.out' using 2:5 w l lt 1  title \"maximal outer flowpipe x(t)\", 'x3x4outer.out' using 3:6 w l lt 1 notitle, ";
-        gnuplot_script << "'x3x4inner.out' using 2:5:6 w filledcu title \"maximal inner flowpipe x(t)\", 'x3x4inner.out' using 2:5 w l lt 2 notitle, 'x3x4inner.out' using 3:6 w l lt 2 notitle" << endl;
-     
- //       gnuplot_script << "'x3x4inner_robust.out' using 2:5:6 w filledcu title \"robust inner flowpipe x(t)\", 'x3x4inner_robust.out' using 2:5 w l lt 2 notitle, 'x3x4inner_robust.out' using 3:6 w l lt 2 notitle"<<endl;
-        
-        gnuplot_script << "unset output" << endl;
-    }
     
     gnuplot_script << "set term pngcairo font \"Helvetica,18\"" << endl;
 //    gnuplot_script << "set terminal png size 1280, 480 font \"Helvetica,30\"" << endl;
@@ -466,35 +454,7 @@ void generate_gnuplot_script()
         gnuplot_script << "'x2inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" notitle, ";
         gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
         gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' notitle " << endl;
-    /*    gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe x(t)\", 'x1outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe x(t)\", ";
-        gnuplot_script << "'x1outer_robust.out' using 1:2 w l lt 5  lc rgb \"red\"  lw 2 title \"robust outer flowpipe x(t)\", 'x1outer_robust.out' using 1:3 w l lt 5  lc rgb \"red\"  lw 2 notitle,";
-        gnuplot_script << "'x1inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" title \"robust inner flowpipe x(t)\", ";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe x(t)\", 'x1outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe x(t)\", ";
-        
-        gnuplot_script << " 'x2outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe v(t)\", 'x2outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe v(t)\", ";
-        gnuplot_script << "'x2outer_robust.out' using 1:2 w l lt 5  lc rgb \"red\"  lw 2 title \"robust outer flowpipe v(t)\", 'x2outer_robust.out' using 1:3 w l lt 5  lc rgb \"red\"  lw 2 notitle,";
-        gnuplot_script << "'x2inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" title \"robust inner flowpipe v(t)\", ";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe v(t)\", 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe v(t)\" " << endl;
-     */
-        /*
-        gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 1  title \"maximal outer flowpipe x(t)\", 'x1outer.out' using 1:3 w l lt 1 notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe x(t)\", 'x1inner.out' using 1:2 w l lt 2 notitle, 'x1inner.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1outer_robust.out' using 1:2:3 w filledcu title \"robust outer flowpipe x(t)\", 'x1outer_robust.out' using 1:2 w l lt 2 notitle, 'x1outer_robust.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1inner_robust.out' using 1:2:3 w filledcu title \"robust inner flowpipe x(t)\", 'x1inner_robust.out' using 1:2 w l lt 2 notitle, 'x1inner_robust.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2:3 w filledcu title \"minimal outer flowpipe x(t)\", 'x1outer_minimal.out' using 1:2 w l lt 2 notitle, 'x1outer_minimal.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu title \"minimal inner flowpipe x(t)\", 'x1inner_minimal.out' using 1:2 w l lt 2 notitle, 'x1inner_minimal.out' using 1:3 w l lt 2 notitle,";
-        
-        gnuplot_script << "'x2outer.out' using 1:2 w l lt 1  title \"maximal outer flowpipe v(t)\", 'x2outer.out' using 1:3 w l lt 1 notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe v(t)\", 'x2inner.out' using 1:2 w l lt 2 notitle, 'x2inner.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2outer_robust.out' using 1:2:3 w filledcu title \"robust outer flowpipe v(t)\", 'x2outer_robust.out' using 1:2 w l lt 2 notitle, 'x2outer_robust.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2inner_robust.out' using 1:2:3 w filledcu title \"robust inner flowpipe v(t)\", 'x2inner_robust.out' using 1:2 w l lt 2 notitle, 'x2inner_robust.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2:3 w filledcu title \"minimal outer flowpipe v(t)\", 'x2outer_minimal.out' using 1:2 w l lt 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu  title \"minimal inner flowpipe v(t)\", 'x2inner_minimal.out' using 1:2 w l lt 2 notitle, 'x2inner_minimal.out' using 1:3 w l lt 2 notitle " << endl;
-         */
+    
     }
     else if (controlled > 0)
     {
@@ -509,27 +469,6 @@ void generate_gnuplot_script()
         gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  notitle, ";
         gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
         gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' notitle " << endl;
-     /*
-        gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe x(t)\", 'x1outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe x(t)\", ";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe x(t)\", 'x1outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe x(t)\", ";
-        
-        gnuplot_script << " 'x2outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe v(t)\", 'x2outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe v(t)\", ";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe v(t)\", 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe v(t)\" " << endl;
-      */
-        
-       /* gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 1  title \"maximal outer flowpipe x(t)\", 'x1outer.out' using 1:3 w l lt 1 notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe x(t)\", 'x1inner.out' using 1:2 w l lt 2 notitle, 'x1inner.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2:3 w filledcu title \"minimal outer flowpipe x(t)\", 'x1outer_minimal.out' using 1:2 w l lt 2 notitle, 'x1outer_minimal.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu title \"minimal inner flowpipe x(t)\", 'x1inner_minimal.out' using 1:2 w l lt 2 notitle, 'x1inner_minimal.out' using 1:3 w l lt 2 notitle,";
-        
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe v(t)\", 'x2inner.out' using 1:2 w l lt 2 notitle, 'x2inner.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2:3 w filledcu title \"minimal outer flowpipe v(t)\", 'x2outer_minimal.out' using 1:2 w l lt 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu title \"minimal inner flowpipe v(t)\", 'x2inner_minimal.out' using 1:2 w l lt 2 notitle, 'x2inner_minimal.out' using 1:3 w l lt 2 notitle,";
-        gnuplot_script << "'x2outer.out' using 1:2 w l lt 1  title \"maximal outer flowpipe v(t)\", 'x2outer.out' using 1:3 w l lt 1 notitle " << endl; */
     }
     else // only initial conditions => only maximal flowpipes
     {
@@ -600,11 +539,13 @@ void print_initstats(vector<AAF> &x)
     for (int i=0 ; i<sysdim ; i++) {
         // print in exit files
         outFile_outer[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        outFile_outer_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        if (uncontrolled > 0)
+            outFile_outer_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
         outFile_outer_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
         outFile_center[i] << 0<< "\t" << mid(x[i].convert_int()) << "\t" << mid(x[i].convert_int()) << endl;
         outFile_inner[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        outFile_inner_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        if (uncontrolled > 0)
+            outFile_inner_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
         outFile_inner_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
     }
     outFile_width_ratio << 0 << "\t" << 1.0 << endl;
@@ -635,10 +576,12 @@ void print_finalstats(clock_t begin)
     
     for (int i=0 ; i<sysdim ; i++) {
         outFile_outer[i].close();
-        outFile_outer_robust[i].close();
+        if (uncontrolled > 0)
+            outFile_outer_robust[i].close();
         outFile_outer_minimal[i].close();
         outFile_inner[i].close();
-        outFile_inner_robust[i].close();
+        if (uncontrolled > 0)
+            outFile_inner_robust[i].close();
         outFile_inner_minimal[i].close();
         outFile_center[i].close();
     }
