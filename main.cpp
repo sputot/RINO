@@ -539,14 +539,17 @@ void print_initstats(vector<AAF> &x)
     for (int i=0 ; i<sysdim ; i++) {
         // print in exit files
         outFile_outer[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        if (uncontrolled > 0)
+        if (uncontrolled > 0) {
+            outFile_inner_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
             outFile_outer_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        outFile_outer_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        }
+        if (controlled > 0 || uncontrolled > 0) {
+            outFile_inner_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+            outFile_outer_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        }
         outFile_center[i] << 0<< "\t" << mid(x[i].convert_int()) << "\t" << mid(x[i].convert_int()) << endl;
         outFile_inner[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        if (uncontrolled > 0)
-            outFile_inner_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        outFile_inner_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        
     }
     outFile_width_ratio << 0 << "\t" << 1.0 << endl;
     
@@ -575,14 +578,17 @@ void print_finalstats(clock_t begin)
     
     
     for (int i=0 ; i<sysdim ; i++) {
-        outFile_outer[i].close();
-        if (uncontrolled > 0)
-            outFile_outer_robust[i].close();
-        outFile_outer_minimal[i].close();
-        outFile_inner[i].close();
-        if (uncontrolled > 0)
+        
+        if (uncontrolled > 0) {
             outFile_inner_robust[i].close();
-        outFile_inner_minimal[i].close();
+            outFile_outer_robust[i].close();
+        }
+        if (uncontrolled > 0 || controlled > 0) {
+            outFile_inner_minimal[i].close();
+            outFile_outer_minimal[i].close();
+        }
+        outFile_outer[i].close();
+        outFile_inner[i].close();
         outFile_center[i].close();
     }
     outFile_width_ratio.close();

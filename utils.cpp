@@ -54,8 +54,10 @@ void open_outputfiles()
         outFile_inner_robust = vector<ofstream>(sysdim);
     }
     outFile_inner = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);   // output inner-approximated range for each variable of the system
-    outFile_outer_minimal = vector<ofstream>(sysdim);
-    outFile_inner_minimal = vector<ofstream>(sysdim);
+    if (uncontrolled > 0 || controlled > 0) {
+        outFile_outer_minimal = vector<ofstream>(sysdim);
+        outFile_inner_minimal = vector<ofstream>(sysdim);
+    }
     outFile_center  = vector<ofstream>(sysdim);
     
     stringstream file_name;
@@ -72,18 +74,21 @@ void open_outputfiles()
             file_name << "output/x" << i+1 << "inner_robust.out";
             outFile_inner_robust[i].open(file_name.str().c_str());
         }
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer_minimal.out";
-        outFile_outer_minimal[i].open(file_name.str().c_str());
+        if (uncontrolled > 0 || controlled > 0) {
+            file_name.str("");
+            file_name << "output/x" << i+1 << "outer_minimal.out";
+            outFile_outer_minimal[i].open(file_name.str().c_str());
+            file_name.str("");
+            file_name << "output/x" << i+1 << "inner_minimal.out";
+            outFile_inner_minimal[i].open(file_name.str().c_str());
+        }
         file_name.str("");
         file_name << "output/x" << i+1 << "center.out";
         outFile_center[i].open(file_name.str().c_str());
         file_name.str("");
         file_name << "output/x" << i+1 << "inner.out";
         outFile_inner[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner_minimal.out";
-        outFile_inner_minimal[i].open(file_name.str().c_str());
+        
     }
     
     

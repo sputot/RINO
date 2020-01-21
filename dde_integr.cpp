@@ -679,32 +679,24 @@ void HybridStep_dde::TM_eval(int s)
 
 void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter)
 {
-   
-  //  double mean_dist; // mean value on the xi of max distance between inner and outer approximations
-   // double tnp1 = tn + tau;
-    
-   // cout << endl;
+
     cout << "print_solutionstep at t=" << tn+(s+1)*tau << ": " << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
-    if (uncontrolled > 0)
-    {
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
-    }
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-    cout << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
-    if (uncontrolled > 0)
-    {
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+    if (uncontrolled > 0) {
+        for (int i=0 ; i<sysdim ; i++)
+            cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+        for (int i=0 ; i<sysdim ; i++)
+            cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
     }
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
-  
+    if (controlled > 0 || uncontrolled > 0) {
+        for (int i=0 ; i<sysdim ; i++)
+            cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
+        for (int i=0 ; i<sysdim ; i++)
+            cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+    }
     
     for (int i=0 ; i<sysdim ; i++) {
         if (nb_subdiv_init ==1)
@@ -712,13 +704,17 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
             outFile_outer[i] << tn+(s+1)*tau << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
             outFile_center[i] << tn+(s+1)*tau << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
         }
-        if (uncontrolled > 0)
-            outFile_outer_robust[i] << tn+(s+1)*tau << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
-        outFile_outer_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
-        outFile_inner[i] << tn+(s+1)*tau << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        if (uncontrolled > 0)
+        if (uncontrolled > 0) {
             outFile_inner_robust[i] << tn+(s+1)*tau << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-        outFile_inner_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
+            outFile_outer_robust[i] << tn+(s+1)*tau << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
+        }
+        
+        outFile_inner[i] << tn+(s+1)*tau << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
+        
+        if (controlled > 0 || uncontrolled > 0) {
+            outFile_outer_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
+            outFile_inner_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
+        }
         
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
@@ -730,14 +726,6 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
         t_print[current_iteration] = tn+(s+1)*tau;
     }
      current_iteration++;
-  /*  minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
-    for (int i=1 ; i<sysdim ; i++) {
-        aux = (sup(Xinner[i])-inf(Xinner[i]))/(sup(Xouter[i])-inf(Xouter[i]));
-        if (minwidth_ratio > aux)
-            minwidth_ratio = aux;
-    }
-    outFile_width_ratio << tn+(s+1)*tau << "\t" << minwidth_ratio << endl;
-   */
 }
 
 
