@@ -83,6 +83,7 @@ variable = 2 3
 # for the visualization: if 0, only .png files are produced
 interactive-visualization = 1
 # the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
+# to print all (default value when the option is not set in the config file): set variables-to-display = all
 variables-to-display = 1 2
 ```
 
