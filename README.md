@@ -30,21 +30,61 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 Hopefully in the future, a parser will allow to read the models of the systems to analyze from input files. For now, they are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
 Running an existing example is then performed at command line, by 
 ```
-./main system_type system_id
+./main system_type system_id [config_file.txt]
 ```
 where 
 - system_type is either 0 (for a system of ODEs - Ordinary Differential Equations) or 1 (for a system of DDEs - Delay Differential Equations)
 - system_id is an integer specifying the predefined system identifier.
+- optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). In the examples directory, we provide configuration files for existing systems.
 
 In praticular:
-  - the Brusselator example of Reference [HSCC 2017] below is run by "./main 0 2"
-  - the self-driving car example of Reference [HSCC 2019]  is run by "./main 0 6"
-  - the self-driving car example of Reference [CAV 2018]  is run by "./main 1 7" (here the model is with delays, hence the system_type 1)
-  - the crazyflie model of Reference [HSCC 2019]  is run by "./main 0 18" 
-  - the platoon examples  of Reference [CAV 2018] are run  by "./main 1 10" (5 vehicles) or "./main 1 11" (10 vehicles) 
+  - the Brusselator example of Reference [HSCC 2017] below is run by "./main 0 2 [examples/config_0_2.txt] "
+  - the self-driving car example of Reference [HSCC 2019]  is run by "./main 0 6 [examples/config_0_6.txt]"
+  - the self-driving car example of Reference [CAV 2018]  is run by "./main 1 7 [examples/config_1_7.txt]" (here the model is with delays, hence the system_type 1)
+  - the crazyflie model of Reference [HSCC 2019]  is run by "./main 0 18 [examples/config_0_18.txt]" 
+  - the platoon examples  of Reference [CAV 2018] are run  by "./main 1 10 [examples/config_1_10.txt]" (5 vehicles) or "./main 1 11 [examples/config_1_11.txt]" (10 vehicles) 
 
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
 More documentation on how to use these (and better input mechanisms) should come.
+
+#### Sample configuration file (ODE)
+
+```
+# dimension of the ODE
+system-dimension = 4
+# dimension of the uncertain parameter + initial conditions (must be equal to the above right now)
+jacobian-dimension = 4
+time-horizon = 5.
+
+# time step: only for ODEs
+sampling-time = 0.02
+
+# only for DDEs
+delay = 0.3 
+# only for DDEs (for ODEs, starting-time is set to 0)
+starting-time = -0.3
+# only for DDEs: defines the time step by delay/nb-time-subdivisions
+nb-time-subdivisions = 3
+
+# order for Taylor models
+order = 3
+
+# ranges for inputs and initial conditions
+inputs = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+# which dimensions correspond to the actual system 
+initial-condition = 0 1
+# which dimensions of the system are disturbances 
+uncontrolled = 3
+# the remaining dimensions (not uncontrolled or initial-conditions: here, 2) of the system are controlled inputs
+# which dimensions are time-varying inputs or parameters
+variable = 2 3
+
+
+# for the visualization: if 0, only .png files are produced
+interactive-visualization = 1
+# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
+variables-to-display = 1 2
+```
 
 ### Visualizing results
 
@@ -56,11 +96,21 @@ After running an example, all results are in the subdirectory ‘output’. For 
 - xiouter_robust.out (robust outer-approximation function of time)
 - xiouter_minimal.out (minimal outer-approximation function of time)
 
-A gnuplot file is also produced, that can be run from the source code repository by
+A python visualization file Visu_output.py is available in the GUI directory. 
+It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by
 ```
-cd output; gnuplot -p 'gnuplot_script.gp' ; cd ..
+python3 Visu_output.py --interactive=1 --printvar=-1-2
 ```
-In particular, one figure per variable, xi.png, is produced (simply named x.png when the system is 1-dim as the running example) printing all these inner and outer-approximations with respect to time. 
+When the script is run by analyzer, the options set above in command line can be set in the configuration file by: 
+```
+interactive-visualization = 1
+variables-to-display = 1 2
+```
+In particular, at least figure per variable is produced, printing the evolution with time of
+    - the maximal inner and outer-approximations (e.g. x1_max.png)
+    - when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph (e.g. x1_min_max.png)
+    - when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
+We also provide graphs embedding all variables, as well as some error measures (see the files in the output directory).
 
 These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below)
 
