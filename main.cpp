@@ -40,8 +40,7 @@ using namespace std;
 //using namespace fadbad;
 
 void print_finalstats(clock_t begin);
-void generate_gnuplot_script();
-
+void run_pythonscript_visualization();
 
 void read_system(const char * system_filename, char *sys_name);
 
@@ -139,9 +138,9 @@ int main(int argc, char* argv[])
                 }
                 cur_step = cur_step.init_nextbigstep(tau);
             }
-            for (int i=0 ; i<sysdim ; i++) {
+           /* for (int i=0 ; i<sysdim ; i++) {
                 outFile_inner[i] << "\n \n";
-            }
+            } */
         }
         
         print_finalsolution(inputs_save, (t_end-t_begin)*nb_subdiv/d0, d0);
@@ -184,7 +183,7 @@ int main(int argc, char* argv[])
     
     print_finalstats(begin);
 
-    generate_gnuplot_script();
+    run_pythonscript_visualization();
 }
 
 // printig solution from all stored results of subdivisiions
@@ -303,228 +302,36 @@ void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double 
 
 
 
-void generate_gnuplot_script()
+void run_pythonscript_visualization()
 {
-    ofstream gnuplot_script;
-    gnuplot_script.open("output/gnuplot_script.gp");
-    
-    // ---------- plotting variables ----------
-    int nb_lignes, nb_colonnes;
-    nb_lignes = sqrt(sysdim);
-    nb_colonnes = nb_lignes;
-    if (nb_lignes * nb_colonnes < sysdim)
-        nb_lignes++;
-    if (nb_lignes * nb_colonnes < sysdim)
-        nb_colonnes++;
-    
-    // to screen
-/*    gnuplot_script << "set terminal aqua 0" << endl;
-    gnuplot_script << "set multiplot layout " << nb_lignes << ", " << nb_colonnes << " title \"System solutions \" font \"arial,18\""  << endl;
-    for (int i=0 ; i<sysdim ; i++) {
-        gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w lp, 'x"<<i+1<<"outer.out' using 1:3 w lp, ";
-        gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2 w lp, 'x"<<i+1<<"inner.out' using 1:3 w lp" << endl;
-    }
-    gnuplot_script << "unset multiplot" << endl; */
-    
-    // to file
- /*   gnuplot_script << "set term pngcairo" << endl;
-    gnuplot_script << "set output \"solutions.png\"" << endl;
-    gnuplot_script << "set multiplot layout " << nb_lignes << ", " << nb_colonnes << " title \"System solutions \" font \"arial,18\""  << endl;
-    for (int i=0 ; i<sysdim ; i++) {
-        gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w lp, 'x"<<i+1<<"outer.out' using 1:3 w lp, ";
- //       gnuplot_script << "'x"<<i+1<<"center.out' using 1:2 w lp, 'x"<<i+1<<"center.out' using 1:3 w lp, ";
-        gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2 w lp, 'x"<<i+1<<"inner.out' using 1:3 w lp" << endl;
-        
-    }
-    gnuplot_script << "unset multiplot" << endl;
-    gnuplot_script << "unset output" << endl; */
-    
-    // plotting indiviudually each solution to a file
-    gnuplot_script << "set term pngcairo font \"Helvetica,18\"" << endl;
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        if (sysdim == 1)
-            gnuplot_script << "set output \"x.png\"" << endl;
-        else
-            gnuplot_script << "set output \"x"<<i+1<<".png\"" << endl;
-        if (nb_subdiv_init > 1)
-            gnuplot_script << "set title '"<<nb_subdiv_init<<" subdivisions'" << endl;
-        gnuplot_script << "set xlabel 't (seconds)'" << endl;
-        if ((systype == 0) && (syschoice == 4) && (i==3)) // ballistic example
-        {
-            gnuplot_script << "set ylabel 'y(t)'" << endl;
-             gnuplot_script << "set arrow 2 from 0,0 to 2,0 nohead  front" << endl;  // black axis
-            gnuplot_script << "set object 1 poly from 0,6 to 2,6 to 2,3 to 0,5 to 0,6 fs solid fc rgb \"red\"" << endl;  // red box to avoid
-            gnuplot_script << "set key left bottom" << endl;
-        //    gnuplot_script << "set object 1 rect from 0,5 to 2,3 fc rgb \"red\"" << endl;  // boite rouge a eviter
-        }
-        else
-            gnuplot_script << "set ylabel 'x(t)'" << endl;
-        if ((systype == 0) && (syschoice == 4) && (i==3)) // ballistic example, y coordinate
-        {
-            gnuplot_script << "set yrange [0:6]" << endl;
-            gnuplot_script << "set object 2 rect from 0.75,3 to 1.,4 fc rgb \"green\" front" << endl;  // green box to reach
-            gnuplot_script << "set object 1 poly from 0.,2 to 1.4,4.5 to 1.4,5.5 to 0,4 to 0,2 fs solid  fc rgb \"cyan\"" << endl;  // green box to reach
-            gnuplot_script << "set object 3 rect from 0.4,0. to 0.6,2 fc rgb \"red\"" << endl;  // red box to avoid
-            gnuplot_script << "LABEL1 = \"U\"" << endl;
-            gnuplot_script << "set label at 0.5,1.5 LABEL1 front center" << endl;
-            gnuplot_script << "LABEL2 = \"T1\"" << endl;
-            gnuplot_script << "set label at 0.9,3.5 LABEL2 front center" << endl;
-            gnuplot_script << "LABEL3 = \"T2\"" << endl;
-            gnuplot_script << "set label at 0.1,3 LABEL3 front center" << endl;
-            gnuplot_script << "set key left top" << endl;
-        }
-        
-     /*   if ((uncontrolled > 0)) // && (controlled > 0))
-        {
-            gnuplot_script << "set style fill noborder"<<endl;
-            gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w l lt 1  title \"maximal outer flowpipe\", 'x"<<i+1<<"outer.out' using 1:3 w l lt 1 notitle, ";
-            //       gnuplot_script << "'x"<<i+1<<"exact.out' using 1:2 w l lt 3  dashtype 2 title \"analytical solution\", 'x"<<i+1<<"exact.out' using 1:3 w l lt 3 dashtype 2 title \"\", ";
-            gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe\", ";
-            gnuplot_script << "'x"<<i+1<<"outer_robust.out' using 1:2:3 w filledcu title \"robust outer flowpipe\", 'x"<<i+1<<"outer_robust.out' using 1:2 w l lt 2 notitle, 'x"<<i+1<<"outer_robust.out' using 1:3 w l lt 2 notitle,";
-            gnuplot_script << "'x"<<i+1<<"inner_robust.out' using 1:2:3 w filledcu title \"robust inner flowpipe\", ";
-            gnuplot_script << "'x"<<i+1<<"outer_minimal.out' using 1:2:3 w filledcu title \"minimal outer flowpipe\", 'x"<<i+1<<"outer_minimal.out' using 1:2 w l lt 2 notitle, 'x"<<i+1<<"outer_minimal.out' using 1:3 w l lt 2 notitle,";
-            gnuplot_script << "'x"<<i+1<<"inner_minimal.out' using 1:2:3 w filledcu title \"minimal inner flowpipe\", " << endl;
-            //    gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe\", 'x"<<i+1<<"inner.out' using 1:2 w l lt 2 notitle, 'x"<<i+1<<"inner.out' using 1:3 w l lt 2 notitle" << endl;
-        } */
-        if ((uncontrolled > 0)) // && (controlled > 0))
-        {
-            gnuplot_script << "set style fill noborder"<<endl;
-            gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe\", 'x"<<i+1<<"outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-            //       gnuplot_script << "'x"<<i+1<<"exact.out' using 1:2 w l lt 3  dashtype 2 title \"analytical solution\", 'x"<<i+1<<"exact.out' using 1:3 w l lt 3 dashtype 2 title \"\", ";
-            gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe\", ";
-            gnuplot_script << "'x"<<i+1<<"outer_robust.out' using 1:2 w l lt 5  lc rgb \"red\"  lw 2 title \"robust outer flowpipe\", 'x"<<i+1<<"outer_robust.out' using 1:3 w l lt 5  lc rgb \"red\"  lw 2notitle,";
-            gnuplot_script << "'x"<<i+1<<"inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" title \"robust inner flowpipe\", ";
-            gnuplot_script << "'x"<<i+1<<"outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe\", 'x"<<i+1<<"outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-            gnuplot_script << "'x"<<i+1<<"inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe\" " << endl;
-            //    gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu title \"maximal inner flowpipe\", 'x"<<i+1<<"inner.out' using 1:2 w l lt 2 notitle, 'x"<<i+1<<"inner.out' using 1:3 w l lt 2 notitle" << endl;
-        }
-        else if (controlled > 0)
-        {
-            gnuplot_script << "set style fill noborder"<<endl;
-            gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe\", 'x"<<i+1<<"outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-            //       gnuplot_script << "'x"<<i+1<<"exact.out' using 1:2 w l lt 3  dashtype 2 title \"analytical solution\", 'x"<<i+1<<"exact.out' using 1:3 w l lt 3 dashtype 2 title \"\", ";
-            gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe\", ";
-            gnuplot_script << "'x"<<i+1<<"outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe\", 'x"<<i+1<<"outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-            gnuplot_script << "'x"<<i+1<<"inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe\" " << endl;
-            
-        }
-        else // no uncertain parameters, only innitial conditions
-        {
-            gnuplot_script << "set style fill noborder"<<endl;
-            gnuplot_script << "plot 'x"<<i+1<<"outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe\", 'x"<<i+1<<"outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-            //       gnuplot_script << "'x"<<i+1<<"exact.out' using 1:2 w l lt 3  dashtype 2 title \"analytical solution\", 'x"<<i+1<<"exact.out' using 1:3 w l lt 3 dashtype 2 title \"\", ";
-            gnuplot_script << "'x"<<i+1<<"inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe\" " << endl;
-            
-        }
-        
-        
-        gnuplot_script << "unset output" << endl;
-    }
-    
-    
-    gnuplot_script << "set term pngcairo font \"Helvetica,18\"" << endl;
-//    gnuplot_script << "set terminal png size 1280, 480 font \"Helvetica,30\"" << endl;
-    gnuplot_script << "set output \"xi.png\"" << endl;
-    if (nb_subdiv_init > 1)
-        gnuplot_script << "set title '"<<nb_subdiv_init<<" subdivisions'" << endl;
-    if (syschoice == 6 || syschoice == 7)
-    {
-        gnuplot_script << "set xrange [0:5]" << endl;
-        gnuplot_script << "set yrange [0:1]" << endl;
-        gnuplot_script << "set ylabel 'x(t), v(t)'" << endl;
-        gnuplot_script << "set key right center" << endl;
-    }
-    gnuplot_script << "set xlabel 't (seconds)'" << endl;
-    
-    if (uncontrolled > 0)
-    {
-        gnuplot_script << "set style fill noborder"<<endl;
-        
-        gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe\", 'x1outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe\", ";
-        gnuplot_script << "'x1outer_robust.out' using 1:2 w l lt 5  lc rgb \"red\"  lw 2 title \"robust outer flowpipe\", 'x1outer_robust.out' using 1:3 w l lt 5  lc rgb \"red\"  lw 2 notitle,";
-        gnuplot_script << "'x1inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" title \"robust inner flowpipe \", ";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe\", 'x1outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe\", ";
-        
-        gnuplot_script << " 'x2outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, 'x2outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  notitle , ";
-        gnuplot_script << "'x2outer_robust.out' using 1:2 w l lt 5  lc rgb \"red\"  lw 2 notitle, 'x2outer_robust.out' using 1:3 w l lt 5  lc rgb \"red\"  lw 2 notitle,";
-        gnuplot_script << "'x2inner_robust.out' using 1:2:3 w filledcu lc rgb \"red\" notitle, ";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' notitle " << endl;
-    
-    }
-    else if (controlled > 0)
-    {
-        gnuplot_script << "set style fill noborder"<<endl;
-        
-        gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe \", 'x1outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe \", ";
-        gnuplot_script << "'x1outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 title \"minimal outer flowpipe \", 'x1outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x1inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' title \"minimal inner flowpipe \", ";
-        
-        gnuplot_script << " 'x2outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, 'x2outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2outer_minimal.out' using 1:2 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle, 'x2outer_minimal.out' using 1:3 w l lt 7 lc rgb '#7e2f8e' lw 2 notitle,";
-        gnuplot_script << "'x2inner_minimal.out' using 1:2:3 w filledcu lc rgb '#7e2f8e' notitle " << endl;
-    }
-    else // only initial conditions => only maximal flowpipes
-    {
-        gnuplot_script << "set style fill noborder"<<endl;
-        
-        gnuplot_script << "plot 'x1outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  title \"maximal outer flowpipe \", 'x1outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x1inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  title \"maximal inner flowpipe \", ";
-        
-        gnuplot_script << " 'x2outer.out' using 1:2 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, 'x2outer.out' using 1:3 w l lt 3 lw 2 lc rgb '#4dbeee'  notitle, ";
-        gnuplot_script << "'x2inner.out' using 1:2:3 w filledcu lc rgb '#4dbeee'  notitle " << endl;
-    }
-    gnuplot_script << "unset output" << endl;
-    
-    
-    // plotting the width ration
-    gnuplot_script << "set term pngcairo" << endl;
-    gnuplot_script << "set output \"width_ratio.png\"" << endl;
-    gnuplot_script << "set xlabel 't (seconds)'" << endl;
-    gnuplot_script << "set ylabel 'min over x_i of width ratios'" << endl;
-    gnuplot_script << "plot 'width_ratio.out' w l title \"width(inner-approx) / width (outer-approx)" << endl;
-    gnuplot_script << "unset output" << endl;
-    
-    // plotting  mean on xi of error between outer-approx and analytical solution if any
-    gnuplot_script << "set term pngcairo" << endl;
-    gnuplot_script << "set output \"meanerror.png\"" << endl;
-    gnuplot_script << "set xlabel 't (seconds)'" << endl;
-    gnuplot_script << "set ylabel 'mean over x_i of max error'" << endl;
-    if (nb_subdiv_init > 1)
-        gnuplot_script << "set title '"<<nb_subdiv_init<<" subdivisions'" << endl;
-    gnuplot_script << "plot 'meanerror_outer.out' w l lt 1 title \"outer-approx error\", 'meanerror_inner.out' w l lt 1 dashtype 2 title \"inner-approx error\", 'meanerror_diff.out' w l lt 2 title \"max distance between inner and outer-approx\"" << endl;
-    gnuplot_script << "unset output" << endl;
-    
-    // plotting  mean on xi of relative error between outer-approx and analytical solution if any (relative because divided by width of exact or over-approx solution)
-    gnuplot_script << "set term pngcairo" << endl;
-    gnuplot_script << "set output \"relmeanerror.png\"" << endl;
-    gnuplot_script << "set xlabel 't (seconds)'" << endl;
-    gnuplot_script << "set ylabel 'mean over x_i of max relative error'" << endl;
-    if (nb_subdiv_init > 1)
-        gnuplot_script << "set title '"<<nb_subdiv_init<<" subdivisions'" << endl;
-    gnuplot_script << "plot 'relmeanerror_outer.out' w l lt 1 title \"outer-approx error\", 'relmeanerror_inner.out' w l lt 1 dashtype 2 title \"inner-approx error\", 'relmeanerror_diff.out' w l lt 2 title \"max distance between inner and outer-approx\"" << endl;
-    gnuplot_script << "unset output" << endl;
-    
-    
-    // gnuplot_script << "set term wxt" << endl;  // vue par defaut
-    // gnuplot_script << "set term aqua // pour avoir des chiffres plus gros sur les axes pour les papiers..." << endl;
-    
-    gnuplot_script << "set terminal aqua" << endl;
-    
-    gnuplot_script.close();
-//    system("cd output; gnuplot -p 'gnuplot_script.gp'"); // marche plus quand je l'appelle de mon programme alors que ca a eu fonctionné ???
-    
+    char command_line[1000];
     cout << "......" << endl;
     cout << "Result files are in the output directory" << endl;
-    cout << "Visualize them with gnuplot by : cd output; gnuplot -p 'gnuplot_script.gp' ; cd .." << endl;
-    cout << "The gnuplot script will also save files as png files (in same directory)" << endl;
-    system("cd output; gnuplot -p 'gnuplot_script.gp' ; cd ..");
+    cout << "Visualize them with by : cd GUI; python3 Visu_output.py ; cd .." << endl;
+    cout << "The python script will save files as png files (in same directory output)" << endl;
+    char displayed_variables[100];
+    bool init=true;
+    int j = 0;
+    for (int i=0; i<sysdim; i++) {
+        if (variables_to_display[i]) {
+            j++;
+            if (init) {
+                sprintf(displayed_variables,"-%d",i);
+                init = false;
+            }
+            else
+                sprintf(displayed_variables,"%s-%d",displayed_variables,i);
+        }
+    }
+    if (!init)
+        sprintf(displayed_variables,"%s-",displayed_variables);
+    cout << displayed_variables << endl;
+    if (j == sysdim)
+        sprintf(displayed_variables,"%s","all");
+    cout << displayed_variables << endl;
+    sprintf(command_line,"cd GUI; python3 Visu_output.py --interactive=%d --printvar=%s; cd ..",interactive_visualization,displayed_variables);
+    cout << command_line << endl;
+    system(command_line);
 }
 
 

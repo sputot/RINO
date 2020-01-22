@@ -257,6 +257,9 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
     FILE *params_file = fopen(params_filename,"r");
     if (params_file == NULL)
         cout << "Error reading " << params_filename << ": file not found" << endl;
+    
+    
+    
     while (fgets(buff,LINESZ,params_file)) {
         //     sscanf(buff, "system = %s\n", sys_name);
         //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
@@ -267,6 +270,23 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         sscanf(buff, "starting-time = %lf\n", &t_begin);  // for DDEs
         sscanf(buff, "nb-time-subdivisions = %d\n", &nb_subdiv); // for DDEs : subdiv of time interval d0 : tau is deduced
         sscanf(buff, "order = %d\n", &order);
+        sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
+        if (sscanf(buff, "variables-to-display = %s\n", initialcondition) == 1)
+        {
+            for (int i=0; i< sysdim; i++)
+                variables_to_display[i] = false;
+            
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i;
+            while( token != NULL ) {
+                sscanf(token,"%d",&i);
+                variables_to_display[i] = true;
+             //   cout <<"input="<<inputs[i].convert_int()<<endl;
+                token = strtok(NULL,space);
+            }
+        }
         if (sscanf(buff, "inputs = %s\n", initialcondition) == 1)
         {
             char *token = strtok(buff,space);
@@ -276,7 +296,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
                 inputs[i] = interval(a,b);
-                cout <<"input="<<inputs[i].convert_int()<<endl;
+               // cout <<"input="<<inputs[i].convert_int()<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -706,6 +726,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[18] = interval(1.99,2.01);
         }
     }
+    
+    variables_to_display = vector<bool>(sysdim);
+    for (int i=0; i< sysdim; i++)
+        variables_to_display[i] = true;
     
     if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
         read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);

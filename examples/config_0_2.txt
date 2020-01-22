@@ -10,3 +10,5 @@ inputs = [0.9,1] [0,0.1]
 params = [1.0,1.0] [1.5,1.5]
 uncontrolled = 
 variable =
+initial-condition = 
+interactive-visualization = 1

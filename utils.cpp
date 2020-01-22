@@ -37,8 +37,8 @@ ofstream outFile_relmeanerror_outer; // mean on xi of error between outer-approx
 ofstream outFile_relmeanerror_inner; // mean on xi of error between inner-approx and analytical solution if any, over width of exact tube
 ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer-approx and inner-approx, over width of over-approx tube
 
-
-
+int interactive_visualization = 0; // 0 or 1
+vector<bool> variables_to_display;
 
 using namespace std;
 

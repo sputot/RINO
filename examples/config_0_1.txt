@@ -10,3 +10,4 @@ inputs = [0.9,1.0]
 params = [1.0,1.0]
 uncontrolled = 
 variable =
+initial-condition = 

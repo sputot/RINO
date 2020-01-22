@@ -719,6 +719,7 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     double mean_dist; // mean value on the xi of max distance between inner and outer approximations
     double tnp1 = tn + tau;
     
+    
     cout << "t=" << tnp1 << endl;
     
     for (int i=0 ; i<sysdim ; i++) {

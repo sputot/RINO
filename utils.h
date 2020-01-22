@@ -30,5 +30,7 @@ extern ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer
 
 #define tol_noise 0.00001
 
+extern int interactive_visualization; // 0 or 1
+extern vector<bool> variables_to_display;
 
 #endif

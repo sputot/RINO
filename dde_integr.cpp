@@ -679,7 +679,7 @@ void HybridStep_dde::TM_eval(int s)
 
 void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter)
 {
-
+    
     cout << "print_solutionstep at t=" << tn+(s+1)*tau << ": " << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";

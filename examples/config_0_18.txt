@@ -1,3 +1,5 @@
+# HSCC 2019 crazyflie example 
+
 system-dimension = 14
 jacobian-dimension = 14
 time-horizon = 2.
