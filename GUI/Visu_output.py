@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[126]:
+# In[56]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -15,9 +15,9 @@ import glob
 import os
 
 
-print_interactive = False
+print_interactive = True
 #variables_to_display="all"
-variables_to_display="-1-"
+variables_to_display="all"
 
 # for reading arguments on command line (use as a script possibly called from the program)
 import sys
@@ -42,7 +42,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[127]:
+# In[57]:
 
 
 # if print_robust = True: print robust approx
@@ -65,12 +65,13 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         height_in_inches = 8
         dots_per_inch = 70
         fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
-    
-    if (subplots):
+    elif (subplots):
         width_in_inches = 12
         height_in_inches = 4*nbrows
         dots_per_inch = 70
         fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch) 
+    else:
+        fig = plt.figure()
     
     if (print_robust and print_minimal):
         extension = '_rob_min_max.png'
@@ -174,7 +175,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
             plt.show() # print all components on same graph
 
 
-# In[128]:
+# In[58]:
 
 
 print_robust = False
@@ -185,7 +186,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[129]:
+# In[59]:
 
 
 print_robust = False
@@ -196,7 +197,29 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[130]:
+# In[60]:
+
+
+print_robust = True
+print_minimal = False
+only_one_graph = False
+subplots = False
+
+my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
+
+
+# In[61]:
+
+
+print_robust = True
+print_minimal = True
+only_one_graph = False
+subplots = False
+
+my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
+
+
+# In[62]:
 
 
 print_robust = False
@@ -206,7 +229,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[131]:
+# In[63]:
 
 
 print_robust = False
@@ -216,10 +239,11 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[132]:
+# In[64]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
+fig = plt.figure()
 with open("width_ratio.out", 'r') as width_ratio:
     lines = width_ratio.readlines()
     t = [float(line.split()[0]) for line in lines]
@@ -232,12 +256,13 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[133]:
+# In[65]:
 
 
 print_interactive = False
 
 # mean on xi of error between outer-approx and analytical solution if any
+fig = plt.figure()
 with open("meanerror_diff.out", 'r') as meanerror_diff, open("meanerror_inner.out", 'r') as meanerror_inner, open("meanerror_outer.out", 'r') as meanerror_outer :
     lines1 = meanerror_diff.readlines()
     lines2 = meanerror_inner.readlines()
@@ -260,10 +285,11 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[134]:
+# In[66]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
+fig = plt.figure()
 with open("relmeanerror_diff.out", 'r') as meanerror_diff, open("relmeanerror_inner.out", 'r') as meanerror_inner, open("relmeanerror_outer.out", 'r') as meanerror_outer :
     lines1 = meanerror_diff.readlines()
     lines2 = meanerror_inner.readlines()

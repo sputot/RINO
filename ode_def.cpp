@@ -654,7 +654,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[3] = interval(2.9,3.1);   // Kd
             is_initialcondition[2] = false;
             is_initialcondition[3] = false;
-            is_uncontrolled[2] = true;
+         //   is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
@@ -671,7 +671,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[3] = interval(2.9,3.1);   // Kd
             is_initialcondition[2] = false;
             is_initialcondition[3] = false;
-            is_uncontrolled[2] = true;
+        //    is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
         else if (syschoice == 9) // Zou CAV 2015

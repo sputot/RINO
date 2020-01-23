@@ -8,7 +8,7 @@ starting-time = -0.2
 nb-time-subdivisions = 5
 order = 3
 inputs = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
-uncontrolled = 2 3
+uncontrolled = 3
 variable =
 initial-condition = 
 
