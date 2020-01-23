@@ -11,4 +11,4 @@ params = [1.0,1.0] [1.5,1.5]
 uncontrolled = 
 variable =
 initial-condition = 
-interactive-visualization = 1
+interactive-visualization = 0

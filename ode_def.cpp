@@ -396,7 +396,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
         is_variable[i] = false;     // variable input or parameter
-        is_initialcondition[i] = false; // by definition, initial conditions are controlled and constant
+        is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
     
     if (systype == 0) // ODE
@@ -449,6 +449,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] = interval(0.0,0.01);
             inputs[3] = interval(0.0,0.25); // interval(0.0,0.01);
             inputs[4]= interval(11.,15.); // 14.... la masse (incontrollable)
+            is_initialcondition[4] = false;
             is_uncontrolled[4] = true;
             is_variable[4] = true;
         }
@@ -491,8 +492,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] =  interval(1.9,2.1);  // Kp
             inputs[3] =  interval(2.9,3.1);    // Kd
             //     inputs[4] = 0;
-            is_initialcondition[0] = true;
-            is_initialcondition[1] = true;
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
             is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
@@ -510,8 +511,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] =  interval(1.9,2.1);  // Kp
             inputs[3] =  interval(2.9,3.1);    // Kd
        //     inputs[4] = 0;
-            is_initialcondition[0] = true;
-            is_initialcondition[1] = true;
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
             is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
@@ -524,7 +525,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;
             inputs[0] = interval(0.4,0.5);
-            is_initialcondition[0] = true;
         }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
@@ -532,10 +532,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 2.;
             order = 3;
             
-            for (int j=0 ; j<sysdim; j++) {
-                is_initialcondition[j] = true;
+            for (int j=0 ; j<sysdim; j++)
                 inputs[j] = 0;
-            }
+            
             inputs[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
             inputs[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
             inputs[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
@@ -653,8 +652,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             inputs[2] = interval(1.9,2.1);  // Kp
             inputs[3] = interval(2.9,3.1);   // Kd
-            is_initialcondition[0] = true;
-            is_initialcondition[1] = true;
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
             is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
@@ -670,8 +669,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             inputs[2] = interval(1.9,2.1);  // Kp
             inputs[3] = interval(2.9,3.1);   // Kd
-            is_initialcondition[0] = true;
-            is_initialcondition[1] = true;
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
             is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }

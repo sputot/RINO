@@ -6,4 +6,4 @@ order = 3
 inputs = [0.4,0.5]
 uncontrolled =
 variable = 
-initial-condition = 0
+initial-condition = 
