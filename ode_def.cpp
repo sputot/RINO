@@ -629,23 +629,23 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 6) // self-driving car; sysdim = 2, jacdim = 2
         {
-            d0 = 0.35;
-            nb_subdiv = 10;  // number of Taylor models on [0,d0]
+            d0 = 0.2;
+            nb_subdiv = 5;  // number of Taylor models on [0,d0]
             t_begin = -d0;  // starting time is -d0 (delay)
-            t_end = 10.;
+            t_end = 5.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             inputs[0] = interval(-0.1,0.1);
             inputs[1] = interval(0,0.1);
-            params[0] = 2.; // interval(1.9,2.1);  // Kp
-            params[1] = 3.; // interval(2.9,3.1);    // Kd
+            params[0] =  interval(1.9,2.1); // 2;  // Kp
+            params[1] =  interval(2.9,3.1);  // 3;   // Kd
         }
         else if (syschoice == 7) // self-driving car bt with coeff in interv; sysdim = 4, jacdim = 4
         {                         // this one can be forgotten ?
             d0 = 0.2;
-            nb_subdiv = 2;  // number of Taylor models on [0,d0]
+            nb_subdiv = 5;  // number of Taylor models on [0,d0]
             t_begin = -d0;  // starting time is -d0 (delay)
-            t_end = 10.;
+            t_end = 5.;
             order = 3;  // order of Taylor Models
           //  uncontrolled = 2; // the last 2 parameters/inputs are uncontrolled (forall parameters)
             // uncertain parameter occurring in initial condition
@@ -653,7 +653,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             inputs[2] = interval(1.9,2.1);  // Kp
             inputs[3] = interval(2.9,3.1);   // Kd
-            
+            is_initialcondition[0] = true;
+            is_initialcondition[1] = true;
             is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
@@ -667,8 +668,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             // uncertain parameter occurring in initial condition
             inputs[0] = interval(-0.1,0.1);
             inputs[1] = interval(0,0.1);
-            inputs[2] = interval(1.95,2.05);  // Kp
-            inputs[3] = interval(2.93,3.05);   // Kd
+            inputs[2] = interval(1.9,2.1);  // Kp
+            inputs[3] = interval(2.9,3.1);   // Kd
+            is_initialcondition[0] = true;
+            is_initialcondition[1] = true;
             is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
