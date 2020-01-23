@@ -7,18 +7,43 @@ ref_exec=$ref"main"
 rino_output=$rino"output/x"
 ref_output=$ref"output/x"
 
+test_ode=true
+test_dde=true
+
+if [ $# == 1 ]
+then
+  if [ "$1" == "all" ]
+  then
+    test_ode=true
+    test_dde=true
+  elif [ "$1" == "ode" ]
+  then
+    test_ode=true
+    test_dde=false
+  elif [ "$1" == "dde" ]
+  then
+    test_ode=false
+    test_dde=true
+  fi
+fi
+
+
 # ODE examples
 examples_indexes=(1 2 3 4 5 6 7 18)   # indexes of ODE examples we wish to test for non regression
 sysdim=(1 2 4 5 2 4 4 14)
 
-compare_to_ref=true  # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version
+# when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
+compare_to_ref=true
 
+if [ "$test_ode" == true ]
+then
 for i in "${!examples_indexes[@]}"
 do
 echo "******* Running RINO regression on ODE example no ${examples_indexes[i]} **************"
 cd $rino
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$rino_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+config_file=$rino"examples/config_0_"${examples_indexes[i]}".txt"
+`$rino_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_rino=$((end_ms - start_ms))
 echo "Execution time for RINO: $elapsed_ms_rino milliseconds"
@@ -28,7 +53,7 @@ if [ "$compare_to_ref" = false ]
 then
 cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$ref_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+`$ref_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_ref=$((end_ms - start_ms))
 echo "Execution time for REF: $elapsed_ms_ref milliseconds"
@@ -50,14 +75,18 @@ else
     rm -r $ref"output"; cp -r $ref"output_0_"${examples_indexes[i]} $ref"output"
 fi
 
+results_changed=false
+
 #for value in {1..2}
-for ((value=1;value<=${sysdim[i]};value++));
+for ((value=0;value<${sysdim[i]};value++));
 do
     for suffix in "center.out" "inner.out" "inner_minimal.out" "inner_robust.out" "outer.out" "outer_minimal.out" "outer_robust.out"
     do
         filename=$value$suffix
         file_rino=$rino_output$filename
         file_ref=$ref_output$filename
+        if test -f $file_rino || test -f $file_ref
+        then
         diff $file_rino $file_ref > /dev/null 2>&1
         error=$?
         if [ $error -eq 0 ]
@@ -74,6 +103,7 @@ do
         results_changed=true
         echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "
         fi
+        fi
     done
 done
 if [ "$results_changed" = true ]
@@ -84,18 +114,21 @@ else
 fi
 
 done
-
+fi
 
 # similarly for DDE examples
 examples_indexes=(1 2 3 4 5 6 7 8 9 10 11)   # indexes of ODE examples we wish to test for non regression
 sysdim=(1 2 7 1 1 2 4 2 1 9 19)
 
+if [ "$test_dde" == true ]
+then
 for i in "${!examples_indexes[@]}"
 do
 echo "******* Running RINO regression on DDE example no ${examples_indexes[i]} **************"
 cd $rino
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$rino_exec 1 ${examples_indexes[i]} > /dev/null 2>&1`
+config_file=$rino"examples/config_1_"${examples_indexes[i]}".txt"
+`$rino_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms=$((end_ms - start_ms))
 echo "Execution time for RINO: $elapsed_ms milliseconds"
@@ -105,7 +138,7 @@ if [ "$compare_to_ref" = false ]
 then
 cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$ref_exec 1 ${examples_indexes[i]} > /dev/null 2>&1`
+`$ref_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms=$((end_ms - start_ms))
 echo "Execution time for REF: $elapsed_ms milliseconds"
@@ -131,13 +164,15 @@ fi
 results_changed=false
 
 #for value in {1..2}
-for ((value=1;value<=${sysdim[i]};value++));
+for ((value=0;value<${sysdim[i]};value++));
 do
 for suffix in "center.out" "inner.out" "inner_minimal.out" "inner_robust.out" "outer.out" "outer_minimal.out" "outer_robust.out"
 do
 filename=$value$suffix
 file_rino=$rino_output$filename
 file_ref=$ref_output$filename
+if test -f $file_rino || test -f $file_ref
+then
 diff $file_rino $file_ref > /dev/null 2>&1
 error=$?
 if [ $error -eq 0 ]
@@ -153,6 +188,7 @@ else
 results_changed=true
 echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "
 fi
+fi
 done
 done
 
@@ -163,6 +199,5 @@ else
 echo "No change when running RINO on 1 ${examples_indexes[i]}"
 fi
 
-
 done
-
+fi

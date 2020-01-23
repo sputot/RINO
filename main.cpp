@@ -182,7 +182,6 @@ int main(int argc, char* argv[])
     }
     
     print_finalstats(begin);
-    cout << "Warning: uncomment run_pythonscript_visualization() in main.cpp to get actual execution time (weird!)" << endl;
     run_pythonscript_visualization();
 }
 

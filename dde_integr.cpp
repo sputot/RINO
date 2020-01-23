@@ -402,7 +402,7 @@ void Dde_TM_val::build(DdeFunc bf, vector<AAF> &param_inputs, int s, double d0, 
     int i, j;
     
     // compute Taylor coefficients / Lie derivatives starting from center of initial conditions
-    dde_x[s].reset();
+  //  dde_x[s].reset();
     // record DDE
     bf(dde_x[s].xp,dde_x[s].x,prev_dde_x[s].x,param_inputs);
     
@@ -414,7 +414,7 @@ void Dde_TM_val::build(DdeFunc bf, vector<AAF> &param_inputs, int s, double d0, 
     // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
     // x-tau should eb the enclosure on the interval step
     // evaluate the Lie derivatives on this enclosure: we will use the last coefficients as remainder terms of Taylor model
-    dde_g[s].reset();
+  //  dde_g[s].reset();
     
     vector<AAF> x_prev_range(sysdim);
     for (j=0 ; j<sysdim ; j++)
@@ -455,8 +455,8 @@ void Dde_TM_Jac::build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau,
     
 //    cout << "entering Dde_TM_Jac::build s=" << s << endl;
     
-    ddeVAR_x[s].reset();
-    ddeJAC_x[s].reset();
+ //   ddeVAR_x[s].reset();
+ //   ddeJAC_x[s].reset();
   //  bf(ddeVAR_x[s].xp,ddeVAR_x[s].x,prev_ddeVAR_x[s].x);
   
    //  beta[0].diff(0,sysdim);   // necessaire ou une fois pour toutes dans la fonction init ou autre ?
@@ -488,8 +488,8 @@ void Dde_TM_Jac::build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau,
         g_rough[i].sumup(tol_noise); // group terms smaller than eps*radius in a new error term
     
     // record DDE
-    ddeVAR_g[s].reset();
-    ddeJAC_g[s].reset();
+   // ddeVAR_g[s].reset();
+   // ddeJAC_g[s].reset();
 
     // ne sert plus a rien ?
     for (j=0 ; j<sysdim ; j++)

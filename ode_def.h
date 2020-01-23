@@ -294,7 +294,7 @@ public:
         {
             yp[0] = -y[0] -3.2 * y_prev[0] + y_prev[0]*y_prev[0]*y_prev[0];
         }
-        else if (syschoice == 6)  // self-driving car
+        else if (syschoice == 6)  // self-driving car: parameters are not in the Jacobian
         {
             yp[0] = y[1];
             yp[1] = -params[0] *(y_prev[0] - 1.0) - params[1]*y_prev[1];   // pr = 1 is the reference position
