@@ -63,7 +63,7 @@ interval Kaucher_add_pro_impro_resultpro(interval pro, interval impro)
 // Application of the Generalized Mean-Value Theorem
 void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps)
 {
-    vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim));
+    vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
     vector<interval> ix0(sysdim);
     interval initialcondition_impro, initialcondition_pro, uncontrolled_impro, uncontrolled_pro, controlled_impro, controlled_pro, aux_impro;
     
@@ -72,7 +72,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         for (int k=0 ; k<jacdim ; k++)
             Jaux[i][k] = Jtau[i][k].convert_int();
     }
-
+    
     // inner approx: special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system
     for (int i=0 ; i<sysdim; i++) {
         

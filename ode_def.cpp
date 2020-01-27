@@ -23,9 +23,9 @@ The place to define initial conditions and parameters the systems of ODEs or DDE
 using namespace std;
 
 int sysdim; // dimension of system of ODE/DDE
-int jacdim;  //  Jacobian will be dimension sysdim * jacdim
+int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + sysdim_jacparams
 int sysdim_params;
-int sysdim_jacparams;
+int sysdim_jacparams; // params that appear in the Jacobian but are not defined as solutions of ODE
 
 // parameters of the system of the ODEs
 vector<AAF> params;  // params of the ODE (nondeterministic disturbances)
@@ -109,10 +109,21 @@ void define_system_dim(int argc, char* argv[])
             jacdim = 4;
             //     sysdim_params = 2;
         }
-        else if (syschoice ==8)
+        else if (syschoice == 8)
         {
             sysdim = 1;
             jacdim = 1;
+        }
+        else if (syschoice == 9)  // self-driving car
+        {
+            sysdim = 2;
+            sysdim_jacparams = 2;
+            jacdim = 4; // sysdim + sysdim_jacparams
+        }
+        else if (syschoice == 10)  // self-driving car
+        {
+            sysdim = 4;
+            jacdim = 4;
         }
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
@@ -195,7 +206,7 @@ void define_system_dim(int argc, char* argv[])
 
 
 // for ODEs : initialize the state variable (and center for inner-approximation)
-void set_initialconditions(vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J)
+void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J)
 {
     assert(systype == 0); // ODE
    
@@ -203,6 +214,16 @@ void set_initialconditions(vector<AAF> &x, vector<AAF> &xcenter, vector<vector<A
     for (int i=0 ; i<sysdim ; i++) {
         x[i] = inputs[i];
         xcenter[i] = center_inputs[i];
+    }
+    if (jacdim-sysdim > 0)
+    {
+        for (int i=0 ; i<jacdim-sysdim ; i++) {
+            param_inputs[i] = inputs[sysdim+i];
+            if (innerapprox == 1)
+                param_inputs_center[i] = center_inputs[sysdim+i];
+            else
+                param_inputs_center[i] = inputs[sysdim+i];
+        }
     }
     setId(J);
     
@@ -481,7 +502,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[3] = true;
             uncontrolled = 2; // utile pour l'affichage
         } */
-        else if (syschoice == 6) // self-driving car with constant parameters; sysdim = 4, jacdim = 4
+        else if (syschoice == 6) // self-driving car with piecewise constant parameters; sysdim = 4, jacdim = 4
         {
             tau = 0.02;
             t_end = 5.;
@@ -495,10 +516,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_initialcondition[2] = false;
             is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
-            is_variable[2] = true;  // piecewise constant
+         //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-             is_variable[3] = true; // piecewise constant
-            //    uncontrolled = 2; // utile pour l'affichage
+          //   is_variable[3] = true; // piecewise constant
         }
         else if (syschoice == 7) // self-driving car with time varying parameters; sysdim = 4, jacdim = 4
         {
@@ -517,7 +537,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
              is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
-        //    uncontrolled = 2; // utile pour l'affichage
         }
         else if (syschoice == 8)
         {
@@ -525,6 +544,36 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;
             inputs[0] = interval(0.4,0.5);
+        }
+        else if (syschoice == 9) // self-driving car with constant coefficients ; sysdim = 2, jacdim = 4
+        {
+            tau = 0.02;
+            t_end = 5.;
+            order = 3;  // order of Taylor Models
+            // uncertain parameter occurring in initial condition
+            inputs[0] = interval(-0.1,0.1);
+            inputs[1] = interval(0,0.1);
+            inputs[2] =  interval(1.9,2.1);  // Kp
+            inputs[3] =  interval(2.9,3.1);    // Kd
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
+        //    is_uncontrolled[2] = true;
+            is_uncontrolled[3] = true;
+        }
+        else if (syschoice == 10) // self-driving car with constant coefficients ; sysdim = 4, jacdim = 4
+        {  // DO NOT use for now sysdim != jacdim (temporary bug that will be fixed)
+            tau = 0.02;
+            t_end = 5.;
+            order = 3;  // order of Taylor Models
+            // uncertain parameter occurring in initial condition
+            inputs[0] = interval(-0.1,0.1);
+            inputs[1] = interval(0,0.1);
+            inputs[2] =  interval(1.9,2.1);  // Kp
+            inputs[3] =  interval(2.9,3.1);    // Kd
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
+            is_uncontrolled[2] = true;
+            is_uncontrolled[3] = true;
         }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...

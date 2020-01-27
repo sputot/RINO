@@ -102,7 +102,7 @@ void Ode::printTM(int order) {
 // computed using an a priori enclosure of the solution on [tn,tn+tau])
 // if active_discrete_trans is true, then we join with range of previous transition for the enclosure on the range (last coeff of TM)
 // tn here is the final time on which this TM should be valid
-void TM_val::build(OdeFunc _bf) {
+void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
     vector<AAF> g_rough(sysdim); // rough estimation of solution of current mode on [tn,tn+tau]
     int i, j;
     
@@ -110,9 +110,11 @@ void TM_val::build(OdeFunc _bf) {
     ode_x.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_x.x[j][0]=x[j]; // initialize with center;
+    for (j=0 ; j<jacdim-sysdim ; j++)
+        ode_x.param_inputs[j][0]=param_inputs[j];
     
     // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
-    g_rough = fixpoint(_bf,x,tau);
+    g_rough = fixpoint(_bf,param_inputs,x,tau);
     
     
         for (int i=0 ; i<sysdim ; i++)
@@ -123,6 +125,8 @@ void TM_val::build(OdeFunc _bf) {
     ode_g.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_g.x[j][0] = g_rough[j]; // initialize with enclosure of the flow on the time step
+    for (j=0 ; j<jacdim-sysdim ; j++)
+        ode_g.param_inputs[j][0]=param_inputs[j];
     
     for(i=0;i<order;i++)
     {
@@ -135,6 +139,10 @@ void TM_val::build(OdeFunc _bf) {
             ode_x.x[j][i+1]=ode_x.xp[j][i]/double(i+1);
             ode_g.x[j][i+1]=ode_g.xp[j][i]/double(i+1);
             // ode.x[0]...ode.x[10] now contains the Taylor-coefficients of the solution of the ODE.
+        }
+        for (j=0 ; j<jacdim-sysdim ; j++) {
+            ode_x.param_inputs[j][i+1]=0;
+            ode_g.param_inputs[j][i+1]=0;
         }
     }
 }
@@ -197,35 +205,48 @@ void TM_val::init_nextstep(double _tau)
 // TM of the Jacobian with respect to IC of the solution of the ODE for all the range of IC
 // outputs are odeVAR_x (Taylor coefficients from 0 to order-1), odeVAR_g (for the remainder term,
 // evaluated using a priori enclosure on [tn,tn+tau]), and J_rough, also used for the remainder term
-void TM_Jac::build(OdeFunc _bf) {
+void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs) {
     vector<AAF> g_rough(sysdim);
-    vector<vector<AAF>> Jac1_g_rough(sysdim, vector<AAF>(sysdim));
+    vector<vector<AAF>> Jac1_g_rough(jacdim, vector<AAF>(jacdim)); // \partial f_i / \partial (z_j,beta_k) => only the sysdim first lines are relevant
+    // vector<T<F<AAF>>> tf_param_inputs(jacdim-sysdim);
     int i, j;
     
     // compute Lie derivatives and Jacobian on CI: these will give coefficients 0 to order-1 of TM for Jacobian
     odeVAR_x.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_x.x[j][0] = x[j];
+    for (j=0 ; j<jacdim-sysdim ; j++)
+        odeVAR_x.param_inputs[j][0]=param_inputs[j];
+        
     
     // compute an a priori enclosure on [tn,tn+tau] of solution
-    g_rough = fixpoint(_bf,x,tau);
+    g_rough = fixpoint(_bf,param_inputs,x,tau);
     
- 
-        for (i=0 ; i<sysdim ; i++) {
-            g_rough[i].sumup(tol_noise); // group terms smaller than eps*radius in a new error term (for efficiency)
-        }
+    
+    for (i=0 ; i<sysdim ; i++) {
+        g_rough[i].compact();
+        g_rough[i].sumup(tol_noise); // group terms smaller than eps*radius in a new error term (for efficiency)
+    }
     
     // evaluate the Lie derivatives and Jacobian on this a priori enclosure on [tn,tn+tau]: we will use the last coefficients as remainder terms of Taylor model
     odeVAR_g.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_g.x[j][0] = g_rough[j];
+    for (j=0 ; j<jacdim-sysdim ; j++)
+        odeVAR_g.param_inputs[j][0]=param_inputs[j];
     
     // specify the variables to differentiate
-    for (j=0 ; j<jacdim ; j++) {
+    for (j=0 ; j<sysdim ; j++) {
         odeVAR_x.x[j][0].diff(j,jacdim);
         odeVAR_g.x[j][0].diff(j,jacdim);
     }
-
+    for (j=0 ; j<jacdim-sysdim ; j++) {
+        odeVAR_x.param_inputs[j][0].diff(sysdim+j,jacdim);
+        odeVAR_g.param_inputs[j][0].diff(sysdim+j,jacdim);
+    }
+    
+    
+    
     for(i=0;i<order;i++)
     {
         // Evaluate the i'th Taylor coefficient of the r.h.s. of the ODE:
@@ -238,20 +259,24 @@ void TM_Jac::build(OdeFunc _bf) {
             odeVAR_g.x[j][i+1]=odeVAR_g.xp[j][i]/double(i+1);
             // ode.x[0]...ode.x[10] now contains the Taylor-coefficients of the solution of the ODE.
         }
+        for (j=0 ; j<jacdim-sysdim ; j++) {
+            odeVAR_x.param_inputs[j][i+1]=0;
+            odeVAR_g.param_inputs[j][i+1]=0;
+        }
     }
+    
+    
    
     // first order coefficient Jac1_g_rough of the  Taylor model for the Jacobian, evaluated on a priori enclosure of the flow (for remainder term)
     for (j=0 ; j<sysdim ; j++)
-        for (int k=0 ; k<sysdim ; k++)
+        for (int k=0 ; k<jacdim ; k++)
         {
             Jac1_g_rough[j][k] = odeVAR_g.x[j][1].d(k);
-      //      cout << "Jac1_g_rough[i][k] in build: " << Jac1_g_rough[j][k].convert_int() << endl;
+            Jac1_g_rough[j][k].compact();
+            Jac1_g_rough[j][k].sumup(tol_noise);
+       //     cout << "Jac1_g_rough[i][k] in build: " << Jac1_g_rough[j][k].convert_int() << endl;
        //     cout << "Jac1_g_rough[i][k] in build: " << odeVAR_x.x[j][1].d(k).convert_int() << endl;
         }
-   
-   // for (j=0 ; j<sysdim ; j++)
-   //     for (int k=sysdim ; k<jacdim ; k++)
-   //  cout << "differentiation in build: " << odeVAR_x.x[j][1].d(k).convert_int() << endl;
     
     // deduce a priori enclosure J_rough of the Jacobian (used to compute the remainder)
     fixpoint(J_rough, Jac1_g_rough,J,tau);
@@ -260,10 +285,10 @@ void TM_Jac::build(OdeFunc _bf) {
         for (i=0 ; i<sysdim ; i++)
             for (int k=0 ; k<jacdim ; k++)
             {
+                J_rough[i][k].compact();
                 J_rough[i][k].sumup(tol_noise); // group terms smaller than eps*radius in a new error term (for efficiency)
          //       cout << "J_rough[i][k] in build: " << J_rough[i][k].convert_int() << endl;
             }
-    
 }
 
 
@@ -301,31 +326,46 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
 void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
 {
     double taui = h;
-    vector<vector<AAF>> aux(sysdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> Jaci(sysdim, vector<AAF>(sysdim));
+    vector<vector<AAF>> aux(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> Jaci(jacdim, vector<AAF>(jacdim));
     
     J_res = J;
     
     // pour les premiers termes, Jac^i(x)*J*tau^i
     for (int i=1; i<order ; i++)
     {
-        for (int j=0 ; j<sysdim; j++)
-            for (int k=0 ; k<sysdim; k++)
+        for (int j=0 ; j<jacdim; j++) {
+            for (int k=0 ; k<jacdim; k++)
                 Jaci[j][k] = odeVAR_x.x[j][i].d(k);
-        multMiMi(aux,Jaci,J); // Jac^i(x)*J
-        scaleM(aux,taui);
-        addMiMi(J_res,aux);
+        }
+        for (int j=sysdim ; j<jacdim ; j++)
+            for (int k=0 ; k<jacdim; k++)
+            Jaci[j][k] = 0;
+        
+        multJacfzJaczz0(aux,Jaci,J); // Jac^i(x)*J
+        scaleJacfz(aux,taui);
+        //scaleM(aux,taui);
+        addJacfzJacfz(J_res,aux);
+//        addMiMi(J_res,aux);
         taui *= h;
     }
     // pour le dernier terme, Jac^i(g_rough)*J_rough*tau^i
     for (int j=0 ; j<sysdim; j++)
-        for (int k=0 ; k<sysdim; k++)
+        for (int k=0 ; k<jacdim; k++)
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
+    for (int j=sysdim ; j<jacdim ; j++)
+        for (int k=0 ; k<jacdim; k++)
+            Jaci[j][k] = 0;
+    
     //  print_interv("Jaci",Jaci);
-    multMiMi(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
+    multJacfzJaczz0(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
+    
     //    print_interv("J_rough",J_rough);
-    scaleM(aux,taui);
-    addMiMi(J_res,aux);
+    scaleJacfz(aux,taui);
+//    scaleM(aux,taui);
+    addJacfzJacfz(J_res,aux);
+   // addMiMi(J_res,aux);
+    
 }
 
 
@@ -353,7 +393,7 @@ void TM_Jac::init_nextstep(double _tau)
     x = xp1;
     
     for (int i=0 ; i<sysdim ; i++)
-        for (int k=0 ; k<sysdim ; k++) {
+        for (int k=0 ; k<jacdim ; k++) {
             Jp1[i][k].compact();
             Jp1[i][k].sumup(tol_noise);
             
@@ -365,7 +405,7 @@ void TM_Jac::init_nextstep(double _tau)
 
 
 
-vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &x0, double tau)
+vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, double tau)
 {
     // calcul de x satisfaisant x0 + [0,tau][f](x) \subseteq x
     vector<AAF> y0(sysdim);
@@ -374,10 +414,12 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &x0, double tau)
     int iter;
     interval widen, coeff;
     
-    bf(fx0,x0);
+    bf(fx0,param_inputs,x0);
     
     for (int i=0; i<sysdim ; i++)
         y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();  // modif (*tau)
+    
+    
     
     y0 = x0;
     
@@ -408,12 +450,14 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &x0, double tau)
         
       //  cout << "iter=" << iter << "fx0[1]=" << fx0[1].convert_int() << "\t" "y0[1]=" << y0[1].convert_int() << endl;
         
-        bf(fx0,y0);
+        bf(fx0,param_inputs,y0);
         // cout << "fx[0]=" << fx0[0] << "\t"  << fx0[1] << endl;
         //   cout << "y1=" << y1[0] << "\t"  << y1[1] << endl;
         for (int i=0; i<sysdim ; i++)
             y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();
         
+        
+       
         iter = iter+1;
     }
     //cout << "y0 (end of fixpoint)=" << y0[0] << "\t"  << y0[1] << " iter=" << iter << endl;
@@ -425,14 +469,15 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &x0, double tau)
 void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector<vector<AAF>> &J0, double tau)
 {
     // calcul de x satisfaisant J0 + [0,tau]Jac1(g)*x \subseteq x
-    vector<vector<AAF>> J1(sysdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> fJ0(sysdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> J1(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> fJ0(jacdim, vector<AAF>(jacdim));
     int iter;
     interval widen, coeff;
     
-    multMiMi(fJ0,Jac1_g_rough,J0);
+    multJacfzJaczz0(fJ0,Jac1_g_rough,J0);
+   
     
-    for (int i=0; i<sysdim ; i++)
+    for (int i=0; i<jacdim ; i++)
         for (int j=0; j<jacdim ; j++)
             J1[i][j] = J0[i][j] + interval(0,tau)*fJ0[i][j].convert_int();
     
@@ -442,6 +487,7 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
     widen = interval(-1,1);
     
     while (iter <=1 || !subseteq(J1,y0)) {
+        
         //     cout << "J1=";
         //     print(J1);
         //    cout << "y0=";
@@ -460,21 +506,27 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
             coeff = 0.00001;
         if (iter > 2)
         {
-            for (int i=0; i<sysdim ; i++)
-                for (int j=0; j<jacdim ; j++)
+            for (int i=0; i<jacdim ; i++)
+                for (int j=0; j<jacdim ; j++) {
                     J1[i][j] = J1[i][j] + coeff*widen*J1[i][j].convert_int();
+                }
             //   print_interv("fixpoint J1",J1);
         }
         y0 = J1;
+    
         
-        multMiMi(fJ0,Jac1_g_rough,y0); // fx0 = f(y0)
+        multJacfzJaczz0(fJ0,Jac1_g_rough,y0); // fx0 = f(y0)
         
-        for (int i=0; i<sysdim ; i++)
-            for (int j=0; j<jacdim ; j++)
+        for (int i=0; i<jacdim ; i++)
+            for (int j=0; j<jacdim ; j++) {
                 J1[i][j] = J0[i][j] + interval(0,tau)*fJ0[i][j].convert_int();
+                J1[i][j].compact();
+                J1[i][j].sumup(tol_noise);
+            }
         
         iter = iter+1;
     }
+
 }
 
 
@@ -528,8 +580,8 @@ void gTaylor(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau, int o
 void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vector<vector<AAF>> &J0, vector<vector<AAF>> &J_rough, double tau, int order)
 {
     double taui = tau;
-    vector<vector<AAF>> aux(sysdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> Jaci(sysdim, vector<AAF>(sysdim));
+    vector<vector<AAF>> aux(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> Jaci(jacdim, vector<AAF>(jacdim));
     //  iMatrix aux, Jaci;
     //  sizeM(aux,sysdim);
     //  sizeM(Jaci,sysdim);
@@ -540,22 +592,30 @@ void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vecto
     for (int i=1; i<order ; i++)
     {
         for (int j=0 ; j<sysdim; j++)
-            for (int k=0 ; k<sysdim; k++)
+            for (int k=0 ; k<jacdim; k++)
                 Jaci[j][k] = odeVAR_x.x[j][i].d(k);
-        multMiMi(aux,Jaci,J0); // Jac^i(x)*J0
-        scaleM(aux,taui);
-        addMiMi(J_res,aux);
+        for (int j=sysdim ; j<jacdim-sysdim; j++)
+            Jaci[j][j] = 1;
+        multJacfzJaczz0(aux,Jaci,J0); // Jac^i(x)*J0
+        scaleJacfz(aux,taui);
+      //  scaleM(aux,taui);
+        addJacfzJacfz(J_res,aux);
+       // addMiMi(J_res,aux);
         taui *= tau;
     }
     // pour le dernier terme, Jac^i(g_rough)*J_rough*tau^i
     for (int j=0 ; j<sysdim; j++)
         for (int k=0 ; k<sysdim; k++)
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
+    for (int j=sysdim ; j<jacdim-sysdim; j++)
+        Jaci[j][j] = 1;
     //  print_interv("Jaci",Jaci);
-    multMiMi(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
+    multJacfzJaczz0(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
     //    print_interv("J_rough",J_rough);
-    scaleM(aux,taui);
-    addMiMi(J_res,aux);
+    scaleJacfz(aux,taui);
+  //  scaleM(aux,taui);
+    addJacfzJacfz(J_res,aux);
+//    addMiMi(J_res,aux);
     for (int j=0 ; j<sysdim; j++)
         for (int k=0 ; k<sysdim; k++)
             if (isInfinite(J_res[j][k].convert_int()))
@@ -590,8 +650,8 @@ void init_nextstep_ode(vector<AAF> &x0, vector<AAF> &x0p1, vector<AAF> &x, vecto
     }
     x = xp1;
     
-    for (int i=0 ; i<sysdim ; i++)
-        for (int k=0 ; k<sysdim ; k++)
+    for (int i=0 ; i<jacdim ; i++)
+        for (int k=0 ; k<jacdim ; k++)
             Jtau[i][k].sumup(tol_noise);
     
     J0 = Jtau; // J0 = Jtau
@@ -657,7 +717,7 @@ void print_solutionstep_ode(vector<interval> &Xouter, vector<interval> &Xinner, 
 
 
 
-HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double tn, double tau, int order)
+HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &param_inputs_center, vector<AAF> &param_inputs, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double tn, double tau, int order)
 {
     OdeVar odeVAR_x = OdeVar(bf);
     OdeVar odeVAR_g = OdeVar(bf);
@@ -695,11 +755,11 @@ void HybridStep_ode::init_nextstep(double _tau)
 }
 
 
-void HybridStep_ode::TM_build()
+void HybridStep_ode::TM_build(vector<AAF> &param_inputs,vector<AAF> &param_inputs_center)
 {
-    TMcenter.build(bf);
+    TMcenter.build(bf,param_inputs_center);
     if (innerapprox == 1)
-        TMJac.build(bf);
+        TMJac.build(bf,param_inputs);
 }
 
 // eval s-th Taylor model and initialize s+1-th

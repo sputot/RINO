@@ -24,12 +24,16 @@ void hull(vector<interval> &res, vector<interval> &x, vector<interval> &y);
 void hull(vector<AAF> &res, vector<AAF> &x, vector<AAF> &y);
 
 void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 
 void multMiVi(vector<interval> &y, vector<vector<interval>> &A, vector<interval> &x) ;
 
 void scaleM(vector<vector<AAF>> &x, double d);
+void scaleJacfz(vector<vector<AAF>> &x, double d);
 
 void addMiMi(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+void addJacfzJacfz(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+
 void addViVi(vector<interval> &x, vector<interval> &y);
 void addViVi(vector<AAF> &x, vector<double> &y);
 void addViVi(vector<AAF> &x, vector<interval> &y);

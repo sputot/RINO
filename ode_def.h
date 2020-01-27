@@ -56,7 +56,7 @@ void define_system_dim(int argc, char* argv[]);  // define the dimensions of you
 
 
 // for ODEs : initialize the state variable (and center for inner-approximation)
-void set_initialconditions(vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J);
+void set_initialconditions(vector<AAF> &params_inputs, vector<AAF> &param_inputs_center, vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J);
 
 // for DDEs : functions that initialize the DDE on first time period
 vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta);
@@ -83,7 +83,7 @@ void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdi
 class OdeFunc {
 public:
     template <class C>
-      void operator()(vector<C> &yp, vector<C> y) {
+      void operator()(vector<C> &yp, vector<C> param_inputs, vector<C> y) {
           
           
           if (syschoice == 1) // running example
@@ -150,6 +150,18 @@ public:
           else if (syschoice == 8)
           {
               yp[0] = - y[0]*y[0]*y[0];
+          }
+          else if (syschoice == 9)  // self-driving car with constant parameters
+          {
+              yp[0] = y[1];
+              yp[1] = -param_inputs[0] *(y[0] - 1.0) - param_inputs[1]*y[1];   // pr = 1 is the reference position
+          }
+          else if (syschoice == 10)  // self-driving car with constant parameters
+          {
+              yp[0] = y[1];
+              yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
+              yp[2] = 0; // constant parameter Kp
+              yp[3] = 0; // constant parameter Kd
           }
          else if(syschoice == 18) // HSCC 2019 paper crazyflie example
           {

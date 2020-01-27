@@ -35,16 +35,18 @@ using namespace std;
 class OdeVar
 {
 public:
+    vector<T<F<AAF>>> param_inputs;
     vector<T<F<AAF> >> x; // Independent variables
     vector<T<F<AAF> >> xp;  // Dependent variables
+
  
-    OdeVar() : x(sysdim), xp(sysdim)
+    OdeVar() : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
     {
     }
     
-    OdeVar(OdeFunc f)  : x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f)  : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
     {
-        f(xp,x); // record DAG at construction:
+        f(xp,param_inputs,x); // record DAG at construction:
     }
     void reset()
     {
@@ -62,18 +64,19 @@ class Ode
 {
 public:
     //  T<AAF> x[sysdim];
+    vector<T<AAF>> param_inputs;
     vector< T<AAF>> x; // Independent variables
     vector< T<AAF>> xp;  // Dependent variables
     
-    Ode()  : x(sysdim), xp(sysdim)
+    Ode()  :  param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
     {
         
     }
     
-    Ode(OdeFunc f)  : x(sysdim), xp(sysdim)
+    Ode(OdeFunc f)  : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
-        f(xp,x);
+        f(xp,param_inputs,x);
     }
     void reset()
     {
@@ -103,14 +106,14 @@ public:
     double tau;
     vector<AAF> xp1;  // value at time tn+tau
     
-    TM_val(OdeFunc _bf, int o, double t, double h) :  ode_x(_bf), ode_g(_bf), order(o), x(sysdim), tn(t), tau(h), xp1(sysdim){}
+    TM_val(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  ode_x(_bf), ode_g(_bf), order(o), x(sysdim), tn(t), tau(h), xp1(sysdim){}
     
     TM_val(Ode &o_x, Ode &o_g, int o, double t, double h) : ode_x(o_x), ode_g(o_g),  order(o), x(sysdim),  tn(t), tau(h), xp1(sysdim) {}
     
     TM_val(Ode &o_x, Ode &o_g, int o, vector<AAF> &_x, double t, double h) :  ode_x(o_x), ode_g(o_g), order(o), x(_x),  tn(t), tau(h), xp1(sysdim)  {}
     
     // builds ode_x, ode_g
-    void build(OdeFunc _bf /*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
+    void build(OdeFunc _bf, vector<AAF> &param_inputs /*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
   
     // eval TM at time tn+h and return value in res
     void eval(vector<AAF> &res, double h);
@@ -139,7 +142,7 @@ public:
     vector<vector<AAF>> J_rough; // computed, for k-th Taylor coeff
     int order;
     vector<AAF> x;          // input, value at time tn
-    vector<vector<AAF>> J;  // input, jacobian at time tn
+    vector<vector<AAF>> J;  // input, jacobian at time tn: \partial z / \partial z0 (dimension jacdim \times jacdim)
     double tn;
     double tau;
     vector<AAF> xp1;  // computed, value at time tn+tau
@@ -147,15 +150,15 @@ public:
  //   vector<AAF> xrange; // value on time range [tn,tn+tau]
  //   vector<vector<AAF>> AAF Jrange[sysdim][sysdim]; // computed, Jac on time range [tn,tn+tau]
     
-    TM_Jac(OdeFunc _bf, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(sysdim,vector<AAF>(sysdim)), order(o), x(sysdim), J(sysdim,vector<AAF>(sysdim)), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(sysdim)){}
+    TM_Jac(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(jacdim,vector<AAF>(jacdim)), order(o), x(sysdim), J(jacdim,vector<AAF>(jacdim)), tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)){}
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(sysdim)),  order(o), x(sysdim), J(sysdim,vector<AAF>(sysdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(sysdim)){}
+    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(jacdim,vector<AAF>(jacdim)),  order(o), x(sysdim), J(jacdim,vector<AAF>(jacdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)){}
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(sysdim)), order(o), x(_x), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(sysdim)) {
+    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(jacdim,vector<AAF>(jacdim)), order(o),  x(_x), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)) {
        // assign(J,_J);
     }
     
-    void build(OdeFunc _bf/*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
+    void build(OdeFunc _bf, vector<AAF> &param_inputs/*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
    
     // eval TM at time tn+h and return value
     void eval_val(vector<AAF> &res, double h);
@@ -178,7 +181,7 @@ public:
 // printing the Taylor coefficients and Jacobians of orders between min and max
 
 // compute an a priori rough enclosure of flow (affine forms)
-vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &x0, double tau);
+vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, double tau);
 
 // compute an a priori  rough enclosure of Jacobian of flow
 //iMatrix fixpoint(iMatrix &Jac1_g_rough, iMatrix &J0, double tau);
@@ -265,7 +268,7 @@ public:
     double tau;
     
     
-    HybridStep_ode(OdeFunc _bf, double _tn, double _tau, int _order) : bf(_bf), TMcenter(_bf, _order, _tn, _tau), TMJac(_bf, _order, _tn, _tau), tn(_tn), tau(_tau), order(_order)
+    HybridStep_ode(OdeFunc _bf, vector<AAF> &param_inputs, double _tn, double _tau, int _order) : bf(_bf), TMcenter(_bf, param_inputs, _order, _tn, _tau), TMJac(_bf, param_inputs, _order, _tn, _tau), tn(_tn), tau(_tau), order(_order)
     {
         
     }
@@ -278,7 +281,7 @@ public:
    // void TM_buildval();
     //void TM_buildJac();
     // build from TMcenter and TMJac Taylor Model for outer-approximation of guard expression from mode to dest on [tn;tn+1] and store in gamma[dest]
-    void TM_build();
+    void TM_build(vector<AAF> &param_inputs,vector<AAF> &param_inputs_center);
    // void TM_build();
     
     void TMval_eval(vector<AAF> &res, double h);
@@ -298,7 +301,7 @@ public:
     
 };
 
-HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
+HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &param_inputs_center, vector<AAF> &param_inputs, vector<AAF> &x0,  vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
 
 
 

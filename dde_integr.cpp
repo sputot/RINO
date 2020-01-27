@@ -310,8 +310,8 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, double tau, int order)
     for (int j=0; j<p ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
         t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
-        for (int i=0 ; i<jacdim ; i++)
-            beta[i][0].diff(i,jacdim);
+    //    for (int i=0 ; i<jacdim ; i++)
+    //        beta[i][0].diff(i,jacdim);
          g_init[j].x  = Initfunc(t,beta); //  ddeVAR_g[j].x = Initfunc(t,beta);
         
         for (int i=0 ; i<sysdim ; i++)
