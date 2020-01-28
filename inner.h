@@ -22,6 +22,6 @@ interval Kaucher_add_pro_impro(interval pro, interval impro);
 interval Kaucher_add_pro_impro_resultpro(interval pro, interval impro);
 // computer inner and outer-approx by mean-value theorem
 // using special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system
-void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps);
+void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_joint, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps);
 
 #endif

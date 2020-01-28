@@ -150,11 +150,11 @@ public:
  //   vector<AAF> xrange; // value on time range [tn,tn+tau]
  //   vector<vector<AAF>> AAF Jrange[sysdim][sysdim]; // computed, Jac on time range [tn,tn+tau]
     
-    TM_Jac(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(jacdim,vector<AAF>(jacdim)), order(o), x(sysdim), J(jacdim,vector<AAF>(jacdim)), tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)){}
+    TM_Jac(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(sysdim,vector<AAF>(jacdim)), order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){}
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(jacdim,vector<AAF>(jacdim)),  order(o), x(sysdim), J(jacdim,vector<AAF>(jacdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)){}
+    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)),  order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){}
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(jacdim,vector<AAF>(jacdim)), order(o),  x(_x), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(jacdim,vector<AAF>(jacdim)) {
+    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)), order(o),  x(_x), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)) {
        // assign(J,_J);
     }
     
@@ -238,23 +238,6 @@ void build_TM_Jacobian(OdeVar &odeVAR_x, OdeVar &odeVAR_g, vector<vector<AAF>> &
 
 
 
-// void print_initstats(vector<AAF> &x, vector<interval> &ix, int mode);
-
-// printing the inner and outer approx at each integration step (more precisely at time tnp1)
-void print_solutionstep_ode(vector<interval> &Xouter, vector<interval> &Xinner, vector<interval> &Xcenter, double tnp1);
-
-//void print_finalstats(clock_t begin);
-
-// reachability for one mode of the hybrid system
-//bool integr_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, vector<interval> &eps, double tn, double tau, double t_end, int order, int mode);
-
-
-// the main loop of reachability analysis
-// x_init are the initial uncertain conditions, _order the order of the Taylor models, _t_end the ending time of integration (starting from 0)
-// void integr_ode(vector<interval> &x_init, int _order, double _tau, double _t_end);
-
-
-
 class HybridStep_ode
 {
 public:
@@ -295,7 +278,7 @@ public:
     void init_nextstep(double _tau);
     
     
-    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
+    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_joint, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
     
 
     

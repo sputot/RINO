@@ -26,6 +26,7 @@ vector<ofstream> outFile_outer_robust;  // robust outer-approximated range for e
 vector<ofstream> outFile_outer;   //  maximal outer-approximated range for each variable of the system
 vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
 vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each variable of the system
+vector<ofstream> outFile_inner_joint;   //  maximal inner-approximated range for each variable of the system
 vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
 vector<ofstream> outFile_center;
 
@@ -54,6 +55,7 @@ void open_outputfiles()
         outFile_inner_robust = vector<ofstream>(sysdim);
     }
     outFile_inner = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);   // output inner-approximated range for each variable of the system
+    outFile_inner_joint = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);
     if (uncontrolled > 0 || controlled > 0) {
         outFile_outer_minimal = vector<ofstream>(sysdim);
         outFile_inner_minimal = vector<ofstream>(sysdim);
@@ -88,6 +90,9 @@ void open_outputfiles()
         file_name.str("");
         file_name << "output/x" << i << "inner.out";
         outFile_inner[i].open(file_name.str().c_str());
+        file_name.str("");
+        file_name << "output/x" << i << "inner_joint.out";
+        outFile_inner_joint[i].open(file_name.str().c_str());
         
     }
     

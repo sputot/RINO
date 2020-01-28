@@ -17,6 +17,7 @@ extern vector<ofstream> outFile_outer;   // output outer-approximated range for 
 extern vector<ofstream> outFile_outer_robust;
 extern vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
 extern vector<ofstream> outFile_inner;   // output inner-approximated range for each variable of the system
+extern vector<ofstream> outFile_inner_joint;   // output inner-approximated range for each variable of the system
 extern vector<ofstream> outFile_inner_robust;   // output inner-approximated range for each variable of the system
 extern vector<ofstream> outFile_center;
 

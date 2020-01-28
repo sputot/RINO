@@ -200,6 +200,7 @@ void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
             Xouter_print[0][current_iteration][i] = Xouter_print[1][current_iteration][i];
             Xouter_robust_print[0][current_iteration][i] = Xouter_robust_print[1][current_iteration][i];
             Xinner_print[0][current_iteration][i] = Xinner_print[1][current_iteration][i];
+            Xinner_joint_print[0][current_iteration][i] = Xinner_joint_print[1][current_iteration][i];
             Xinner_robust_print[0][current_iteration][i] = Xinner_robust_print[1][current_iteration][i];
             for (int j=2; j <=nb_subdiv_init; j++)
             {
@@ -214,6 +215,7 @@ void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
                 }
                 // Warning: joining tubes is correct for inner approx only if no hole
                 Xinner_print[0][current_iteration][i] = hull(Xinner_print[0][current_iteration][i],Xinner_print[j][current_iteration][i]);
+                Xinner_joint_print[0][current_iteration][i] = hull(Xinner_joint_print[0][current_iteration][i],Xinner_joint_print[j][current_iteration][i]);
                 Xinner_robust_print[0][current_iteration][i] = hull(Xinner_robust_print[0][current_iteration][i],Xinner_robust_print[j][current_iteration][i]);
             }
             if (nb_subdiv_init > 1)
@@ -357,7 +359,7 @@ void print_initstats(vector<AAF> &x)
         }
         outFile_center[i] << 0<< "\t" << mid(x[i].convert_int()) << "\t" << mid(x[i].convert_int()) << endl;
         outFile_inner[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        
+        outFile_inner_joint[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
     }
     outFile_width_ratio << 0 << "\t" << 1.0 << endl;
     
@@ -397,6 +399,7 @@ void print_finalstats(clock_t begin)
         }
         outFile_outer[i].close();
         outFile_inner[i].close();
+        outFile_inner_joint[i].close();
         outFile_center[i].close();
     }
     outFile_width_ratio.close();

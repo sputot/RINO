@@ -36,7 +36,7 @@ vector<interval> eps;
 // for subdivisions of the initial domain to refine precision
 int nb_subdiv_init; // number of subdivisiions
 double recovering; // percentage of recovering between subdivisions
-vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
+vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
 vector<double> t_print; // times where results are stored
 int current_subdiv;
 int current_iteration;
@@ -124,6 +124,16 @@ void define_system_dim(int argc, char* argv[])
         {
             sysdim = 4;
             jacdim = 4;
+        }
+        else if (syschoice == 11)  // academic example to investigate time-varying parameters
+        {
+            sysdim = 1;
+            jacdim = 2;
+        }
+        else if (syschoice == 12)  // academic example to investigate time-varying parameters
+        {
+            sysdim = 2;
+            jacdim = 2;
         }
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
@@ -575,6 +585,26 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
+        else if (syschoice == 11)
+        {
+            tau = 1.;
+            t_end = 2.;
+            order = 2;
+            inputs[0] = interval(0,1);
+            inputs[1] = interval(0,0.1);
+            is_initialcondition[1] = false;
+            is_variable[1] = true;
+        }
+        else if (syschoice == 12)
+        {
+            tau = 1.;
+            t_end = 2.;
+            order = 2;
+            inputs[0] = interval(0,0.1);
+            inputs[1] = interval(0,0.1);
+            is_initialcondition[1] = false;
+            is_variable[1] = true;
+        }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.03;
@@ -822,6 +852,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     Xouter_robust_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xouter_minimal_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xinner_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
+    Xinner_joint_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xinner_robust_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xinner_minimal_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xexact_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));

@@ -36,7 +36,7 @@ extern vector<interval> eps;
 // for subdivisions of the initial domain to refine precision
 extern int nb_subdiv_init; // number of subdivisiions
 extern double recovering; // percentage of recovering between subdivisions
-extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
+extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
 extern vector<double> t_print; // times where results are stored
 extern int current_subdiv;
 extern int current_iteration;
@@ -162,6 +162,15 @@ public:
               yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
               yp[2] = 0; // constant parameter Kp
               yp[3] = 0; // constant parameter Kd
+          }
+          else if (syschoice == 11)  // academic example to investigate time-varying parameters
+          {
+              yp[0] = 0.1*y[0] - param_inputs[0]; //*y[0];
+          }
+          else if (syschoice == 12)  // academic example to investigate time-varying parameters
+          {
+              yp[0] = y[1]*y[0];
+              yp[1] = 0;
           }
          else if(syschoice == 18) // HSCC 2019 paper crazyflie example
           {

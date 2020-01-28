@@ -326,45 +326,36 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
 void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
 {
     double taui = h;
-    vector<vector<AAF>> aux(jacdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> Jaci(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> aux(sysdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> Jaci(sysdim, vector<AAF>(jacdim));
     
     J_res = J;
     
     // pour les premiers termes, Jac^i(x)*J*tau^i
     for (int i=1; i<order ; i++)
     {
-        for (int j=0 ; j<jacdim; j++) {
+        for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<jacdim; k++)
                 Jaci[j][k] = odeVAR_x.x[j][i].d(k);
         }
-        for (int j=sysdim ; j<jacdim ; j++)
-            for (int k=0 ; k<jacdim; k++)
-            Jaci[j][k] = 0;
         
         multJacfzJaczz0(aux,Jaci,J); // Jac^i(x)*J
         scaleJacfz(aux,taui);
-        //scaleM(aux,taui);
         addJacfzJacfz(J_res,aux);
-//        addMiMi(J_res,aux);
         taui *= h;
     }
     // pour le dernier terme, Jac^i(g_rough)*J_rough*tau^i
     for (int j=0 ; j<sysdim; j++)
         for (int k=0 ; k<jacdim; k++)
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
-    for (int j=sysdim ; j<jacdim ; j++)
-        for (int k=0 ; k<jacdim; k++)
-            Jaci[j][k] = 0;
+ 
     
     //  print_interv("Jaci",Jaci);
     multJacfzJaczz0(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
     
     //    print_interv("J_rough",J_rough);
     scaleJacfz(aux,taui);
-//    scaleM(aux,taui);
     addJacfzJacfz(J_res,aux);
-   // addMiMi(J_res,aux);
     
 }
 
@@ -469,15 +460,15 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
 void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector<vector<AAF>> &J0, double tau)
 {
     // calcul de x satisfaisant J0 + [0,tau]Jac1(g)*x \subseteq x
-    vector<vector<AAF>> J1(jacdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> fJ0(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> J1(sysdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> fJ0(sysdim, vector<AAF>(jacdim));
     int iter;
     interval widen, coeff;
     
     multJacfzJaczz0(fJ0,Jac1_g_rough,J0);
    
     
-    for (int i=0; i<jacdim ; i++)
+    for (int i=0; i<sysdim ; i++)
         for (int j=0; j<jacdim ; j++)
             J1[i][j] = J0[i][j] + interval(0,tau)*fJ0[i][j].convert_int();
     
@@ -506,7 +497,7 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
             coeff = 0.00001;
         if (iter > 2)
         {
-            for (int i=0; i<jacdim ; i++)
+            for (int i=0; i<sysdim ; i++)
                 for (int j=0; j<jacdim ; j++) {
                     J1[i][j] = J1[i][j] + coeff*widen*J1[i][j].convert_int();
                 }
@@ -517,7 +508,7 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
         
         multJacfzJaczz0(fJ0,Jac1_g_rough,y0); // fx0 = f(y0)
         
-        for (int i=0; i<jacdim ; i++)
+        for (int i=0; i<sysdim ; i++)
             for (int j=0; j<jacdim ; j++) {
                 J1[i][j] = J0[i][j] + interval(0,tau)*fJ0[i][j].convert_int();
                 J1[i][j].compact();
@@ -580,8 +571,8 @@ void gTaylor(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau, int o
 void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vector<vector<AAF>> &J0, vector<vector<AAF>> &J_rough, double tau, int order)
 {
     double taui = tau;
-    vector<vector<AAF>> aux(jacdim, vector<AAF>(jacdim));
-    vector<vector<AAF>> Jaci(jacdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> aux(sysdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> Jaci(sysdim, vector<AAF>(jacdim));
     //  iMatrix aux, Jaci;
     //  sizeM(aux,sysdim);
     //  sizeM(Jaci,sysdim);
@@ -594,8 +585,6 @@ void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vecto
         for (int j=0 ; j<sysdim; j++)
             for (int k=0 ; k<jacdim; k++)
                 Jaci[j][k] = odeVAR_x.x[j][i].d(k);
-        for (int j=sysdim ; j<jacdim-sysdim; j++)
-            Jaci[j][j] = 1;
         multJacfzJaczz0(aux,Jaci,J0); // Jac^i(x)*J0
         scaleJacfz(aux,taui);
       //  scaleM(aux,taui);
@@ -605,10 +594,8 @@ void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vecto
     }
     // pour le dernier terme, Jac^i(g_rough)*J_rough*tau^i
     for (int j=0 ; j<sysdim; j++)
-        for (int k=0 ; k<sysdim; k++)
+        for (int k=0 ; k<jacdim; k++)
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
-    for (int j=sysdim ; j<jacdim-sysdim; j++)
-        Jaci[j][j] = 1;
     //  print_interv("Jaci",Jaci);
     multJacfzJaczz0(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
     //    print_interv("J_rough",J_rough);
@@ -617,7 +604,7 @@ void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vecto
     addJacfzJacfz(J_res,aux);
 //    addMiMi(J_res,aux);
     for (int j=0 ; j<sysdim; j++)
-        for (int k=0 ; k<sysdim; k++)
+        for (int k=0 ; k<jacdim; k++)
             if (isInfinite(J_res[j][k].convert_int()))
                 cout << "Jac_res is infinite!" << endl;
 }
@@ -662,57 +649,6 @@ void init_nextstep_ode(vector<AAF> &x0, vector<AAF> &x0p1, vector<AAF> &x, vecto
 
 
 
-
-
-// printing the inner and outer approx at each integration step (more precisely at time tnp1)
-void print_solutionstep_ode(vector<interval> &Xouter, vector<interval> &Xinner, vector<interval> &Xcenter, double tnp1)
-{
-    double aux, minwidth_ratio = 1.0;  // min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
-    double mean_dist; // mean value on the xi of max distance between inner and outer approximations
-    
-    cout << "t=" << tnp1 << endl;
-    
-    cout << "Xouter=" << endl;
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xouter[" << i <<"]=" << Xouter[i] << "\t";
-    cout << endl;
-    
-    cout << "Xinner=" << endl;
-    for (int i=0 ; i<sysdim ; i++)
-        cout << "Xinner[" << i <<"]=" << Xinner[i] << "\t";
-    cout << endl;
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
-        outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
-        outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-   //     outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-    }
-    minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
-    for (int i=1 ; i<sysdim ; i++) {
-        aux = (sup(Xinner[i])-inf(Xinner[i]))/(sup(Xouter[i])-inf(Xouter[i]));
-        if (minwidth_ratio > aux)
-            minwidth_ratio = aux;
-    }
-    if (tnp1 != 0)
-    outFile_width_ratio << tnp1 << "\t" << minwidth_ratio << endl;
-    
-  /*  mean_dist = 0.0;
-    for (int i=0 ; i<sysdim ; i++) {
-        if (! isEmpty(Xinner[i])) {
-            if (sup(Xouter[i])-sup(Xinner[i]) > inf(Xinner[i])-inf(Xouter[i]))
-                aux = sup(Xouter[i])-sup(Xinner[i]);
-            else
-                aux = inf(Xinner[i])-inf(Xouter[i]);
-            mean_dist += aux;
-            cout << "distance between inner and outer approx on component " << i <<" is " << aux << endl;
-        }
-    }
-    
-    mean_dist = mean_dist / sysdim;
-    if (mean_dist != 0)
-        cout << "mean distance between inner and outer approx is " << mean_dist << endl; */
-}
 
 
 
@@ -773,7 +709,7 @@ void HybridStep_ode::TM_eval()
 
 
 
-void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter)
+void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_joint, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter)
 {
     double aux, minwidth_ratio = 1.0;  // min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
     double mean_dist; // mean value on the xi of max distance between inner and outer approximations
@@ -785,6 +721,7 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     for (int i=0 ; i<sysdim ; i++) {
         cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
         cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
+        cout << "Xinner_joint[" << i <<"]=" << Xinner_joint[i] << "\t";
     }
       cout << endl;
     if (uncontrolled > 0)
@@ -821,15 +758,15 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
             outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
         }
         
-
-            outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        
+        outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
+        outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
         
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
         Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];
         Xouter_minimal_print[current_subdiv][current_iteration][i] = Xouter_minimal[i];
         Xinner_print[current_subdiv][current_iteration][i] = Xinner[i];
+        Xinner_joint_print[current_subdiv][current_iteration][i] = Xinner_joint[i];
         Xinner_robust_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
         Xinner_minimal_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
         t_print[current_iteration] = tnp1;
@@ -853,7 +790,7 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
     assert (tn <= tnp1);
     assert (tnp1 <= tn+tau);
     
-    vector<interval> Xouter(sysdim), Xouter_robust(sysdim), Xouter_minimal(sysdim), Xinner(sysdim), Xinner_robust(sysdim), Xinner_minimal(sysdim), Xcenter(sysdim);
+    vector<interval> Xouter(sysdim), Xouter_robust(sysdim), Xouter_minimal(sysdim), Xinner(sysdim), Xinner_joint(sysdim), Xinner_robust(sysdim), Xinner_minimal(sysdim), Xcenter(sysdim);
     
     // eval and store at time tnp1
     TM_eval();
@@ -865,7 +802,7 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xouter[i] = TMcenter.xp1[i].convert_int();
         }
-        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter);
+        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter);
     }
     else {
     // deduce inner-approx by mean-value thm
@@ -874,11 +811,11 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
-        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps);
+        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps);
       //  InnerOuter(Xinner,Xouter,TMcenter.xp1,TMJac.Jp1,eps);
         intersectViVi(Xouter,TMJac.xp1);
     
-    print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+    print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xcenter);
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
     }
 }
