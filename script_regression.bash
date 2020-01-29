@@ -29,8 +29,8 @@ fi
 
 
 # ODE examples
-examples_indexes=(1 2 3 4 5 6 7 18)   # indexes of ODE examples we wish to test for non regression
-sysdim=(1 2 4 5 2 4 4 14)
+examples_indexes=(1 2 3 4 5 6 7 9 18)   # indexes of ODE examples we wish to test for non regression
+sysdim=(1 2 4 5 2 4 4 2 14)
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
 compare_to_ref=true

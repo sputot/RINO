@@ -66,32 +66,32 @@ void open_outputfiles()
     
     for (int i=0 ; i<sysdim ; i++) {
         file_name.str("");
-        file_name << "output/x" << i << "outer.out";
+        file_name << "output/x" << i+1 << "outer.out";
         outFile_outer[i].open(file_name.str().c_str());
         if (uncontrolled > 0) {
             file_name.str("");
-            file_name << "output/x" << i << "outer_robust.out";
+            file_name << "output/x" << i+1 << "outer_robust.out";
             outFile_outer_robust[i].open(file_name.str().c_str());
             file_name.str("");
-            file_name << "output/x" << i << "inner_robust.out";
+            file_name << "output/x" << i+1 << "inner_robust.out";
             outFile_inner_robust[i].open(file_name.str().c_str());
         }
         if (uncontrolled > 0 || controlled > 0) {
             file_name.str("");
-            file_name << "output/x" << i << "outer_minimal.out";
+            file_name << "output/x" << i+1 << "outer_minimal.out";
             outFile_outer_minimal[i].open(file_name.str().c_str());
             file_name.str("");
-            file_name << "output/x" << i << "inner_minimal.out";
+            file_name << "output/x" << i+1 << "inner_minimal.out";
             outFile_inner_minimal[i].open(file_name.str().c_str());
         }
         file_name.str("");
-        file_name << "output/x" << i << "center.out";
+        file_name << "output/x" << i+1 << "center.out";
         outFile_center[i].open(file_name.str().c_str());
         file_name.str("");
-        file_name << "output/x" << i << "inner.out";
+        file_name << "output/x" << i+1 << "inner.out";
         outFile_inner[i].open(file_name.str().c_str());
         file_name.str("");
-        file_name << "output/x" << i << "inner_joint.out";
+        file_name << "output/x" << i+1 << "inner_joint.out";
         outFile_inner_joint[i].open(file_name.str().c_str());
         
     }

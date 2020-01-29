@@ -135,6 +135,27 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             jacdim = 2;
         }
+        else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
+        {
+            sysdim = 7;
+            jacdim = 7;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
+        {
+            sysdim = 2;
+            jacdim = 2;
+        }
+        else if (syschoice == 15) // Van der Pol oscillator [Arch 2018 and Sparse Polynomial zonotopes]
+        {
+            sysdim = 2;
+            jacdim = 2;
+        }
+        else if(syschoice == 17) // quadrotor model [Arch 2019]
+        {
+            sysdim = 12;
+            jacdim = 12;
+        }
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
             sysdim = 14;
@@ -604,6 +625,61 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             is_initialcondition[1] = false;
             is_variable[1] = true;
+        }
+        else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
+        {
+            tau = 0.1;
+            t_end = 20.;
+            order = 3;
+            interval W = interval(-0.05,0.05);
+            // to express that it is the same interval: use params[0] = interval(-0.1,0.1) and inputs[0] = 1.2 + params[0]; etc
+            inputs[0] = 1.2 + W;
+            inputs[1] = 1.05 + W;
+            inputs[2] = 1.5 + W;
+            inputs[3] = 2.4 + W;
+            inputs[4] = 1. + W;
+            inputs[5] = 0.1 + W;
+            inputs[6] = 0.45 + W;
+        }
+        else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
+        {
+            tau = 0.01;
+            t_end = 6.;
+            order = 10;
+            // for mu = 1
+            inputs[0] = interval(1.25,1.55);
+            inputs[1] = interval(2.35,2.45);
+           // for mu = 2
+            // inputs[0] = interval(1.55,1.85);
+           // inputs[1] = interval(2.35,2.45);
+        }
+        else if (syschoice == 15) // Van der Pol oscillator [Arch 2018 and Sparse Polynomial zonotopes]
+        {
+            tau = 0.005;
+            t_end = 3.15;
+            order = 10;
+            // for mu = 1
+            inputs[0] = interval(1.23,1.57);
+            inputs[1] = interval(2.34,2.46);
+            // for mu = 2
+            // inputs[0] = interval(1.55,1.85);
+            // inputs[1] = interval(2.35,2.45);
+        }
+        else if(syschoice == 17) // quadrotor model [Arch 2019]
+        {
+            tau = 0.1;
+            t_end = 5;
+            order = 3;
+            for (int j=0 ; j<sysdim; j++)
+                inputs[j] = 0;
+            // positions
+            inputs[0] = interval(-0.4,0.4);
+            inputs[1] = interval(-0.4,0.4);
+            inputs[2] = interval(-0.4,0.4);
+            // velocities
+            inputs[3] = interval(-0.4,0.4);
+            inputs[4] = interval(-0.4,0.4);
+            inputs[5] = interval(-0.4,0.4);
         }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...

@@ -172,6 +172,58 @@ public:
               yp[0] = y[1]*y[0];
               yp[1] = 0;
           }
+          else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
+          {
+              yp[0] = 1.4*y[2] - 0.9*y[0];
+              yp[1] = 2.5*y[4] - 1.5*y[1];
+              yp[2] = 0.6*y[6] - 0.8*y[1]*y[2];
+              yp[3] = 2 - 1.3*y[2]*y[3];
+              yp[4] = 0.7*y[0] - y[3]*y[4];
+              yp[5] = 0.3*y[0] - 3.1*y[5];
+              yp[6] = 1.8*y[5]-1.5*y[1]*y[6];
+          }
+          else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
+          {
+              double mu = 1.;
+              yp[0] = y[1];
+              yp[1] = mu*(1-y[0]*y[0])*y[1]-y[0];
+          }
+          else if (syschoice == 15) // Van der Pol oscillator [Arch 2018 and Sparse Polynomial zonotopes]
+          {
+              yp[0] = y[1];
+              yp[1] = (1-y[0]*y[0])*y[1]-y[0];
+          }
+          else if(syschoice == 17) // quadrotor model [Arch 2019]
+          {
+              double g = 9.81;
+              double R = 0.1;
+              double l = 0.5;
+              double Mmotor = 0.5;
+              double M = 1;
+              double m = M + 4*Mmotor;
+              double Jx = 2./5*M*R*R + 2*l*l*Mmotor;
+              double Jy = Jx;
+              double Jz = 2./5*M*R*R + 4*l*l*Mmotor;
+              double u1 = 1.;
+              double u2 = 0;
+              double u3 = 0;
+              auto F = m*g - 10*(y[2]-u1)+3*y[5]; // height control
+              auto tau_phi = -(y[6]-u2)-y[9];  // roll control
+              auto tau_theta = -(y[7]-u3)-y[10]; // pitch control
+              auto tau_psi = 0; // heading uncontrolled
+              yp[0] = cos(y[7])*cos(y[8])*y[3] + (sin(y[6])*sin(y[7])*cos(y[8])-cos(y[6]*sin(y[8])))*y[4] + (cos(y[6])*sin(y[7])*cos(y[8])+sin(y[6])*sin(y[8]))*y[5];
+              yp[1] = cos(y[7])*sin(y[8])*y[3] + (sin(y[6])*sin(y[7])*cos(y[8])+cos(y[6]*sin(y[8])))*y[4] + (cos(y[6])*sin(y[7])*sin(y[8])-sin(y[6])*cos(y[8]))*y[5];
+              yp[2] = sin(y[7])*y[3] - sin(y[6])*cos(y[7])*y[4] - cos(y[6])*cos(y[7])*y[5];
+              yp[3] = y[11]*y[4] - y[10]*y[5] - g*sin(y[7]);
+              yp[4] = y[9]*y[5] - y[11]*y[3] + g*cos(y[7])*sin(y[6]);
+              yp[5] = y[10]*y[3] - y[9]*y[4] + g*cos(y[7])*cos(y[6]) - F/m;
+              yp[6] = y[9] + sin(y[6])*tan(y[7])*y[10] + cos(y[6])*tan(y[7])*y[11];
+              yp[7] = cos(y[6])*y[10] - sin(y[6])*y[11];
+              yp[8] = sin(y[6])/cos(y[7])*y[10] + cos(y[6])/cos(y[7])*y[11];
+              yp[9] = (Jy-Jz)/Jx*y[10]*y[11] + tau_phi/Jx;
+              yp[10] = (Jz-Jx)/Jy*y[9]*y[11] + tau_theta/Jy;
+              yp[11] = (Jx-Jy)/Jz*y[9]*y[10] + tau_psi/Jz;
+          }
          else if(syschoice == 18) // HSCC 2019 paper crazyflie example
           {
               static const double p_sp = 1.0*M_PI/180.0;  // angular speed of 1 degree / sec
