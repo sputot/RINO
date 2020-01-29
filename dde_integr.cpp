@@ -378,7 +378,7 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
             Xcenter[i] = TMcenter.x[0][i].convert_int();
         }
         //
-        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.x[0],TMJac.J[0],eps); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
         intersectViVi(Xouter,TMJac.x[0]);
         print_solutionstep(-1,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter); // initial solution t=-d0
         
@@ -756,7 +756,7 @@ void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
             Xcenter[i] = TMcenter.xp1[s][i].convert_int();
         }
        
-        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
      //   cout << "Xouter[0]" << Xouter[0] << endl;
         intersectViVi(Xouter,TMJac.xp1[s]);
        // for (int i = 0 ; i<sysdim ; i++)

@@ -759,7 +759,7 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
         }
         
         outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
+    //    outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
         
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
@@ -811,7 +811,7 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
-        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps);
+        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
       //  InnerOuter(Xinner,Xouter,TMcenter.xp1,TMJac.Jp1,eps);
         intersectViVi(Xouter,TMJac.xp1);
     

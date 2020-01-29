@@ -29,8 +29,8 @@ fi
 
 
 # ODE examples
-examples_indexes=(1 2 3 4 5 6 7 9 18)   # indexes of ODE examples we wish to test for non regression
-sysdim=(1 2 4 5 2 4 4 2 14)
+examples_indexes=(1 2 3 4 5 6 7 9 13 14 15 17 18)   # indexes of ODE examples we wish to test for non regression
+sysdim=(1 2 4 5 2 4 4 2 7 2 2 12 14)
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
 compare_to_ref=true
@@ -43,7 +43,12 @@ echo "******* Running RINO regression on ODE example no ${examples_indexes[i]} *
 cd $rino
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 config_file=$rino"examples/config_0_"${examples_indexes[i]}".txt"
-`$rino_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+if test -f $config_file
+then
+    `$rino_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+else
+    `$rino_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+fi
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_rino=$((end_ms - start_ms))
 echo "Execution time for RINO: $elapsed_ms_rino milliseconds"
@@ -53,7 +58,12 @@ if [ "$compare_to_ref" = false ]
 then
 cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$ref_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+if test -f $config_file
+then
+    `$ref_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+else
+    `$ref_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+fi
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_ref=$((end_ms - start_ms))
 echo "Execution time for REF: $elapsed_ms_ref milliseconds"
