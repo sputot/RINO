@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, inputs_save, 0);
+                init_subdiv(current_subdiv, inputs_save, component_to_subdiv);
             current_iteration = 0;
             
             tn = t_begin;

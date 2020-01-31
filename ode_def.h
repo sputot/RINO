@@ -35,6 +35,8 @@ extern vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
 extern int nb_subdiv_init; // number of subdivisiions
+extern int component_to_subdiv;
+
 extern double recovering; // percentage of recovering between subdivisions
 extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
 extern vector<double> t_print; // times where results are stored

@@ -34,7 +34,9 @@ vector<AAF> center_inputs;
 vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
-int nb_subdiv_init; // number of subdivisiions
+int nb_subdiv_init = 1; // number of subdivisiions
+int component_to_subdiv = 0;
+
 double recovering; // percentage of recovering between subdivisions
 vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
 vector<double> t_print; // times where results are stored
@@ -507,6 +509,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_initialcondition[4] = false;
             is_uncontrolled[4] = true;
             is_variable[4] = true;
+            
+        //    nb_subdiv_init = 2;
+        //    component_to_subdiv = 4;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
