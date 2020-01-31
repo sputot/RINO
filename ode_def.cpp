@@ -49,6 +49,7 @@ vector<bool> is_initialcondition; // for each input, initial condition or parame
 int variable; // number of non constant parameters
 vector<bool> is_variable;  // for each parameter, constant or variable
 
+bool refined_mean_value;
 
 
 
@@ -450,6 +451,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         is_variable[i] = false;     // variable input or parameter
         is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
+    
+    refined_mean_value = false;
     
     if (systype == 0) // ODE
     {

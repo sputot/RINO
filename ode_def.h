@@ -49,7 +49,7 @@ extern vector<bool> is_initialcondition; // for each input, initial condition or
 extern int variable;  // number of non constant parameters
 extern vector<bool> is_variable; // for each parameter, constant or variable
 
-
+extern bool refined_mean_value;
 
 void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
 

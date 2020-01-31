@@ -137,11 +137,12 @@ class TM_Jac
 public:
     
 //    OdeFunc bf;   // def of switched system - really useful ?
-    OdeVar odeVAR_x;      // computed, Taylor coeff 0 to k-1
+    vector<OdeVar> odeVAR_x;      // computed, Taylor coeff 0 to k-1 -- will be evaluated on [x1]...[xi],x0i+1,...x0n
     OdeVar odeVAR_g;      // computed, for k-th Taylor coeff
-    vector<vector<AAF>> J_rough; // computed, for k-th Taylor coeff
+    vector<vector<AAF>> J_rough; // computed, for k-th Taylor coeff - will be evaluated on all [x]
     int order;
     vector<AAF> x;          // input, value at time tn
+    vector<AAF> x0;          // center value at time tn, coming from TM_val
     vector<vector<AAF>> J;  // input, jacobian at time tn: \partial z / \partial z0 (dimension jacdim \times jacdim)
     double tn;
     double tau;
@@ -150,15 +151,15 @@ public:
  //   vector<AAF> xrange; // value on time range [tn,tn+tau]
  //   vector<vector<AAF>> AAF Jrange[sysdim][sysdim]; // computed, Jac on time range [tn,tn+tau]
     
-    TM_Jac(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(sysdim,vector<AAF>(jacdim)), order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){}
+   /* TM_Jac(OdeFunc _bf, vector<AAF> &param_inputs, int o, double t, double h) :  odeVAR_x(_bf), odeVAR_g(_bf), J_rough(sysdim,vector<AAF>(jacdim)), order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){}
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)),  order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){}
+    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, double t, double h) : odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)),  order(o), x(sysdim), J(sysdim,vector<AAF>(jacdim)),  tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)){} */
     
-    TM_Jac(OdeVar &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)), order(o),  x(_x), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)) {
+    TM_Jac(vector<OdeVar> &o_x, OdeVar &o_g, int o, vector<AAF> &_x, vector<AAF> &_x0, vector<vector<AAF>> &_J, double t, double h) :  odeVAR_x(o_x), odeVAR_g(o_g), J_rough(sysdim,vector<AAF>(jacdim)), order(o),  x(_x), x0(_x0), J(_J), tn(t), tau(h), xp1(sysdim) , Jp1(sysdim,vector<AAF>(jacdim)) {
        // assign(J,_J);
     }
     
-    void build(OdeFunc _bf, vector<AAF> &param_inputs/*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
+    void build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_inputs_center);
    
     // eval TM at time tn+h and return value
     void eval_val(vector<AAF> &res, double h);
@@ -173,7 +174,7 @@ public:
  //   void eval_range();
     
   //  void change_stepsize(double _tau); // tau := _tau
-    void init_nextstep(double _tau); // set x := xp1 ; J := Jp1
+    void init_nextstep(double _tau, vector<AAF> &_x0); // set x := xp1 ; J := Jp1
   //  void reinit_nextstep(vector<AAF> &_x, AAF _J[sysdim][sysdim], double _tn, double _tau);
 };
 
@@ -192,17 +193,17 @@ void fixpoint(vector<vector<AAF>> &J_rough , vector<vector<AAF>> &Jac1_g_rough, 
 
 
 // enclosure by Taylor model of order order of the flow g_i(X0) at time tau
-void gTaylor(vector<AAF> &g, Ode ode_x0, Ode ode_g0, double tau, int order);
+//void gTaylor(vector<AAF> &g, Ode ode_x0, Ode ode_g0, double tau, int order);
 // same thing on time [0,tau]
 //void gTaylor_range(vector<AAF> &g, Ode ode_x0, Ode ode_g0, double tau1, double tau2, int order);
 
 // enclosure by Taylor model of order order of the flow g_i(X0)
-void gTaylor(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau, int order);
+//void gTaylor(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau, int order);
 // same thing on time interval [tau1,tau]
 //void gTaylor_range(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau1, double tau2, int order);
 
 // enclosure by Taylor model of order order of the Jacobian of the flow g_i(X0)
-void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vector<vector<AAF>> &J0, vector<vector<AAF>> &J_rough , double tau, int order);
+//void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vector<vector<AAF>> &J0, vector<vector<AAF>> &J_rough , double tau, int order);
 // same thing on time interval [tau1,tau2]
 //void JTaylor_range(AAF J_res[sysdim][sysdim], OdeVar odeVAR_x, OdeVar odeVAR_g, AAF J0[sysdim][sysdim], AAF J_rough[sysdim][sysdim], double tau1, double tau2, int order);
 
@@ -216,7 +217,7 @@ void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vecto
 //     x, xp1 are the solution of the ODE starting from the full range of initial conditions
 //     J0, Jtau are the Jacobian of the solution with respect to initial conditions
  */
-void init_nextstep_ode(vector<AAF> &x0, vector<AAF> &x0p1, vector<AAF> &x, vector<AAF> &xp1, vector<vector<AAF>> &J0, vector<vector<AAF>> &Jtau);
+//void init_nextstep_ode(vector<AAF> &x0, vector<AAF> &x0p1, vector<AAF> &x, vector<AAF> &xp1, vector<vector<AAF>> &J0, vector<vector<AAF>> &Jtau);
 
 /* building Taylor models */
 
@@ -251,10 +252,11 @@ public:
     double tau;
     
     
-    HybridStep_ode(OdeFunc _bf, vector<AAF> &param_inputs, double _tn, double _tau, int _order) : bf(_bf), TMcenter(_bf, param_inputs, _order, _tn, _tau), TMJac(_bf, param_inputs, _order, _tn, _tau), tn(_tn), tau(_tau), order(_order)
+  /*  HybridStep_ode(OdeFunc _bf, vector<AAF> &param_inputs, double _tn, double _tau, int _order) : bf(_bf), TMcenter(_bf, param_inputs, _order, _tn, _tau), TMJac(jacdim), tn(_tn), tau(_tau), order(_order)
     {
-        
-    }
+        for (int j=0 ; j<jacdim; j++)
+            TMJac[j] = TMJac(_bf, param_inputs, _order, _tn, _tau);
+    } */
     
     HybridStep_ode(OdeFunc _bf, TM_val &_TMcenter, TM_Jac &_TMJac, double _tn, double _tau, int _order) : bf(_bf), TMcenter(_TMcenter), TMJac(_TMJac), tn(_tn), tau(_tau), order(_order)
     {
