@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[177]:
+# In[267]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -42,7 +42,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[178]:
+# In[268]:
 
 
 width_in_inches = 12
@@ -93,7 +93,7 @@ def print_xy(varx,vary):
 print_xy("x1","x2")
 
 
-# In[179]:
+# In[269]:
 
 
 # if print_robust = True: print robust approx
@@ -165,11 +165,11 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         xmin_inner = []
                         xmax_inner = []
                 if (subplots):
-                    ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
+                    ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
                     ax.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
                     ax.title.set_text(variable)
                 else:
-                    plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
+                    plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
                 #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                 #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                     plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
@@ -180,9 +180,24 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                 f_inner = variable + 'inner_minimal.out'
                 with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner:
                     lines_outer = x_outer.readlines()
-                    t_outer = [float(line.split()[0]) for line in lines_outer]
-                    xmin_outer = [float(line.split()[1]) for line in lines_outer]
-                    xmax_outer = [float(line.split()[2]) for line in lines_outer]
+                    t_outer = [] 
+                    xmin_outer = []
+                    xmax_outer = []
+                    for line in lines_outer:
+                        if line.strip():
+                            t_outer.append(float(line.split()[0]))
+                            xmin_outer.append(float(line.split()[1]))
+                            xmax_outer.append(float(line.split()[2]))
+                        else:
+                          #  plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
+                            if (subplots):
+                                ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                            else:
+                                plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                            t_outer = [] 
+                            xmin_outer = []
+                            xmax_outer = []
+                    
                     lines_inner = x_inner.readlines()
                     t_inner = [] 
                     xmin_inner = []
@@ -202,11 +217,12 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                             xmin_inner = []
                             xmax_inner = []
                     if (subplots):
-                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue')
+                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
                         ax.fill_between(t_inner,xmin_inner,xmax_inner, label='minimal inner approx')
                         ax.title.set_text(variable)
                     else:
-                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue')
+                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                       # plt.legend(pltlines[:2], label='minimal outer approx')
                     #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                     #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                         plt.fill_between(t_inner,xmin_inner,xmax_inner, label='minimal inner approx')
@@ -217,9 +233,24 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                 f_inner = variable + 'inner_robust.out'
                 with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner:
                     lines_outer = x_outer.readlines()
-                    t_outer = [float(line.split()[0]) for line in lines_outer]
-                    xmin_outer = [float(line.split()[1]) for line in lines_outer]
-                    xmax_outer = [float(line.split()[2]) for line in lines_outer]
+                    t_outer = [] 
+                    xmin_outer = []
+                    xmax_outer = []
+                    for line in lines_outer:
+                        if line.strip():
+                            t_outer.append(float(line.split()[0]))
+                            xmin_outer.append(float(line.split()[1]))
+                            xmax_outer.append(float(line.split()[2]))
+                        else:
+                          #  plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
+                            if (subplots):
+                                ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                            else:
+                                plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                            t_outer = [] 
+                            xmin_outer = []
+                            xmax_outer = []
+                    
                     lines_inner = x_inner.readlines()
                     t_inner = [] 
                     xmin_inner = []
@@ -239,11 +270,11 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                             xmin_inner = []
                             xmax_inner = []
                     if (subplots):
-                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green')
+                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
                         ax.fill_between(t_inner,xmin_inner,xmax_inner, label='robust inner approx')
                         ax.title.set_text(variable)
                     else:
-                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green')
+                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
                     #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                     #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                         plt.fill_between(t_inner,xmin_inner,xmax_inner, label='robust inner approx')
@@ -267,48 +298,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
             plt.show() # print all components on same graph
 
 
-# In[180]:
-
-
-nbsubplots = len(filenames_outer)
-for f_outer,f_inner,k in zip(filenames_outer, filenames_inner,range(nbsubplots)):
-    variable = f_outer.rsplit( "outer", 1 )[ 0 ]  # get variable name out of file names
-    variable_nb = '-' + variable.split( "x", 1 )[1] + '-'
-    # print only if variable is in list of variables to display
-    with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner:
-        lines_outer = x_outer.readlines()
-        t_outer = [float(line.split()[0]) for line in lines_outer]
-        xmin_outer = [float(line.split()[1]) for line in lines_outer]
-        xmax_outer = [float(line.split()[2]) for line in lines_outer]
-        lines_inner = x_inner.readlines()
-        t_inner = [] 
-        xmin_inner = []
-        xmax_inner = []
-        for line in lines_inner:
-            if line.strip():
-                t_inner.append(float(line.split()[0]))
-                xmin_inner.append(float(line.split()[1]))
-                xmax_inner.append(float(line.split()[2]))
-            else:
-              #  plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
-                plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
-                t_inner = [] 
-                xmin_inner = []
-                xmax_inner = []
-        
-        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
-        #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
-        #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
-        plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
-        plt.show()
-            
-            
-            
-       
-        
-
-
-# In[181]:
+# In[270]:
 
 
 print_robust = False
@@ -319,7 +309,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[182]:
+# In[271]:
 
 
 print_robust = False
@@ -330,7 +320,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[183]:
+# In[272]:
 
 
 print_robust = True
@@ -341,7 +331,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[184]:
+# In[273]:
 
 
 print_robust = True
@@ -352,7 +342,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[185]:
+# In[274]:
 
 
 print_robust = False
@@ -362,7 +352,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[186]:
+# In[275]:
 
 
 print_robust = False
@@ -372,7 +362,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[187]:
+# In[276]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -389,7 +379,7 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[188]:
+# In[277]:
 
 
 print_interactive = False
@@ -418,7 +408,7 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[189]:
+# In[278]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
