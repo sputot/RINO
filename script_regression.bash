@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rino="/Users/sylvie/RINO/"
+rino="/Users/sylvie/RINO_essai/"
 ref="/Users/sylvie/RINO_NONREGRESSION/RINO/"
 rino_exec=$rino"main"
 ref_exec=$ref"main"
@@ -33,7 +33,7 @@ examples_indexes=(1 2 3 4 5 6 7 9 13 14 15 17 18)   # indexes of ODE examples we
 sysdim=(1 2 4 5 2 4 4 2 7 2 2 12 14)
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
-compare_to_ref=true
+compare_to_ref=false
 
 if [ "$test_ode" == true ]
 then
@@ -140,8 +140,8 @@ start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 config_file=$rino"examples/config_1_"${examples_indexes[i]}".txt"
 `$rino_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-elapsed_ms=$((end_ms - start_ms))
-echo "Execution time for RINO: $elapsed_ms milliseconds"
+elapsed_ms_rino=$((end_ms - start_ms))
+echo "Execution time for RINO: $elapsed_ms_rino milliseconds"
 
 # run RINO_REF only if we do not compare to stored version
 if [ "$compare_to_ref" = false ]
@@ -150,8 +150,8 @@ cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 `$ref_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-elapsed_ms=$((end_ms - start_ms))
-echo "Execution time for REF: $elapsed_ms milliseconds"
+elapsed_ms_ref=$((end_ms - start_ms))
+echo "Execution time for REF: $elapsed_ms_ref milliseconds"
 
 if [ $(($elapsed_ms_rino)) -gt $((2*$elapsed_ms_ref)) ]
 then
