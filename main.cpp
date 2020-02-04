@@ -138,9 +138,18 @@ int main(int argc, char* argv[])
                 }
                 cur_step = cur_step.init_nextbigstep(tau);
             }
-           /* for (int i=0 ; i<sysdim ; i++) {
-                outFile_inner[i] << "\n \n";
-            } */
+            if (current_subdiv<nb_subdiv_init) {
+                for (int i=0 ; i<sysdim ; i++)
+                    outFile_inner[i] << "\n";
+                if (uncontrolled > 0) {
+                    for (int i=0 ; i<sysdim ; i++)
+                        outFile_inner_robust[i] << "\n";
+                }
+                if (controlled > 0 || uncontrolled > 0) {
+                    for (int i=0 ; i<sysdim ; i++)
+                        outFile_inner_minimal[i] << "\n";
+                }
+            }
         }
         
         print_finalsolution(inputs_save, (t_end-t_begin)*nb_subdiv/d0, d0);
@@ -178,6 +187,24 @@ int main(int argc, char* argv[])
                 cur_step.TM_build(param_inputs,param_inputs_center);
                 cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau);
                 cur_step.init_nextstep(tau);
+            }
+            // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
+            if (current_subdiv<nb_subdiv_init) {
+                for (int i=0 ; i<sysdim ; i++)
+                    outFile_inner[i] << "\n";
+                if (uncontrolled > 0) {
+                    for (int i=0 ; i<sysdim ; i++) {
+                        outFile_inner_robust[i] << "\n";
+                        outFile_outer_robust[i] << "\n";
+                    }
+                }
+                if (controlled > 0 || uncontrolled > 0) {
+                    for (int i=0 ; i<sysdim ; i++){
+                        outFile_inner_minimal[i] << "\n";
+                        outFile_outer_minimal[i] << "\n";
+                    }
+                    
+                }
             }
         }
         print_finalsolution(inputs_save, (t_end-t_begin)/tau, d0);

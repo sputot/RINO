@@ -167,12 +167,15 @@ public:
           }
           else if (syschoice == 11)  // academic example to investigate time-varying parameters
           {
-              yp[0] = 0.1*y[0] - param_inputs[0]; //*y[0];
+              yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
+              yp[1] = 1;
           }
           else if (syschoice == 12)  // academic example to investigate time-varying parameters
           {
-              yp[0] = y[1]*y[0];
-              yp[1] = 0;
+              yp[0] = (y[2] + y[3]*y[1])*y[0];
+              yp[1] = 1;
+              yp[2] = 0;
+              yp[3] = 0;
           }
           else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
           {

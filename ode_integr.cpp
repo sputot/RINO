@@ -335,6 +335,7 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
             res[j] += odeVAR_x[jacdim-1].x[j][i].x()*taui;
         taui *= h;
     }
+    
     // pour le dernier terme, on utilise le reste dL^i(g0_rough)*tau^i
     for (int j=0 ; j<sysdim; j++)
         res[j] += odeVAR_g.x[j][order].x()*taui;
@@ -344,6 +345,8 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     if (is_variable[j]) // variable param with value always in the same range
         res[j] = odeVAR_x[jacdim-1].x[j][0].x();
     }
+    for (int j=0 ; j<sysdim; j++)
+        cout << "res[j]=" << res[j].convert_int() << endl;
 }
 
 

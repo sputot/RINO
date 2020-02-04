@@ -130,13 +130,13 @@ void define_system_dim(int argc, char* argv[])
         }
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
-            sysdim = 1;
-            jacdim = 2;
+            sysdim = 2;
+            jacdim = 4;
         }
         else if (syschoice == 12)  // academic example to investigate time-varying parameters
         {
-            sysdim = 2;
-            jacdim = 2;
+            sysdim = 4;
+            jacdim = 4;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {
@@ -618,21 +618,31 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         {
             tau = 1.;
             t_end = 2.;
-            order = 2;
-            inputs[0] = interval(0,1);
-            inputs[1] = interval(0,0.1);
-            is_initialcondition[1] = false;
-            is_variable[1] = true;
+            order = 4;
+            inputs[0] = 1;
+            inputs[1] = 0;
+            inputs[2] = interval(0,0.1);
+            inputs[3] = interval(0,0.1);
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
+            //is_initialcondition[2] = false;
+            is_variable[2] = true;
+            is_variable[3] = true;
         }
         else if (syschoice == 12)
         {
             tau = 1.;
             t_end = 2.;
-            order = 2;
-            inputs[0] = interval(0,0.1);
-            inputs[1] = interval(0,0.1);
-            is_initialcondition[1] = false;
-            is_variable[1] = true;
+            order = 3;
+            inputs[0] = 1;
+            inputs[1] = 0;
+            inputs[2] = interval(0,0.1);
+            inputs[3] = interval(0,0.1);
+            is_initialcondition[2] = false;
+            is_initialcondition[3] = false;
+            is_variable[2] = true;
+            is_variable[3] = true;
+           // is_variable[1] = true;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {
