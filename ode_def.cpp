@@ -37,7 +37,7 @@ vector<interval> eps;
 int nb_subdiv_init = 1; // number of subdivisiions
 int component_to_subdiv = 0;
 
-double recovering; // percentage of recovering between subdivisions
+double recovering = 0.0; // percentage of recovering between subdivisions
 vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
 vector<double> t_print; // times where results are stored
 int current_subdiv;
@@ -510,8 +510,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[4] = true;
             is_variable[4] = true;
             
-        //    nb_subdiv_init = 2;
-        //    component_to_subdiv = 4;
+            nb_subdiv_init = 2;
+            component_to_subdiv = 4;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
@@ -741,6 +741,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             inputs[0] = interval(0.33,1.0);
+      //      nb_subdiv_init = 2;
         }
         else if (syschoice == 2)
         {
@@ -946,8 +947,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
 
 void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdivide)
 {
-    center_inputs = vector<AAF>(jacdim);
-    eps = vector<interval>(jacdim);
+ //   center_inputs = vector<AAF>(jacdim);
+ //   eps = vector<interval>(jacdim);
     
     interval save = inputs_save[param_to_subdivide].convert_int();
     double delta = (save.sup()-save.inf())/nb_subdiv_init;
