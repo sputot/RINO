@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[267]:
+# In[474]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -15,7 +15,7 @@ import glob
 import os
 
 
-print_interactive = False
+print_interactive = True
 #variables_to_display="all"
 variables_to_display="all"
 
@@ -35,6 +35,7 @@ if (nb_arguments > 1):
 os.chdir('../output')
 #print(glob.glob('x*outer.out'))
 filenames_outer = sorted(glob.glob('x*outer.out'))
+filenames_exact = sorted(glob.glob('x*exact.out'))
 filenames_inner = sorted(glob.glob('x*inner.out'))
 filenames_inner_minimal = sorted(glob.glob('x*inner_minimal.out'))
 filenames_outer_minimal = sorted(glob.glob('x*outer_minimal.out'))
@@ -42,58 +43,61 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[268]:
+# In[475]:
 
 
 width_in_inches = 12
 height_in_inches = 9
 dots_per_inch = 100
 #fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
-fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
 from matplotlib.patches import Rectangle
+import os.path
+from os import path
 
 def print_xy(varx,vary):
+    fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     # print maximal outer and inner approximations for each component separately
     fx_inner = varx + 'inner_joint.out'
     fy_inner = vary + 'inner_joint.out'
     fx_outer = varx + 'outer.out'
     fy_outer = vary + 'outer.out'
-    with open(fx_outer, 'r') as x_outer, open(fx_inner, 'r') as x_inner, open(fy_outer, 'r') as y_outer, open(fy_inner, 'r') as y_inner:
-        linesx_outer = x_outer.readlines()
-        tx_outer = [float(line.split()[0]) for line in linesx_outer]
-        xmin_outer = [float(line.split()[1]) for line in linesx_outer]
-        xmax_outer = [float(line.split()[2]) for line in linesx_outer]
-        linesx_inner = x_inner.readlines()     
-        tx_inner = [float(line.split()[0]) for line in linesx_inner]
-        xmin_inner = [float(line.split()[1]) for line in linesx_inner]
-        xmax_inner = [float(line.split()[2]) for line in linesx_inner]
-        linesy_outer = y_outer.readlines()
-        ty_outer = [float(line.split()[0]) for line in linesy_outer]
-        ymin_outer = [float(line.split()[1]) for line in linesy_outer]
-        ymax_outer = [float(line.split()[2]) for line in linesy_outer]
-        linesy_inner = y_inner.readlines()     
-        ty_inner = [float(line.split()[0]) for line in linesy_inner]
-        ymin_inner = [float(line.split()[1]) for line in linesy_inner]
-        ymax_inner = [float(line.split()[2]) for line in linesy_inner]
-        
-        for xo1,xo2,xi1,xi2,yo1,yo2,yi1,yi2 in zip(xmin_outer,xmax_outer,xmin_inner,xmax_inner,ymin_outer,ymax_outer,ymin_inner,ymax_inner):
-            car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1)
-            ax.add_patch(car_fig)
-        for xo1,xo2,xi1,xi2,yo1,yo2,yi1,yi2 in zip(xmin_outer,xmax_outer,xmin_inner,xmax_inner,ymin_outer,ymax_outer,ymin_inner,ymax_inner):
-            car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='orange')
-            ax.add_patch(car_fig2)
-    ax.autoscale()
-    ax.set_xlabel(varx)
-    ax.set_ylabel(vary)
-    f_output="joint_" + varx + vary
-    plt.savefig(f_output)
-    if (print_interactive):
-        plt.show() 
+    if (path.isfile(fx_outer) and path.isfile(fy_outer)):
+        with open(fx_outer, 'r') as x_outer, open(fx_inner, 'r') as x_inner, open(fy_outer, 'r') as y_outer, open(fy_inner, 'r') as y_inner:
+            linesx_outer = x_outer.readlines()
+            tx_outer = [float(line.split()[0]) for line in linesx_outer]
+            xmin_outer = [float(line.split()[1]) for line in linesx_outer]
+            xmax_outer = [float(line.split()[2]) for line in linesx_outer]
+            linesx_inner = x_inner.readlines()     
+            tx_inner = [float(line.split()[0]) for line in linesx_inner]
+            xmin_inner = [float(line.split()[1]) for line in linesx_inner]
+            xmax_inner = [float(line.split()[2]) for line in linesx_inner]
+            linesy_outer = y_outer.readlines()
+            ty_outer = [float(line.split()[0]) for line in linesy_outer]
+            ymin_outer = [float(line.split()[1]) for line in linesy_outer]
+            ymax_outer = [float(line.split()[2]) for line in linesy_outer]
+            linesy_inner = y_inner.readlines()     
+            ty_inner = [float(line.split()[0]) for line in linesy_inner]
+            ymin_inner = [float(line.split()[1]) for line in linesy_inner]
+            ymax_inner = [float(line.split()[2]) for line in linesy_inner]
+
+            for xo1,xo2,xi1,xi2,yo1,yo2,yi1,yi2 in zip(xmin_outer,xmax_outer,xmin_inner,xmax_inner,ymin_outer,ymax_outer,ymin_inner,ymax_inner):
+                car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1)
+                ax.add_patch(car_fig)
+            for xo1,xo2,xi1,xi2,yo1,yo2,yi1,yi2 in zip(xmin_outer,xmax_outer,xmin_inner,xmax_inner,ymin_outer,ymax_outer,ymin_inner,ymax_inner):
+                car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='orange')
+                ax.add_patch(car_fig2)
+        ax.autoscale()
+        ax.set_xlabel(varx)
+        ax.set_ylabel(vary)
+        f_output="joint_" + varx + vary
+        plt.savefig(f_output)
+        if (print_interactive):
+            plt.show() 
         
 print_xy("x1","x2")
 
 
-# In[269]:
+# In[476]:
 
 
 # if print_robust = True: print robust approx
@@ -134,18 +138,22 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         extension = '_max.png'
     
     # print maximal outer and inner approximations for each component separately
-    for f_outer,f_inner,k in zip(filenames_outer, filenames_inner,range(nbsubplots)):
+    for f_outer,f_inner,f_exact,k in zip(filenames_outer, filenames_inner,filenames_exact,range(nbsubplots)):
         variable = f_outer.rsplit( "outer", 1 )[ 0 ]  # get variable name out of file names
         variable_nb = '-' + variable.split( "x", 1 )[1] + '-'
         # print only if variable is in list of variables to display
         if re.match(variable_nb,variables_to_display) or re.match("all",variables_to_display):  
             if (subplots):
                 ax = fig.add_subplot(nbrows,nbcols,position[k])
-            with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner:
+            with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner, open(f_exact, 'r') as x_exact:
                 lines_outer = x_outer.readlines()
                 t_outer = [float(line.split()[0]) for line in lines_outer]
                 xmin_outer = [float(line.split()[1]) for line in lines_outer]
                 xmax_outer = [float(line.split()[2]) for line in lines_outer]
+                lines_exact = x_exact.readlines()
+                t_exact = [float(line.split()[0]) for line in lines_exact]
+                xmin_exact = [float(line.split()[1]) for line in lines_exact]
+                xmax_exact = [float(line.split()[2]) for line in lines_exact]
                 lines_inner = x_inner.readlines()
                 t_inner = [] 
                 xmin_inner = []
@@ -166,10 +174,14 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         xmax_inner = []
                 if (subplots):
                     ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
+                    if (lines_exact):
+                        ax.plot(t_exact ,xmin_exact, t_exact, xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
                     ax.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
                     ax.title.set_text(variable)
                 else:
                     plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
+                    if (lines_exact):
+                        plt.plot(t_exact ,xmin_exact, t_exact, xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
                 #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                 #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                     plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
@@ -298,7 +310,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
             plt.show() # print all components on same graph
 
 
-# In[270]:
+# In[477]:
 
 
 print_robust = False
@@ -309,7 +321,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[271]:
+# In[478]:
 
 
 print_robust = False
@@ -320,7 +332,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[272]:
+# In[479]:
 
 
 print_robust = True
@@ -331,7 +343,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[273]:
+# In[480]:
 
 
 print_robust = True
@@ -342,7 +354,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[274]:
+# In[481]:
 
 
 print_robust = False
@@ -352,7 +364,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[275]:
+# In[482]:
 
 
 print_robust = False
@@ -362,7 +374,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[276]:
+# In[483]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -379,7 +391,7 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[277]:
+# In[484]:
 
 
 print_interactive = False
@@ -408,7 +420,7 @@ if (print_interactive):
     plt.show() # print
 
 
-# In[278]:
+# In[485]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
