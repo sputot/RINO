@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
             print_initstats(inputs);
             
             current_iteration = 1;
-            HybridStep_ode cur_step = init_ode(obf,param_inputs_center,param_inputs,xcenter,x,J,tn,tau,order);
+            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
             
             while (cur_step.tn < t_end)
             {

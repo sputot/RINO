@@ -50,6 +50,7 @@ extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controll
 extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
 extern int variable;  // number of non constant parameters
 extern vector<bool> is_variable; // for each parameter, constant or variable
+extern vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 extern bool refined_mean_value;
 
@@ -336,11 +337,17 @@ public:
               // yp[13] = velZ_sp - y[11];
           }
          else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*param_inputs[0]*(1-y[0]) + y[0];
+             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
+             yp[1] = 1; // time
          }
          else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*y[1]*(1-y[0]) + y[0]; // same as above but coded differently
-             yp[1] = 0;
+             yp[0] = 2 + 2*y[2]*(1-y[1]) + y[1]; // same as above but coded differently
+             yp[1] = 1; // time
+             yp[2] = 0;
+         }
+         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
+             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
+             yp[1] = 1; // time
          }
     }
 };

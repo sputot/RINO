@@ -286,7 +286,7 @@ public:
     
 };
 
-HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &param_inputs_center, vector<AAF> &param_inputs, vector<AAF> &x0,  vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
+HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &x0,  vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
 
 
 

@@ -50,6 +50,7 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
 int variable; // number of non constant parameters
 vector<bool> is_variable;  // for each parameter, constant or variable
+vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 bool refined_mean_value;
 
@@ -167,12 +168,16 @@ void define_system_dim(int argc, char* argv[])
             // 0 for sysdim params
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
-            sysdim = 1;
-            jacdim = 2;
+            sysdim = 2;
+            jacdim = 3;
         }
         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
+            sysdim = 3;
+            jacdim = 3;
+        }
+        else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            jacdim = 2;
+            jacdim = 4;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -455,10 +460,12 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     is_uncontrolled = vector<bool>(jacdim);
     variable = 0;
     is_variable = vector<bool>(jacdim);
+    nb_inputs = vector<int>(jacdim);
     is_initialcondition = vector<bool>(jacdim);
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
         is_variable[i] = false;     // variable input or parameter
+        nb_inputs[i] = 1; // > 1 if variable input
         is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
     
@@ -745,24 +752,39 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[13] = 0.0;
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
-            tau = 0.5;
+            tau = 1.0;
             t_end = 2;
             order = 4;
             inputs[0] = 0;
-            inputs[1] = interval(0,0.25);
-            is_initialcondition[1] = false;
-            is_variable[1] = true;
+            inputs[1] = 0;
+            inputs[2] = interval(0,1.);
+            is_initialcondition[2] = false;
+            is_variable[2] = true;
+        //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
-            tau = 0.5;
+            tau = 1.0;
             t_end = 2;
             order = 4;
             inputs[0] = 0;
-            inputs[1] = interval(0,0.25);
-            is_initialcondition[1] = false;
-             is_variable[1] = true;
+            inputs[1] = 0;
+            inputs[2] = interval(0,1.);
+            is_initialcondition[2] = false;
+          //   is_variable[2] = true;
             // solution at t=2  is 6 + u1 - u2 (u being the piecewise constant value of y[1])
+        }
+        else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
+            tau = 1.0;
+            t_end = 2;
+            order = 4;
+            inputs[0] = 0;
+            inputs[1] = 0;
+            inputs[2] = interval(0,1.);
+            is_initialcondition[2] = false;
+            is_variable[2] = true;
+            nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
     }
     if (systype == 1) // DDE
@@ -1142,8 +1164,16 @@ void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
         if (current_iteration == 0)
             Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
         else {
-            double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
-            Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[1].convert_int()*(2*delta_t-delta_t*delta_t) + 2*delta_t + delta_t*delta_t/2;
+            if (is_variable[2]) {
+                double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
+                double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+            }
+            else {
+                double delta_t = t_print[current_iteration]-t_print[0];
+                double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
+                Xexact_print[0][current_iteration][0] = inputs[0].convert_int() + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+            }
         }
     }
     
