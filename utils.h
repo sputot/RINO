@@ -14,6 +14,7 @@ void open_outputfiles();
 
 extern vector<ofstream> outFile_outer_minimal;   //  minimal outer-approximated range for each variable of the system
 extern vector<ofstream> outFile_outer;   // output outer-approximated range for each variable of the system
+extern vector<ofstream> outFile_exact;
 extern vector<ofstream> outFile_outer_robust;
 extern vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
 extern vector<ofstream> outFile_inner;   // output inner-approximated range for each variable of the system

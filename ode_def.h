@@ -65,7 +65,7 @@ vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta);
 vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta);
 
 // defining analytical solution if any for comparison
-vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0);
+void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0);
 
 // reading sysdim, jacdim, etc
 void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init);
@@ -78,7 +78,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
 
 // specific to subdivisions
 void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdivide);
-
 
 
 // define here  your ODE system yp = \dot y = f(y)
@@ -336,6 +335,13 @@ public:
               // // Z integrale for thrust setpoint calculation
               // yp[13] = velZ_sp - y[11];
           }
+         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
+             yp[0] = 2 + 2*param_inputs[0]*(1-y[0]) + y[0];
+         }
+         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
+             yp[0] = 2 + 2*y[1]*(1-y[0]) + y[0]; // same as above but coded differently
+             yp[1] = 0;
+         }
     }
 };
 

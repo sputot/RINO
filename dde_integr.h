@@ -289,7 +289,7 @@ public:
     
 };
 
-void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv/*, vector<AAF> &ix*/);
+//void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv/*, vector<AAF> &ix*/);
 
 
 #endif
