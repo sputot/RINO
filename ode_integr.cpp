@@ -345,8 +345,8 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     if (is_variable[j]) // variable param with value always in the same range
         res[j] = odeVAR_x[jacdim-1].x[j][0].x();
     }
-    for (int j=0 ; j<sysdim; j++)
-        cout << "res[j]=" << res[j].convert_int() << endl;
+   // for (int j=0 ; j<sysdim; j++)
+   //     cout << "res[j]=" << res[j].convert_int() << endl;
 }
 
 
@@ -865,7 +865,8 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
      //   cout << "before intersect: Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
         intersectViVi(Xouter,TMJac.xp1);
     
-    print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xcenter);
+        print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xcenter);
+        
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
     }
 }

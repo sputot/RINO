@@ -834,7 +834,7 @@ HybridStep_dde HybridStep_dde::init_nextbigstep(double tau)
 
 
 // for running example
-void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv/*, vector<AAF> &ix*/)
+/*void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv)
 {
     vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);
     
@@ -865,5 +865,5 @@ void print_exactsolutiondde(double t0, double d0, double tau, double t_end, doub
     for (int j=0 ; j<sysdim; j++)
         outFile_exact[j].close();
 }
-
+*/
 

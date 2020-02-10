@@ -166,6 +166,14 @@ void define_system_dim(int argc, char* argv[])
             // sysdim_params = 3;
             // 0 for sysdim params
         }
+        else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
+            sysdim = 1;
+            jacdim = 2;
+        }
+        else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
+            sysdim = 2;
+            jacdim = 2;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -496,7 +504,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         else if (syschoice == 4) // ballistic linearise
         {
             tau = 0.1;
-            t_end = 1.39;
+            t_end = 1.4;
             order = 3;
             
             inputs[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
@@ -510,7 +518,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[4] = true;
             is_variable[4] = true;
             
-            nb_subdiv_init = 2;
+       //     nb_subdiv_init = 2;
             component_to_subdiv = 4;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
@@ -736,6 +744,26 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
           //  inputs[12] = interval(-0.1 , 0.1);
             inputs[13] = 0.0;
         }
+        else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
+            tau = 0.5;
+            t_end = 2;
+            order = 4;
+            inputs[0] = 0;
+            inputs[1] = interval(0,0.25);
+            is_initialcondition[1] = false;
+            is_variable[1] = true;
+            // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
+        }
+        else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
+            tau = 0.5;
+            t_end = 2;
+            order = 4;
+            inputs[0] = 0;
+            inputs[1] = interval(0,0.25);
+            is_initialcondition[1] = false;
+             is_variable[1] = true;
+            // solution at t=2  is 6 + u1 - u2 (u being the piecewise constant value of y[1])
+        }
     }
     if (systype == 1) // DDE
     {
@@ -751,7 +779,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             inputs[0] = interval(0.33,1.0);
-      //      nb_subdiv_init = 2;
+            // nb_subdiv_init = 5;
         }
         else if (syschoice == 2)
         {
@@ -913,12 +941,12 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     if (systype == 0)
     {
-        nb_points = (t_end-t_begin)/tau+1;
+        nb_points = ceil((t_end-t_begin)/tau)+2;
     }
     else // systype == 1
     {
         tau = d0/nb_subdiv;
-        nb_points = ((t_end-t_begin)/d0+1)*(nb_subdiv+1);
+        nb_points = (ceil((t_end-t_begin)/d0+2))*(nb_subdiv+1);
     }
     
     
@@ -1035,31 +1063,39 @@ vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta)
     return res;
 }
 
+
+
 // analytical solution if any (for comparison purpose)
-vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0)
+void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
 {
-    vector<interval> res(sysdim);
+  //  vector<interval> res(sysdim);
     vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);
     
+    double t = t_print[current_iteration];
     double beta_inf = beta[0].convert_int().inf();
     double beta_sup = beta[0].convert_int().sup();
     
     // running example
     //res[0] = (1+beta[0]*t)*(1+beta[0]*t);  // ix[0] = beta
     
+    for (int i=0 ; i<sysdim ; i++)
+        Xexact_print[0][current_iteration][i] = interval(1,-1); // no analytical solution : bot
+    
+    if (systype == 1)
+    {
     if ((syschoice == 1) && beta_sup <= 1)  // running example
     {
         if (t <= 0)   // on [-d0,0], solution is defined by init function
         {
             Xouter_min[0] = ((1.+beta_inf*t)*(1.+beta_inf*t));
             Xouter_max[0] = ((1.+beta_sup*t)*(1.+beta_sup*t));
-            res[0] = hull(Xouter_min[0],Xouter_max[0]);
+            Xexact_print[0][current_iteration][0] = hull(Xouter_min[0],Xouter_max[0]);
         }
         else if (t >= 0 && t <= d0)
         {
             Xouter_min[0] = exp((-1./(3.*beta_inf)*(pow(1.+(t-1.)*beta_inf,3)-pow(1.-beta_inf,3))));
             Xouter_max[0] = exp((-1./(3.*beta_sup)*(pow(1.+(t-1.)*beta_sup,3)-pow(1.-beta_sup,3))));
-            res[0] = hull(Xouter_min[0],Xouter_max[0]);
+            Xexact_print[0][current_iteration][0] = hull(Xouter_min[0],Xouter_max[0]);
             
         }
         else if (t >= d0 && t <= 2*d0)
@@ -1073,13 +1109,13 @@ vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0)
             temp1 = pow(1+(t-2)*beta_sup,3)/(3*beta_sup);
             temp2 = pow(1-beta_sup,3)/(3*beta_sup);
             Xouter_max[0] =  aux * exp(-exp(temp2)*pow(3*beta_sup,-2/3.0)*2.6789385347077476337*(gsl_sf_gamma_inc_P(1/3.0,temp1)-gsl_sf_gamma_inc_P(1/3.0,temp2)));
-            res[0] = hull(Xouter_min[0],Xouter_max[0]);
+            Xexact_print[0][current_iteration][0] = hull(Xouter_min[0],Xouter_max[0]);
             // res[0] = interval(min(inf(Xouter_min[0]),inf(Xouter_max[0])),max(sup(Xouter_min[0]),sup(Xouter_max[0])));
           //  cout << "beta_inf = " << beta_inf << "beta_sup=" << beta_sup << " res[0] = " << res[0] << endl;
         }
         else
         {
-            res[0] = interval(1,-1); // no analytical solution : bot
+            Xexact_print[0][current_iteration][0] = interval(1,-1); // no analytical solution : bot
         }
         
     }
@@ -1088,47 +1124,28 @@ vector <interval> AnalyticalSol(double t, vector<AAF> &beta, double d0)
         // example 5.15
         if (t <0)
         {
-            res[0] = beta[0].convert_int()*exp(t);
-            res[1] = beta[1].convert_int()*(1-exp(-1.));
+            Xexact_print[0][current_iteration][0] = beta[0].convert_int()*exp(t);
+            Xexact_print[0][current_iteration][1] = beta[1].convert_int()*(1-exp(-1.));
         }
         else
         {
-            res[0] = beta[0].convert_int()*exp(t);
-            res[1] = beta[1].convert_int()*(exp(t)-exp(t-1.));
+            Xexact_print[0][current_iteration][0] = beta[0].convert_int()*exp(t);
+            Xexact_print[0][current_iteration][1] = beta[1].convert_int()*(exp(t)-exp(t-1.));
         }
     }
-    else if (syschoice == 3) // Xue et al. 2017 ex. 3
-    {
-        for (int i=0 ; i<sysdim ; i++)
-            res[i] = interval(1,-1); // no analytical solution : bot
     }
-    else if (syschoice == 4 || syschoice == 5) // Szczelina_1 2014 : no analytical solution : bot
+    
+    // iterative definition
+    // mmmh idealementil faudrait calculer en AAF ici ???
+    else if ((systype == 0) && ((syschoice == 19) || (syschoice == 20)))
     {
-        res[0] = interval(1,-1);
+        if (current_iteration == 0)
+            Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
+        else {
+            double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
+            Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[1].convert_int()*(2*delta_t-delta_t*delta_t) + 2*delta_t + delta_t*delta_t/2;
+        }
     }
-    else if (syschoice == 6)  // self-driving car
-    {
-        for (int i=0 ; i<sysdim ; i++)
-            res[i] = interval(1,-1); // no analytical solution : bot
-    }
-    else if (syschoice == 7)  // self-driving car
-    {
-        for (int i=0 ; i<sysdim ; i++)
-            res[i] = interval(1,-1); // no analytical solution : bot
-    }
-    else if (syschoice == 8)  // self-driving car
-    {
-        for (int i=0 ; i<sysdim ; i++)
-            res[i] = interval(1,-1); // no analytical solution : bot
-    }
-    else if (syschoice == 9) // Zou CAV 2015
-    {
-        res[0] = interval(1,-1);
-    }
-    else if (syschoice == 10 || syschoice == 11) // platoon
-    {
-        res[0] = interval(1,-1);
-    }
-    return res;
+    
 }
 

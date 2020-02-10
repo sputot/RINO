@@ -29,6 +29,7 @@ vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each 
 vector<ofstream> outFile_inner_joint;   //  maximal inner-approximated range for each variable of the system
 vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
 vector<ofstream> outFile_center;
+vector<ofstream> outFile_exact; // analytical solution if any
 
 ofstream outFile_width_ratio;     //  min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
 ofstream outFile_meanerror_outer; // mean on xi of error between outer-approx and analytical solution if any
@@ -50,6 +51,7 @@ void open_outputfiles()
     system("mkdir output");
     
     outFile_outer = vector<ofstream>(sysdim);   // output outer-approximated range for each variable of the system
+    outFile_exact = vector<ofstream>(sysdim);
     if (uncontrolled > 0) {
         outFile_outer_robust = vector<ofstream>(sysdim);
         outFile_inner_robust = vector<ofstream>(sysdim);
@@ -68,6 +70,9 @@ void open_outputfiles()
         file_name.str("");
         file_name << "output/x" << i+1 << "outer.out";
         outFile_outer[i].open(file_name.str().c_str());
+        file_name.str("");
+        file_name << "output/x"<<i+1<<"exact.out";
+        outFile_exact[i].open(file_name.str().c_str());
         if (uncontrolled > 0) {
             file_name.str("");
             file_name << "output/x" << i+1 << "outer_robust.out";

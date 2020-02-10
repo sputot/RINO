@@ -106,12 +106,14 @@ int main(int argc, char* argv[])
     if (systype == 1) // DDE
     {
         // printing exact solution if any for comparison
-        print_exactsolutiondde(t_begin, d0, tau, t_end, nb_subdiv/*, ip*/);
+      //  print_exactsolutiondde(t_begin, d0, tau, t_end, nb_subdiv/*, ip*/);
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, inputs_save, component_to_subdiv);
+            
+            // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
             current_iteration = 0;
             
             tn = t_begin;
@@ -142,17 +144,22 @@ int main(int argc, char* argv[])
                 for (int i=0 ; i<sysdim ; i++)
                     outFile_inner[i] << "\n";
                 if (uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++)
+                    for (int i=0 ; i<sysdim ; i++) {
                         outFile_inner_robust[i] << "\n";
+                        outFile_outer_robust[i] << "\n";
+                    }
                 }
                 if (controlled > 0 || uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++)
+                    for (int i=0 ; i<sysdim ; i++){
                         outFile_inner_minimal[i] << "\n";
+                        outFile_outer_minimal[i] << "\n";
+                    }
+                    
                 }
             }
         }
         
-        print_finalsolution(inputs_save, (t_end-t_begin)*nb_subdiv/d0, d0);
+        print_finalsolution(inputs_save, ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
     }
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
@@ -168,7 +175,7 @@ int main(int argc, char* argv[])
         {
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, inputs_save, component_to_subdiv);
-            current_iteration = 0;
+            
             
             
     //        cout << "center_inputs[0]" << center_inputs[0] << endl;
@@ -179,6 +186,7 @@ int main(int argc, char* argv[])
             tn = t_begin;
             print_initstats(inputs);
             
+            current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,param_inputs_center,param_inputs,xcenter,x,J,tn,tau,order);
             
             while (cur_step.tn < t_end)
@@ -206,8 +214,10 @@ int main(int argc, char* argv[])
                     
                 }
             }
+            
+            
         }
-        print_finalsolution(inputs_save, (t_end-t_begin)/tau, d0);
+        print_finalsolution(inputs_save, ceil((t_end-t_begin)/tau), d0);
     }
     
     print_finalstats(begin);
@@ -220,6 +230,7 @@ void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
     // print final solution + output some stats / error information
     bool no_hole = true;
     
+    // starts at delta_t (initial condition is not stored)
     for (current_iteration = 0; current_iteration <= max_it; current_iteration++)
     {
         for (int i=0 ; i<sysdim ; i++)
@@ -261,7 +272,7 @@ void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
 void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double d0)
 {
     double aux, minwidth_ratio, sum, rel_sum;
-    vector<interval> Xexact(sysdim);
+  //  vector<interval> Xexact(sysdim);
     
     
     // correct only of no hole
@@ -273,22 +284,24 @@ void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double 
             minwidth_ratio = aux;
     }
     if (t_print[current_iteration] != 0)
-    outFile_width_ratio << t_print[current_iteration] << "\t" << minwidth_ratio << endl;
+        outFile_width_ratio << t_print[current_iteration] << "\t" << minwidth_ratio << endl;
     
     
- /*
-    Xexact = AnalyticalSol(t_print[current_iteration],inputs_save,d0);
-    
-    if (sup(Xexact[0]) >= inf(Xexact[0])) // an analytical solution exists
+    // fills Xexact_print with analytical solution
+    AnalyticalSol(current_iteration, inputs_save,d0);
+   // cout << "before testing x_exact, current_iteration=" << current_iteration << "t_print[current_iteration] " << t_print[current_iteration]  << endl;
+    if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
     {
+        for (int i=0 ; i<sysdim ; i++)
+            outFile_exact[i] << t_print[current_iteration] << "\t" << inf(Xexact_print[0][current_iteration][i]) << "\t" << sup(Xexact_print[0][current_iteration][i]) << endl;
         // mean over the xi of the error between over-approx and exact solution
         sum = 0;
         rel_sum = 0;;
         for (int i=0 ; i<sysdim ; i++)
         {
-            aux = max(sup(Xouter_print[0][current_iteration][i])-sup(Xexact[i]),inf(Xexact[i])-inf(Xouter_print[0][current_iteration][i]));
+            aux = max(sup(Xouter_print[0][current_iteration][i])-sup(Xexact_print[0][current_iteration][i]),inf(Xexact_print[0][current_iteration][i])-inf(Xouter_print[0][current_iteration][i]));
             sum += aux;
-            rel_sum += aux / (sup(Xexact[i])-inf(Xexact[i]));
+            rel_sum += aux / (sup(Xexact_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
         }
         sum = sum/sysdim;
         rel_sum = rel_sum/sysdim;
@@ -300,16 +313,16 @@ void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double 
         rel_sum = 0;
         for (int i=0 ; i<sysdim ; i++)
         {
-            aux = max(sup(Xexact[i])-sup(Xinner_print[0][current_iteration][i]),inf(Xinner_print[0][current_iteration][i])-inf(Xexact[i]));
+            aux = max(sup(Xexact_print[0][current_iteration][i])-sup(Xinner_print[0][current_iteration][i]),inf(Xinner_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
             sum += aux;
-            rel_sum += aux / (sup(Xexact[i])-inf(Xexact[i]));
+            rel_sum += aux / (sup(Xexact_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
         }
         sum = sum/sysdim;
         rel_sum = rel_sum/sysdim;
         outFile_meanerror_inner << t_print[current_iteration] << "\t" << sum << endl;
         outFile_relmeanerror_inner << t_print[current_iteration] << "\t" << rel_sum << endl;
     }
-  */
+  
     
     // mean over the xi of the error between over-approx and inner-approx
     sum = 0;
@@ -387,8 +400,21 @@ void print_initstats(vector<AAF> &x)
         outFile_center[i] << 0<< "\t" << mid(x[i].convert_int()) << "\t" << mid(x[i].convert_int()) << endl;
         outFile_inner[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
         outFile_inner_joint[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        
+        Xouter_print[current_subdiv][0][i] = x[i].convert_int();
+        Xouter_robust_print[current_subdiv][0][i] = x[i].convert_int();
+        Xouter_minimal_print[current_subdiv][0][i] = x[i].convert_int();
+        Xinner_print[current_subdiv][0][i] = x[i].convert_int();
+        Xinner_joint_print[current_subdiv][0][i] = x[i].convert_int();
+        Xinner_robust_print[current_subdiv][0][i] = x[i].convert_int();
+        Xinner_minimal_print[current_subdiv][0][i] = x[i].convert_int();
+        Xexact_print[current_subdiv][0][i] = x[i].convert_int();
     }
     outFile_width_ratio << 0 << "\t" << 1.0 << endl;
+    
+    // a changer un jour pour t_begin (notamment pour DDE)?
+    t_print[0] = 0;
+    
     
     cout << "printing at t=0 : x=" << endl;
     for (int i=0 ; i<sysdim ; i++)
@@ -425,6 +451,7 @@ void print_finalstats(clock_t begin)
             outFile_outer_minimal[i].close();
         }
         outFile_outer[i].close();
+        outFile_exact[i].close();
         outFile_inner[i].close();
         outFile_inner_joint[i].close();
         outFile_center[i].close();
