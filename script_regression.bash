@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rino="/Users/sylvie/RINO_essai/"
+rino="/Users/sylvie/RINO/"
 ref="/Users/sylvie/RINO_NONREGRESSION/RINO/"
 rino_exec=$rino"main"
 ref_exec=$ref"main"
@@ -29,8 +29,8 @@ fi
 
 
 # ODE examples
-examples_indexes=(1 2 3 4 5 6 7 9 13 14 15 17 18)   # indexes of ODE examples we wish to test for non regression
-sysdim=(1 2 4 5 2 4 4 2 7 2 2 12 14)
+examples_indexes=(1 2 3 4 5 6 7 9 14 15 19 20 21 22 13 17 18)   # indexes of ODE examples we wish to test for non regression
+sysdim=(1 2 4 5 2 4 4 2 2 2 2 3 2 2 7 12 14)
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
 compare_to_ref=false
