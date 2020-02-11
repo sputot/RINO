@@ -92,7 +92,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_joint, vector
         
         for (int j=0 ; j<jacdim ; j++)
         { // adding the controlled (exists) part
-            if (is_initialcondition[j])
+            if (j<sysdim) // initial conditions //(is_initialcondition[j])
             {
                 initialcondition_impro = initialcondition_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
                 initialcondition_pro = initialcondition_pro + Jaux[i][j]*eps[j];

@@ -52,7 +52,7 @@ int current_iteration;
 int uncontrolled; // number of uncontrolled parameters (forall params)
 int controlled; // number of controlled parameters (forall params)
 vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
-vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
+//vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
 //int variable; // number of non constant parameters
 //vector<bool> is_variable;  // for each parameter, constant or variable
 vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
@@ -422,7 +422,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
                 token = strtok(NULL,space);
             }
         } */
-        if (sscanf(buff, "initial-condition = %s\n", initialcondition) == 1)
+        /*if (sscanf(buff, "initial-condition = %s\n", initialcondition) == 1)
         {
             for (int i=0 ; i<jacdim; i++)
                 is_initialcondition[i] = false;
@@ -437,7 +437,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
                 //  cout <<"is_variable="<<i<<endl;
                 token = strtok(NULL,space);
             }
-        }
+        }*/
     }
     fclose(params_file);
     
@@ -487,7 +487,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             j++;
         }
     }
-    // ******* end for variable inputs ********
+    // ******* end for piecewise constant inputs ********
     
     inputs = vector<AAF>(jacdim);
     if (sysdim_params > 0)
@@ -499,12 +499,12 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
   //  variable = 0;
   //  is_variable = vector<bool>(sysdim+sysdim_params);
     // nb_inputs = vector<int>(jacdim);
-    is_initialcondition = vector<bool>(sysdim+sysdim_params);
+//    is_initialcondition = vector<bool>(sysdim+sysdim_params);
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
      //   is_variable[i] = false;     // variable input or parameter
        // nb_inputs[i] = 1; // > 1 if variable input
-        is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
+ //       is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
     
     refined_mean_value = false;
@@ -559,7 +559,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] = interval(0.0,0.01);
             inputs[3] = interval(0.0,0.25); // interval(0.0,0.01);
             inputs[4]= interval(11.,15.); // 14.... la masse (incontrollable)
-            is_initialcondition[4] = false;
+          //  is_initialcondition[4] = false;
             is_uncontrolled[4] = true;
   //          is_variable[4] = true;
        //     nb_subdiv_init = 2;
@@ -588,8 +588,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] =  interval(1.9,2.1);  // Kp
             inputs[3] =  interval(2.9,3.1);    // Kd
             //     inputs[4] = 0;
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
+        //    is_initialcondition[2] = false;
+        //    is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
          //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
@@ -607,8 +607,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[2] =  interval(1.9,2.1);  // Kp
             inputs[3] =  interval(2.9,3.1);    // Kd
        //     inputs[4] = 0;
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
+       //     is_initialcondition[2] = false;
+       //     is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
             // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
          //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
@@ -632,8 +632,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = 0;
             inputs[2] = interval(0,0.1);
             inputs[3] = interval(0,0.1);
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
+        //    is_initialcondition[2] = false;
+        //    is_initialcondition[3] = false;
             //is_initialcondition[2] = false;
         //    is_variable[2] = true;
         //    is_variable[3] = true;
@@ -737,7 +737,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = 0;
             inputs[1] = 0;
             inputs[2] = interval(0,1.);
-            is_initialcondition[2] = false;
+        //    is_initialcondition[2] = false;
          //   is_variable[2] = true;
         //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
@@ -753,7 +753,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
                 for (int j=1; j<nb_inputs[i]; j++)
                     inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
             }
-            is_initialcondition[2] = false;
+       //     is_initialcondition[2] = false;
            // is_variable[2] = true;
           //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
@@ -769,7 +769,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
                 for (int j=1; j<nb_inputs[i]; j++)
                     inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
             }
-            is_initialcondition[2] = false;
+         //   is_initialcondition[2] = false;
             // is_variable[2] = true;
             //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
@@ -864,8 +864,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             inputs[2] = interval(1.9,2.1);  // Kp
             inputs[3] = interval(2.9,3.1);   // Kd
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
+         //   is_initialcondition[2] = false;
+         //   is_initialcondition[3] = false;
          //   is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
@@ -881,8 +881,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0,0.1);
             inputs[2] = interval(1.9,2.1);  // Kp
             inputs[3] = interval(2.9,3.1);   // Kd
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
+      //      is_initialcondition[2] = false;
+       //     is_initialcondition[3] = false;
         //    is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
