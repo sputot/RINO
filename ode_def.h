@@ -125,11 +125,11 @@ public:
            double d = 0.45; // drag coefficient
            double m = 14.3; // mass du bullet in g
          //  yp[0] = - g*(y[1])-rho*y[0]*y[0]*a*d/(2.0*m); // velocity v
-              yp[0] = - g*(y[1])-rho*y[0]*y[0]*a*d/(2.0*y[4]); // velocity v
+              yp[0] = - g*(y[1])-rho*y[0]*y[0]*a*d/(2.0*param_inputs[0]); // velocity v
            yp[1] = - g*(1-y[1]*y[1]/2)/y[0]; // angle gamma with respect to the x axis
            yp[2] = y[0]*(1-y[1]*y[1]/2); // position x
            yp[3] = y[0]*(y[1]); // position y
-              yp[4] = 0;
+            //  yp[4] = 0;
           }
           /******************* end ballistic ****************************/
           else if (syschoice == 5)  // self-driving car

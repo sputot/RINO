@@ -90,10 +90,11 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 4;
             jacdim = 4;
         }
-        else if (syschoice == 4)  // ballistic linearise + masse dans le systeme
+        else if (syschoice == 4)  // ballistic linearise + masse incertaine
         {
-            sysdim = 5;
-            jacdim = 5;
+            sysdim = 4;
+            sysdim_jacparams = 1;
+            jacdim = sysdim+sysdim_jacparams;
         }
         else if (syschoice == 5)  // self-driving car
         {
@@ -580,7 +581,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_initialcondition[4] = false;
             is_uncontrolled[4] = true;
             is_variable[4] = true;
-            
        //     nb_subdiv_init = 2;
             component_to_subdiv = 4;
         }
