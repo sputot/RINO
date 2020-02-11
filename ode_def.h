@@ -55,8 +55,8 @@ extern int uncontrolled;  // number of uncontrolled parameters (forall params)
 extern int controlled;  // number of controlled parameters (forall params)
 extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
 extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
-extern int variable;  // number of non constant parameters
-extern vector<bool> is_variable; // for each parameter, constant or variable
+//extern int variable;  // number of non constant parameters
+//extern vector<bool> is_variable; // for each parameter, constant or variable
 extern vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 extern bool refined_mean_value;
@@ -137,11 +137,6 @@ public:
               yp[0] = y[1];
               yp[1] = -params[0] *(y[0] - 1.0) - params[1]*y[1];   // pr = 1 is the reference position
           }
-        /*  else if (syschoice == 6)  // self-driving car (version obsolete)
-          {
-              yp[0] = y[1];
-              yp[1] = -inputs[2] *(y[0] - 1.0) - inputs[3]*y[1];   // pr = 1 is the reference position
-          }*/
           else if (syschoice == 6)  // self-driving car with constant parameters
           {
               yp[0] = y[1];
@@ -162,13 +157,6 @@ public:
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
               yp[1] = 1;
-          }
-          else if (syschoice == 12)  // academic example to investigate time-varying parameters
-          {
-              yp[0] = (y[2] + y[3]*y[1])*y[0];
-              yp[1] = 1;
-              yp[2] = 0;
-              yp[3] = 0;
           }
           else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
           {

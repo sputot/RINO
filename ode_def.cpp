@@ -53,8 +53,8 @@ int uncontrolled; // number of uncontrolled parameters (forall params)
 int controlled; // number of controlled parameters (forall params)
 vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
 vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
-int variable; // number of non constant parameters
-vector<bool> is_variable;  // for each parameter, constant or variable
+//int variable; // number of non constant parameters
+//vector<bool> is_variable;  // for each parameter, constant or variable
 vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 bool refined_mean_value;
@@ -129,11 +129,6 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
-            jacdim = 4;
-        }
-        else if (syschoice == 12)  // academic example to investigate time-varying parameters
-        {
-            sysdim = 4;
             jacdim = 4;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
@@ -411,7 +406,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
                 token = strtok(NULL,space);
             }
         }
-        if (sscanf(buff, "variable = %s\n", initialcondition) == 1)
+     /*   if (sscanf(buff, "variable = %s\n", initialcondition) == 1)
         {
             for (int i=0 ; i<jacdim; i++)
                 is_variable[i] = false;
@@ -426,7 +421,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
               //  cout <<"is_variable="<<i<<endl;
                 token = strtok(NULL,space);
             }
-        }
+        } */
         if (sscanf(buff, "initial-condition = %s\n", initialcondition) == 1)
         {
             for (int i=0 ; i<jacdim; i++)
@@ -501,13 +496,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     uncontrolled = 0;
     controlled = 0;
     is_uncontrolled = vector<bool>(sysdim+sysdim_params);
-    variable = 0;
-    is_variable = vector<bool>(sysdim+sysdim_params);
+  //  variable = 0;
+  //  is_variable = vector<bool>(sysdim+sysdim_params);
     // nb_inputs = vector<int>(jacdim);
     is_initialcondition = vector<bool>(sysdim+sysdim_params);
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
-        is_variable[i] = false;     // variable input or parameter
+     //   is_variable[i] = false;     // variable input or parameter
        // nb_inputs[i] = 1; // > 1 if variable input
         is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
@@ -566,7 +561,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[4]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_initialcondition[4] = false;
             is_uncontrolled[4] = true;
-            is_variable[4] = true;
+  //          is_variable[4] = true;
        //     nb_subdiv_init = 2;
             component_to_subdiv = 4;
         }
@@ -582,22 +577,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             params[0] =  interval(1.9,2.1);  // Kp
             params[1] =  interval(2.9,3.1);    // Kd
         }
-       /* else if (syschoice == 6) // self-driving car; sysdim = 2, jacdim = 4
-        {  // DO NOT use for now sysdim != jacdim (temporary bug that will be fixed)
-            tau = 0.05;
-            t_end = 5.;
-            order = 3;  // order of Taylor Models
-            // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] =  interval(1.9,2.1);  // Kp
-            inputs[3] =  interval(2.9,3.1);    // Kd
-            is_initialcondition[0] = true;
-            is_initialcondition[1] = true;
-            is_uncontrolled[2] = true;
-            is_uncontrolled[3] = true;
-            uncontrolled = 2; // utile pour l'affichage
-        } */
         else if (syschoice == 6) // self-driving car with piecewise constant parameters; sysdim = 4, jacdim = 4
         {
             tau = 0.02;
@@ -616,6 +595,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
           //   is_variable[3] = true; // piecewise constant
         }
+  // REFLECHIR COMMENT GERER CA DIFFEREMMENT
         else if (syschoice == 7) // self-driving car with time varying parameters; sysdim = 4, jacdim = 4
         {
             tau = 0.02;
@@ -630,9 +610,11 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_initialcondition[2] = false;
             is_initialcondition[3] = false;
             is_uncontrolled[3] = true; // Kd uncontrolled
-            is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
+            // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
+         //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-             is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
+        
+          //   is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
         }
         else if (syschoice == 8)
         {
@@ -653,23 +635,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_initialcondition[2] = false;
             is_initialcondition[3] = false;
             //is_initialcondition[2] = false;
-            is_variable[2] = true;
-            is_variable[3] = true;
-        }
-        else if (syschoice == 12)
-        {
-            tau = 1.;
-            t_end = 2.;
-            order = 3;
-            inputs[0] = 1;
-            inputs[1] = 0;
-            inputs[2] = interval(0,0.1);
-            inputs[3] = interval(0,0.1);
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
-            is_variable[2] = true;
-            is_variable[3] = true;
-           // is_variable[1] = true;
+        //    is_variable[2] = true;
+        //    is_variable[3] = true;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {

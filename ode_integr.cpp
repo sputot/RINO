@@ -169,11 +169,12 @@ void TM_val::eval(vector<AAF> &res, double h)
     for (int j=0 ; j<sysdim; j++)
         res[j] += ode_g.x[j][order]*taui;
     
-    for (int j=0 ; j<sysdim; j++)
+ // A REVOIR
+/*    for (int j=0 ; j<sysdim; j++)
     {
         if (is_variable[j]) // variable param with value always in the same range
         res[j] = ode_x.x[j][0];
-    }
+    } */
 }
 
 // eval TM at tn+tau and store in xp1 and J
@@ -192,9 +193,10 @@ void TM_val::init_nextstep(double _tau)
     for (int i=0 ; i<sysdim ; i++) {
         xp1[i].compact();  // compact the affine form: remove zero coefficients (there are some ...)
         xp1[i].sumup(tol_noise); // group small terms
-        
-        if (is_variable[i]) // removing dependencies to previous occurence in time dependent input
-            xp1[i] = xp1[i].convert_int();
+   
+        // A REVOIR
+//        if (is_variable[i]) // removing dependencies to previous occurence in time dependent input
+//            xp1[i] = xp1[i].convert_int();
     }
     x = xp1;
 }
@@ -359,11 +361,11 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
         res[j] += odeVAR_g.x[j][order].x()*taui;
     
     // A REVOIR
-    for (int j=0 ; j<sysdim; j++)
+  /*  for (int j=0 ; j<sysdim; j++)
     {
     if (is_variable[j]) // variable param with value always in the same range
         res[j] = odeVAR_x[sysdim+sysdim_jacparams-1].x[j][0].x();
-    }
+    } */
    // for (int j=0 ; j<sysdim; j++)
    //     cout << "res[j]=" << res[j].convert_int() << endl;
 }
@@ -444,8 +446,9 @@ void TM_Jac::init_nextstep(double _tau, vector<AAF> &_x0)
         xp1[i].compact();  // compact the affine form: remove zero coefficients (there are some ...)
         xp1[i].sumup(tol_noise); // group small terms
         
-        if (is_variable[i]) // removing dependencies to previous occurence in time dependent input
-            xp1[i] = xp1[i].convert_int();
+        // A REVOIR
+    //    if (is_variable[i]) // removing dependencies to previous occurence in time dependent input
+     //       xp1[i] = xp1[i].convert_int();
     }
     x = xp1;
     
