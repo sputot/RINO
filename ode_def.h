@@ -145,9 +145,7 @@ public:
           else if (syschoice == 6)  // self-driving car with constant parameters
           {
               yp[0] = y[1];
-              yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
-              yp[2] = 0; // constant parameter Kp
-              yp[3] = 0; // constant parameter Kd
+              yp[1] = -param_inputs[0] *(y[0] - 1.0) - param_inputs[1]*y[1];   // pr = 1 is the reference position
           }
           else if (syschoice == 7)  // self-driving car with time-varying parameters
           {
@@ -159,18 +157,6 @@ public:
           else if (syschoice == 8)
           {
               yp[0] = - y[0]*y[0]*y[0];
-          }
-          else if (syschoice == 9)  // self-driving car with constant parameters
-          {
-              yp[0] = y[1];
-              yp[1] = -param_inputs[0] *(y[0] - 1.0) - param_inputs[1]*y[1];   // pr = 1 is the reference position
-          }
-          else if (syschoice == 10)  // self-driving car with constant parameters
-          {
-              yp[0] = y[1];
-              yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
-              yp[2] = 0; // constant parameter Kp
-              yp[3] = 0; // constant parameter Kd
           }
           else if (syschoice == 11)  // academic example to investigate time-varying parameters
           {
@@ -347,11 +333,7 @@ public:
              yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
-         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*y[2]*(1-y[1]) + y[1]; // same as above but coded differently
-             yp[1] = 1; // time
-             yp[2] = 0;
-         }
+         
          else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
              yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
              yp[1] = 1; // time

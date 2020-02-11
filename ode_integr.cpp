@@ -223,7 +223,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
                 odeVAR_x[k].x[j][0] = x0[j];
             else{
                 odeVAR_x[k].x[j][0] = x[j];
-                cout << "k=" << k << " j=" << j <<" odeVAR_x[k].x[j][0] =" << x[j].convert_int() << endl;
+     //           cout << "k=" << k << " j=" << j <<" odeVAR_x[k].x[j][0] =" << x[j].convert_int() << endl;
             }
         }
         
@@ -232,7 +232,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
                 odeVAR_x[k].param_inputs[j][0]=param_inputs_center[index_param_inv[j]+floor(offset*nb_inputs[j])];
             else {
                 odeVAR_x[k].param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
-                cout << "k=" << k << " j=" << j <<" odeVAR_x[k].param_inputs[j][0] =" << param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])].convert_int() << endl;
+          //      cout << "k=" << k << " j=" << j <<" odeVAR_x[k].param_inputs[j][0] =" << param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])].convert_int() << endl;
             }
             
            // cout << "index of param_inputs=" << index_param_inv[0]+floor(offset*nb_inputs[0]) << endl;
@@ -387,11 +387,11 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<sysdim; k++) {
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
-                cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
+      //          cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
             }
             for (int k=0 ; k<sysdim_jacparams ; k++) {
                 Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_x[sysdim+k].x[j][i].d(0);
-                cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
+     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
             }
         }
         
@@ -407,7 +407,7 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
         }
         for (int k=0 ; k<sysdim_jacparams ; k++) {
-            cout << "k+sysdim+floor(offset*nb_inputs[k])" << k+sysdim+floor(offset*nb_inputs[k]) << endl;
+     //       cout << "k+sysdim+floor(offset*nb_inputs[k])" << k+sysdim+floor(offset*nb_inputs[k]) << endl;
             Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_g.x[j][order].d(k);
         }
     }
@@ -418,9 +418,9 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     //    print_interv("J_rough",J_rough);
     scaleJacfz(aux,taui);
     addJacfzJacfz(J_res,aux);
-        for (int j=0 ; j<sysdim; j++)
+     /*   for (int j=0 ; j<sysdim; j++)
             for (int k=0 ; k<jacdim; k++)
-                cout << "J_res[j][k]=" << J_res[j][k].convert_int() << endl;
+                cout << "J_res[j][k]=" << J_res[j][k].convert_int() << endl; */
 }
 
 

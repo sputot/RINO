@@ -110,8 +110,9 @@ void define_system_dim(int argc, char* argv[])
         } */
         else if (syschoice == 6)  //  self-driving car
         {
-            sysdim = 4;
-            jacdim = 4;
+            sysdim = 2;
+            sysdim_jacparams = 2;
+            jacdim = sysdim+sysdim_jacparams;
             //     sysdim_params = 2;
         }
         else if (syschoice == 7)  //  self-driving car
@@ -124,17 +125,6 @@ void define_system_dim(int argc, char* argv[])
         {
             sysdim = 1;
             jacdim = 1;
-        }
-        else if (syschoice == 9)  // self-driving car
-        {
-            sysdim = 2;
-            sysdim_jacparams = 2;
-            jacdim = 4; // sysdim + sysdim_jacparams
-        }
-        else if (syschoice == 10)  // self-driving car
-        {
-            sysdim = 4;
-            jacdim = 4;
         }
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
@@ -178,10 +168,6 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             sysdim_jacparams = 1;
             jacdim = sysdim+sysdim_jacparams;
-        }
-        else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
-            sysdim = 3;
-            jacdim = 3;
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
@@ -655,36 +641,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 3;
             inputs[0] = interval(0.4,0.5);
         }
-        else if (syschoice == 9) // self-driving car with constant coefficients ; sysdim = 2, jacdim = 4
-        {
-            tau = 0.02;
-            t_end = 5.;
-            order = 3;  // order of Taylor Models
-            // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] =  interval(1.9,2.1);  // Kp
-            inputs[3] =  interval(2.9,3.1);    // Kd
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
-        //    is_uncontrolled[2] = true;
-            is_uncontrolled[3] = true;
-        }
-        else if (syschoice == 10) // self-driving car with constant coefficients ; sysdim = 4, jacdim = 4
-        {  // DO NOT use for now sysdim != jacdim (temporary bug that will be fixed)
-            tau = 0.02;
-            t_end = 5.;
-            order = 3;  // order of Taylor Models
-            // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] =  interval(1.9,2.1);  // Kp
-            inputs[3] =  interval(2.9,3.1);    // Kd
-            is_initialcondition[2] = false;
-            is_initialcondition[3] = false;
-            is_uncontrolled[2] = true;
-            is_uncontrolled[3] = true;
-        }
         else if (syschoice == 11)
         {
             tau = 1.;
@@ -818,17 +774,6 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
          //   is_variable[2] = true;
         //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
-        }
-        else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
-            tau = 1.0;
-            t_end = 2;
-            order = 3;
-            inputs[0] = 0;
-            inputs[1] = 0;
-            inputs[2] = interval(0,1.);
-            is_initialcondition[2] = false;
-          //   is_variable[2] = true;
-            // solution at t=2  is 6 + u1 - u2 (u being the piecewise constant value of y[1])
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
