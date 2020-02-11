@@ -40,11 +40,11 @@ public:
     vector<T<F<AAF> >> xp;  // Dependent variables
 
  
-    OdeVar() : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
+    OdeVar() : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
     {
     }
     
-    OdeVar(OdeFunc f)  : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f)  : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
     {
         f(xp,param_inputs,x); // record DAG at construction:
     }
@@ -68,12 +68,12 @@ public:
     vector< T<AAF>> x; // Independent variables
     vector< T<AAF>> xp;  // Dependent variables
     
-    Ode()  :  param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
+    Ode()  :  param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
     {
         
     }
     
-    Ode(OdeFunc f)  : param_inputs(jacdim-sysdim), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f)  : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
         f(xp,param_inputs,x);
@@ -192,32 +192,9 @@ void fixpoint(vector<vector<AAF>> &J_rough , vector<vector<AAF>> &Jac1_g_rough, 
 
 
 
-// enclosure by Taylor model of order order of the flow g_i(X0) at time tau
-//void gTaylor(vector<AAF> &g, Ode ode_x0, Ode ode_g0, double tau, int order);
-// same thing on time [0,tau]
-//void gTaylor_range(vector<AAF> &g, Ode ode_x0, Ode ode_g0, double tau1, double tau2, int order);
-
-// enclosure by Taylor model of order order of the flow g_i(X0)
-//void gTaylor(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau, int order);
-// same thing on time interval [tau1,tau]
-//void gTaylor_range(vector<AAF> &g, OdeVar odeVAR_x, OdeVar odeVAR_g, double tau1, double tau2, int order);
-
-// enclosure by Taylor model of order order of the Jacobian of the flow g_i(X0)
-//void JTaylor(vector<vector<AAF>> &J_res, OdeVar odeVAR_x, OdeVar odeVAR_g, vector<vector<AAF>> &J0, vector<vector<AAF>> &J_rough , double tau, int order);
-// same thing on time interval [tau1,tau2]
-//void JTaylor_range(AAF J_res[sysdim][sysdim], OdeVar odeVAR_x, OdeVar odeVAR_g, AAF J0[sysdim][sysdim], AAF J_rough[sysdim][sysdim], double tau1, double tau2, int order);
 
 
 
-
-
-
-/* init next time step of integration:
-//     x0, x0p1 are the solution of the ODE starting from the center of initial conditions
-//     x, xp1 are the solution of the ODE starting from the full range of initial conditions
-//     J0, Jtau are the Jacobian of the solution with respect to initial conditions
- */
-//void init_nextstep_ode(vector<AAF> &x0, vector<AAF> &x0p1, vector<AAF> &x, vector<AAF> &xp1, vector<vector<AAF>> &J0, vector<vector<AAF>> &Jtau);
 
 /* building Taylor models */
 

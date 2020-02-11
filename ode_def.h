@@ -28,9 +28,16 @@ extern int sysdim;
 // dimension of uncertain input
 extern int jacdim; // Jacobian will be dimension sysdim * jacdim
 extern int sysdim_params;  // dimension of the vector of parameters params - Boost
+extern int sysdim_jacparams; // params that appear in the Jacobian but are not defined as solutions of ODE
+
+extern double t_end; // ending time of integration
+extern double t_begin; // starting time of initialization
+
 extern vector<AAF> params;      // params of the ODE (nondeterministic disturbances)
 extern vector<AAF> inputs;   // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
 extern vector<AAF> center_inputs;
+extern vector<int> index_param;
+extern vector<int> index_param_inv;
 extern vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
@@ -347,6 +354,10 @@ public:
          }
          else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
              yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
+             yp[1] = 1; // time
+         }
+         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
+             yp[0] = 2 + 2*(param_inputs[0]+param_inputs[0]*param_inputs[0])*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
     }

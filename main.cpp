@@ -59,8 +59,6 @@ int main(int argc, char* argv[])
     // all these parameters in initialization functions defined in ode_def.cpp
     double tn;    // current time
     double tau;   // integration time step (fixed step for now)
-    double t_begin; // starting time of initialization
-    double t_end; // ending time of integration
     int order;    // order of Taylor expansion
     
     double d0; // = 1;   // delay in DDE

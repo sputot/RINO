@@ -27,10 +27,15 @@ int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = s
 int sysdim_params;
 int sysdim_jacparams; // params that appear in the Jacobian but are not defined as solutions of ODE
 
+double t_end; // ending time of integration
+double t_begin; // starting time of initialization
+
 // parameters of the system of the ODEs
 vector<AAF> params;  // params of the ODE (nondeterministic disturbances)
 vector<AAF> inputs; // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
 vector<AAF> center_inputs;
+vector<int> index_param;
+vector<int> index_param_inv;
 vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
@@ -62,6 +67,7 @@ void define_system_dim(int argc, char* argv[])
     /*************************************************************************** ODE ************************************************************/
     
     sysdim_params = 0;
+    sysdim_jacparams = 0;
     nb_subdiv_init = 1; // nb of initial subdivisions of the input range
 
     if (systype == 0) // ODE
@@ -169,7 +175,8 @@ void define_system_dim(int argc, char* argv[])
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            jacdim = 3;
+            sysdim_jacparams = 1;
+            jacdim = sysdim+sysdim_jacparams;
         }
         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 3;
@@ -177,8 +184,18 @@ void define_system_dim(int argc, char* argv[])
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            jacdim = 4;
+            sysdim_jacparams = 1;
+            jacdim = sysdim + sysdim_jacparams;
+            
         }
+        else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
+            sysdim = 2;
+            sysdim_jacparams = 1;
+            jacdim = sysdim + sysdim_jacparams;
+        }
+        
+        
+        // jacdim = 4
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -227,6 +244,7 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 8) // self-driving car but with coeff in interv
         {
             sysdim = 2;
+            sysdim_jacparams = 2;
             jacdim = 4;
         }
         else if (syschoice == 9) 
@@ -262,16 +280,23 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
         x[i] = inputs[i];
         xcenter[i] = center_inputs[i];
     }
-    if (jacdim-sysdim > 0)
-    {
-        for (int i=0 ; i<jacdim-sysdim ; i++) {
-            param_inputs[i] = inputs[sysdim+i];
-            if (innerapprox == 1)
-                param_inputs_center[i] = center_inputs[sysdim+i];
-            else
-                param_inputs_center[i] = inputs[sysdim+i];
+    
+    // param_inputs between 0 and jacdim-sysdim, inputs between 0 and sysdim_jacparams
+        int j = 0;
+        for (int i = 0; i < sysdim_jacparams ; i++) {
+            for (int k=0; k<nb_inputs[i] ; k++) {
+                index_param[j] = i;
+                if (k == 0)
+                    index_param_inv[i] = j;
+                param_inputs[j] = inputs[sysdim+j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
+                if (innerapprox == 1)
+                    param_inputs_center[j] = center_inputs[sysdim+j]; // center_inputs[sysdim+i].convert_int();
+                else
+                    param_inputs_center[j] = inputs[sysdim+j]; // inputs[sysdim+i].convert_int();
+                j++;
+            }
         }
-    }
+    
     setId(J);
     
     
@@ -449,7 +474,38 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
+    // ******* for variable inputs ********
+    nb_inputs = vector<int>(sysdim_jacparams);
+    for (int i=0; i<sysdim_jacparams; i++)
+        nb_inputs[i] = 1;
     
+    if (systype == 0) // ODE
+    {
+        t_begin = 0;
+        if (syschoice == 21)  // running example
+        {
+            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+        }
+        else if (syschoice == 22)  // running example
+        {
+            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+        }
+    }
+    for (int i=0; i<sysdim_jacparams; i++)
+        jacdim += nb_inputs[i]-1;
+    // correspondance between variable inputs wwhich sucessive bounds are stored in inputs of size [jacdim]
+    index_param = vector<int>(jacdim-sysdim);
+    index_param_inv = vector<int>(sysdim_jacparams);
+    int j = 0;
+    for (int i = 0; i < sysdim_jacparams ; i++) {
+        for (int k=0; k<nb_inputs[i] ; k++) {
+            index_param[j] = i;
+            if (k == 0)
+                index_param_inv[i] = j;
+            j++;
+        }
+    }
+    // ******* end for variable inputs ********
     
     inputs = vector<AAF>(jacdim);
     if (sysdim_params > 0)
@@ -457,15 +513,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     uncontrolled = 0;
     controlled = 0;
-    is_uncontrolled = vector<bool>(jacdim);
+    is_uncontrolled = vector<bool>(sysdim+sysdim_params);
     variable = 0;
-    is_variable = vector<bool>(jacdim);
-    nb_inputs = vector<int>(jacdim);
-    is_initialcondition = vector<bool>(jacdim);
+    is_variable = vector<bool>(sysdim+sysdim_params);
+    // nb_inputs = vector<int>(jacdim);
+    is_initialcondition = vector<bool>(sysdim+sysdim_params);
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
         is_variable[i] = false;     // variable input or parameter
-        nb_inputs[i] = 1; // > 1 if variable input
+       // nb_inputs[i] = 1; // > 1 if variable input
         is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
     
@@ -759,14 +815,14 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = 0;
             inputs[2] = interval(0,1.);
             is_initialcondition[2] = false;
-            is_variable[2] = true;
+         //   is_variable[2] = true;
         //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
         else if (syschoice == 20) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
-            order = 4;
+            order = 3;
             inputs[0] = 0;
             inputs[1] = 0;
             inputs[2] = interval(0,1.);
@@ -777,13 +833,33 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
-            order = 4;
+            order = 3;
             inputs[0] = 0;
             inputs[1] = 0;
             inputs[2] = interval(0,1.);
+            for (int i=0; i<sysdim_jacparams; i++) {
+                for (int j=1; j<nb_inputs[i]; j++)
+                    inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
+            }
             is_initialcondition[2] = false;
-            is_variable[2] = true;
-            nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+           // is_variable[2] = true;
+          //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
+        }
+        else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
+            tau = 1.;
+            t_end = 2;
+            order = 3;
+            inputs[0] = 0;
+            inputs[1] = 0;
+            inputs[2] = interval(0,1.);
+            for (int i=0; i<sysdim_jacparams; i++) {
+                for (int j=1; j<nb_inputs[i]; j++)
+                    inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
+            }
+            is_initialcondition[2] = false;
+            // is_variable[2] = true;
+            //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
     }
@@ -979,7 +1055,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     {
         if (is_uncontrolled[i])
             uncontrolled ++;
-        if (!is_uncontrolled[i] && !is_initialcondition[i])
+        if (!is_uncontrolled[i] && (i >= sysdim))
             controlled++;
         
         temp = inputs[i].convert_int();
@@ -987,7 +1063,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         eps[i] = temp-mid(temp);
     }
     
-    cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
+  //  cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
     
     open_outputfiles(); // needs sysdim to be first defined but also controlled and uncontrolled...
     
@@ -1159,12 +1235,12 @@ void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
     
     // iterative definition
     // mmmh idealementil faudrait calculer en AAF ici ???
-    else if ((systype == 0) && ((syschoice == 19) || (syschoice == 20)))
+    else if ((systype == 0) && ((syschoice == 19) || (syschoice == 20)|| (syschoice == 21)))
     {
         if (current_iteration == 0)
             Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
         else {
-            if (is_variable[2]) {
+            if (jacdim>sysdim+sysdim_jacparams) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
                 Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
@@ -1173,6 +1249,23 @@ void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
                 double delta_t = t_print[current_iteration]-t_print[0];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
                 Xexact_print[0][current_iteration][0] = inputs[0].convert_int() + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+            }
+        }
+    }
+    else if ((systype == 0) && ((syschoice == 22)))
+    {
+        if (current_iteration == 0)
+            Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
+        else {
+            if (jacdim>sysdim+sysdim_jacparams) {
+                double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
+                double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[2].convert_int()+inputs[2].convert_int()*inputs[2].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+            }
+            else {
+                double delta_t = t_print[current_iteration]-t_print[0];
+                double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
+                Xexact_print[0][current_iteration][0] = inputs[0].convert_int() + (inputs[2].convert_int()+inputs[2].convert_int()*inputs[2].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
         }
     }
