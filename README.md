@@ -52,8 +52,8 @@ More documentation on how to use these (and better input mechanisms) should come
 ```
 # dimension of the ODE
 system-dimension = 4
-# dimension of the uncertain parameter + initial conditions (must be equal to the above right now)
-jacobian-dimension = 4
+# dimension of the uncertain parameter and inputs
+inputs-dimension = 0
 time-horizon = 5.
 
 # time step: only for ODEs
