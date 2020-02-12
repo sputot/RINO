@@ -23,9 +23,9 @@ The place to define initial conditions and parameters the systems of ODEs or DDE
 using namespace std;
 
 int sysdim; // dimension of system of ODE/DDE
-int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + sysdim_jacparams
+int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + inputsdim
 int sysdim_params;
-int sysdim_jacparams; // params that appear in the Jacobian but are not defined as solutions of ODE
+int inputsdim; // params that appear in the Jacobian but are not defined as solutions of ODE
 
 double t_end; // ending time of integration
 double t_begin; // starting time of initialization
@@ -69,7 +69,7 @@ void define_system_dim(int argc, char* argv[])
     /*************************************************************************** ODE ************************************************************/
     
     sysdim_params = 0;
-    sysdim_jacparams = 0;
+    inputsdim = 0;
     nb_subdiv_init = 1; // nb of initial subdivisions of the input range
 
     if (systype == 0) // ODE
@@ -95,8 +95,8 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 4)  // ballistic linearise + masse incertaine
         {
             sysdim = 4;
-            sysdim_jacparams = 1;
-            jacdim = sysdim+sysdim_jacparams;
+            inputsdim = 1;
+            jacdim = sysdim+inputsdim;
         }
         else if (syschoice == 5)  // self-driving car
         {
@@ -113,8 +113,8 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 6)  //  self-driving car
         {
             sysdim = 2;
-            sysdim_jacparams = 2;
-            jacdim = sysdim+sysdim_jacparams;
+            inputsdim = 2;
+            jacdim = sysdim+inputsdim;
             //     sysdim_params = 2;
         }
         else if (syschoice == 7)  //  self-driving car
@@ -163,19 +163,19 @@ void define_system_dim(int argc, char* argv[])
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            sysdim_jacparams = 1;
-            jacdim = sysdim+sysdim_jacparams;
+            inputsdim = 1;
+            jacdim = sysdim+inputsdim;
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            sysdim_jacparams = 1;
-            jacdim = sysdim + sysdim_jacparams;
+            inputsdim = 1;
+            jacdim = sysdim + inputsdim;
             
         }
         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
-            sysdim_jacparams = 1;
-            jacdim = sysdim + sysdim_jacparams;
+            inputsdim = 1;
+            jacdim = sysdim + inputsdim;
         }
         
         
@@ -223,7 +223,7 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 8) // self-driving car but with coeff in interv
         {
             sysdim = 2;
-            sysdim_jacparams = 2;
+            inputsdim = 2;
             jacdim = 4;
         }
         else if (syschoice == 9) 
@@ -260,9 +260,9 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
         xcenter[i] = center_initial_values[i];
     }
     
-    // param_inputs between 0 and jacdim-sysdim, inputs between 0 and sysdim_jacparams
+    // param_inputs between 0 and jacdim-sysdim, inputs between 0 and inputsdim
         int j = 0;
-        for (int i = 0; i < sysdim_jacparams ; i++) {
+        for (int i = 0; i < inputsdim ; i++) {
             for (int k=0; k<nb_inputs[i] ; k++) {
                 index_param[j] = i;
                 if (k == 0)
@@ -374,7 +374,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         }
         if (sscanf(buff, "uncontrolled = %s\n", initialcondition) == 1)
         {
-            for (int i=0 ; i<jacdim; i++)
+            for (int i=0 ; i<inputsdim; i++)
                 is_uncontrolled[i] = false;
                 
             char *token = strtok(buff,space);
@@ -439,8 +439,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
     // ******* for variable inputs ********
-    nb_inputs = vector<int>(sysdim_jacparams);
-    for (int i=0; i<sysdim_jacparams; i++)
+    nb_inputs = vector<int>(inputsdim);
+    for (int i=0; i<inputsdim; i++)
         nb_inputs[i] = 1;
     
     if (systype == 0) // ODE
@@ -455,13 +455,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
         }
     }
-    for (int i=0; i<sysdim_jacparams; i++)
+    for (int i=0; i<inputsdim; i++)
         jacdim += nb_inputs[i]-1;
     // correspondance between variable inputs wwhich sucessive bounds are stored in inputs of size [jacdim]
     index_param = vector<int>(jacdim-sysdim);
-    index_param_inv = vector<int>(sysdim_jacparams);
+    index_param_inv = vector<int>(inputsdim);
     int j = 0;
-    for (int i = 0; i < sysdim_jacparams ; i++) {
+    for (int i = 0; i < inputsdim ; i++) {
         for (int k=0; k<nb_inputs[i] ; k++) {
             index_param[j] = i;
             if (k == 0)
@@ -478,9 +478,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     uncontrolled = 0;
     controlled = 0;
-    is_uncontrolled = vector<bool>(sysdim+sysdim_params);
+    is_uncontrolled = vector<bool>(inputsdim);
   
-    for (int i=0 ; i<jacdim; i++) {
+    for (int i=0 ; i<inputsdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
     }
     
@@ -536,7 +536,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[2] = interval(0.0,0.01);
             initial_values[3] = interval(0.0,0.25); // interval(0.0,0.01);
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
-            is_uncontrolled[4] = true;
+            is_uncontrolled[0] = true;
   //          is_variable[4] = true;
        //     nb_subdiv_init = 2;
             component_to_subdiv = 4;
@@ -563,7 +563,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[1] = interval(0,0.1);
             inputs[0] =  interval(1.9,2.1);  // Kp
             inputs[1] =  interval(2.9,3.1);    // Kd
-            is_uncontrolled[3] = true; // Kd uncontrolled
+            is_uncontrolled[1] = true; // Kd uncontrolled
          //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
           //   is_variable[3] = true; // piecewise constant
@@ -713,7 +713,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
-            for (int i=0; i<sysdim_jacparams; i++) {
+            for (int i=0; i<inputsdim; i++) {
                 for (int j=1; j<nb_inputs[i]; j++)
                     inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
             }
@@ -727,7 +727,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
-            for (int i=0; i<sysdim_jacparams; i++) {
+            for (int i=0; i<inputsdim; i++) {
                 for (int j=1; j<nb_inputs[i]; j++)
                     inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
             }
@@ -824,7 +824,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(1.9,2.1);  // Kp
             inputs[1] = interval(2.9,3.1);   // Kd
         //    is_uncontrolled[2] = true;
-            is_uncontrolled[3] = true;
+            is_uncontrolled[1] = true;
         }
         else if (syschoice == 9) // Zou CAV 2015
         {
@@ -912,9 +912,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     }
     for (int i=0 ; i<jacdim-sysdim ; i++)
     {
-        if (is_uncontrolled[i+sysdim])
+        if (is_uncontrolled[i])
             uncontrolled ++;
-        if (!is_uncontrolled[i+sysdim])
+        if (!is_uncontrolled[i])
             controlled++;
         
         temp = inputs[i].convert_int();
@@ -1116,7 +1116,7 @@ void AnalyticalSol(int current_iteration, double d0)
         if (current_iteration == 0)
             Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
         else {
-            if (jacdim>sysdim+sysdim_jacparams) {
+            if (jacdim>sysdim+inputsdim) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
                 Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[0].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
@@ -1133,7 +1133,7 @@ void AnalyticalSol(int current_iteration, double d0)
         if (current_iteration == 0)
             Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
         else {
-            if (jacdim>sysdim+sysdim_jacparams) {
+            if (jacdim>sysdim+inputsdim) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
                 Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[0].convert_int()+inputs[0].convert_int()*inputs[0].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;

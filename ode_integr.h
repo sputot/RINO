@@ -40,11 +40,11 @@ public:
     vector<T<F<AAF> >> xp;  // Dependent variables
 
  
-    OdeVar() : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
+    OdeVar() : param_inputs(inputsdim), x(sysdim), xp(sysdim)
     {
     }
     
-    OdeVar(OdeFunc f)  : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f)  : param_inputs(inputsdim), x(sysdim), xp(sysdim)
     {
         f(xp,param_inputs,x); // record DAG at construction:
     }
@@ -68,12 +68,12 @@ public:
     vector< T<AAF>> x; // Independent variables
     vector< T<AAF>> xp;  // Dependent variables
     
-    Ode()  :  param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
+    Ode()  :  param_inputs(inputsdim), x(sysdim), xp(sysdim)
     {
         
     }
     
-    Ode(OdeFunc f)  : param_inputs(sysdim_jacparams), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f)  : param_inputs(inputsdim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
         f(xp,param_inputs,x);

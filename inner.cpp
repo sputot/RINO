@@ -103,7 +103,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_joint, vector
                     innerjoint_pro = innerjoint_pro + Jaux[i][j]*eps[j];
                 }
             }
-            else if (!is_uncontrolled[j])
+            else if (!is_uncontrolled[j-sysdim])
             {
                 controlled_impro = controlled_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
                 controlled_pro = controlled_pro + Jaux[i][j]*eps[j];

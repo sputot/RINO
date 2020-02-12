@@ -23,12 +23,12 @@ using namespace std;
 extern int systype;    // systype = 0 (ODE) or 1 (DDE) -- initialized in main.cpp / command line
 extern int syschoice;  // to choose among the predefined systems of ODE or DDE -- initialized in main.cpp / command line
 
-// dimension of the system of ODE/DDE to analyze:
-extern int sysdim;
+
+extern int sysdim; // dimension of the system of ODE/DDE to analyze
+extern int inputsdim; // dimension of the uncertain inputs and parameters of the system
 // dimension of uncertain input
-extern int jacdim; // Jacobian will be dimension sysdim * jacdim
-extern int sysdim_params;  // dimension of the vector of parameters params - Boost
-extern int sysdim_jacparams; // params that appear in the Jacobian but are not defined as solutions of ODE
+extern int jacdim; // Jacobian will be dimension jacdim = sysdim + inputsdim
+extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
 
 extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization

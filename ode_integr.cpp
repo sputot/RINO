@@ -111,7 +111,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
     ode_x.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_x.x[j][0]=x[j]; // initialize with center;
-    for (j=0 ; j<sysdim_jacparams ; j++)
+    for (j=0 ; j<inputsdim ; j++)
         ode_x.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
     // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
@@ -126,7 +126,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
     ode_g.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_g.x[j][0] = g_rough[j]; // initialize with enclosure of the flow on the time step
-    for (j=0 ; j<sysdim_jacparams ; j++)
+    for (j=0 ; j<inputsdim ; j++)
         ode_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
    
     
@@ -142,7 +142,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
             ode_g.x[j][i+1]=ode_g.xp[j][i]/double(i+1);
             // ode.x[0]...ode.x[10] now contains the Taylor-coefficients of the solution of the ODE.
         }
-        for (j=0 ; j<sysdim_jacparams ; j++) {
+        for (j=0 ; j<inputsdim ; j++) {
             ode_x.param_inputs[j][i+1]=0;
             ode_g.param_inputs[j][i+1]=0;
         }
@@ -217,7 +217,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
     double offset = (tn-t_begin)/t_end;
     
     // compute Lie derivatives and Jacobian on CI: these will give coefficients 0 to order-1 of TM for Jacobian
-    for (k=0 ; k<sysdim+sysdim_jacparams; k++)
+    for (k=0 ; k<sysdim+inputsdim; k++)
     {
         odeVAR_x[k].reset();
         for (j=0 ; j<sysdim ; j++) {
@@ -229,7 +229,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
             }
         }
         
-        for (j=0 ; j<sysdim_jacparams ; j++) {
+        for (j=0 ; j<inputsdim ; j++) {
             if ((k < j+sysdim) && (refined_mean_value))
                 odeVAR_x[k].param_inputs[j][0]=param_inputs_center[index_param_inv[j]+floor(offset*nb_inputs[j])];
             else {
@@ -254,28 +254,28 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
     odeVAR_g.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_g.x[j][0] = g_rough[j];
-    for (j=0 ; j<sysdim_jacparams ; j++)
+    for (j=0 ; j<inputsdim ; j++)
         odeVAR_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
     // specify the variables to differentiate - we can probably differentiate only on the component we will be interested in - see later !
     for (k=0 ; k<sysdim; k++)
         odeVAR_x[k].x[k][0].diff(0,1);
-    for (k=0 ; k<sysdim_jacparams ; k++)
+    for (k=0 ; k<inputsdim ; k++)
         odeVAR_x[k+sysdim].param_inputs[k][0].diff(0,1); // index_param: correspondance for variable parameter
    //     odeVAR_x[k+sysdim].param_inputs[index_param[k]][0].diff(0,1); // index_param: correspondance for variable parameter
     
     
     for (j=0 ; j<sysdim ; j++)
-        odeVAR_g.x[j][0].diff(j,sysdim+sysdim_jacparams);
-    for (j=0 ; j<sysdim_jacparams ; j++)
-        odeVAR_g.param_inputs[j][0].diff(sysdim+j,sysdim+sysdim_jacparams);
+        odeVAR_g.x[j][0].diff(j,sysdim+inputsdim);
+    for (j=0 ; j<inputsdim ; j++)
+        odeVAR_g.param_inputs[j][0].diff(sysdim+j,sysdim+inputsdim);
     
     
     
     for(i=0;i<order;i++)
     {
         // Evaluate the i'th Taylor coefficient of the r.h.s. of the ODE:
-        for (k=0 ; k<sysdim+sysdim_jacparams; k++)
+        for (k=0 ; k<sysdim+inputsdim; k++)
             for (j=0 ; j<sysdim ; j++) {
                 odeVAR_x[k].xp[j].eval(i);
                 // Since d(x,y,z,p)/dt=f(x,y,z,p) we have
@@ -289,16 +289,16 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
             // ode.x[0]...ode.x[10] now contains the Taylor-coefficients of the solution of the ODE.
         }
         // zero derivative: important, does not work otherwise...
-        for (k=0 ; k<sysdim+sysdim_jacparams; k++)
-            for (j=0 ; j<sysdim_jacparams ; j++)
+        for (k=0 ; k<sysdim+inputsdim; k++)
+            for (j=0 ; j<inputsdim ; j++)
                 odeVAR_x[k].param_inputs[j][i+1]=0;
-        for (j=0 ; j<sysdim_jacparams ; j++)
+        for (j=0 ; j<inputsdim ; j++)
             odeVAR_g.param_inputs[j][i+1]=0;
         
     }
     
     
-//    for (int k=0 ; k<sysdim_jacparams ; k++) {
+//    for (int k=0 ; k<inputsdim ; k++) {
 //        cout << "k+sysdim+floor(offset*nb_inputs[j])" << k+sysdim+floor(offset*nb_inputs[j]) << endl;
  //       Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_g.x[j][order].d(k);
     
@@ -313,7 +313,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
        //     cout << "Jac1_g_rough[i][k] in build: " << Jac1_g_rough[j][k].convert_int() << endl;
        //     cout << "Jac1_g_rough[i][k] in build: " << odeVAR_x.x[j][1].d(k).convert_int() << endl;
         }
-        for (int k=0 ; k<sysdim_jacparams ; k++)
+        for (int k=0 ; k<inputsdim ; k++)
         {
             Jac1_g_rough[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_g.x[j][1].d(k);
             Jac1_g_rough[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].compact();
@@ -346,13 +346,13 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     
     // only the last differentiation is computed with full intervals (improved mean value)
     for (int j=0 ; j<sysdim; j++)
-        res[j] = odeVAR_x[sysdim+sysdim_jacparams-1].x[j][0].x();
+        res[j] = odeVAR_x[sysdim+inputsdim-1].x[j][0].x();
     
     // pour les premiers termes, on utilise dL^i(x0)*tau^i
     for (int i=1; i<order ; i++)
     {
         for (int j=0 ; j<sysdim; j++)
-            res[j] += odeVAR_x[sysdim+sysdim_jacparams-1].x[j][i].x()*taui;
+            res[j] += odeVAR_x[sysdim+inputsdim-1].x[j][i].x()*taui;
         taui *= h;
     }
     
@@ -364,7 +364,7 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
   /*  for (int j=0 ; j<sysdim; j++)
     {
     if (is_variable[j]) // variable param with value always in the same range
-        res[j] = odeVAR_x[sysdim+sysdim_jacparams-1].x[j][0].x();
+        res[j] = odeVAR_x[sysdim+inputsdim-1].x[j][0].x();
     } */
    // for (int j=0 ; j<sysdim; j++)
    //     cout << "res[j]=" << res[j].convert_int() << endl;
@@ -391,7 +391,7 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
       //          cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
             }
-            for (int k=0 ; k<sysdim_jacparams ; k++) {
+            for (int k=0 ; k<inputsdim ; k++) {
                 Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_x[sysdim+k].x[j][i].d(0);
      //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
             }
@@ -408,7 +408,7 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         for (int k=0 ; k<sysdim; k++) {
             Jaci[j][k] = odeVAR_g.x[j][order].d(k);
         }
-        for (int k=0 ; k<sysdim_jacparams ; k++) {
+        for (int k=0 ; k<inputsdim ; k++) {
      //       cout << "k+sysdim+floor(offset*nb_inputs[k])" << k+sysdim+floor(offset*nb_inputs[k]) << endl;
             Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_g.x[j][order].d(k);
         }
@@ -598,7 +598,7 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
 
 HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double tn, double tau, int order)
 {
-    vector<OdeVar> odeVAR_x(sysdim+sysdim_jacparams);
+    vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     OdeVar odeVAR_g = OdeVar(bf);
     Ode ode_x0 = Ode(bf);
     Ode ode_g0 = Ode(bf);
@@ -615,7 +615,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     //if (innerapprox == 1)
     
     if (innerapprox == 1) {
-        for (int k = 0; k<sysdim+sysdim_jacparams; k++)
+        for (int k = 0; k<sysdim+inputsdim; k++)
             odeVAR_x[k] = OdeVar(bf);
     }
     TM_Jac TMJac = TM_Jac(odeVAR_x, odeVAR_g, order, x, init_x, J0, tn, tau);
