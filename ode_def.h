@@ -26,8 +26,8 @@ extern int syschoice;  // to choose among the predefined systems of ODE or DDE -
 
 extern int sysdim; // dimension of the system of ODE/DDE to analyze
 extern int inputsdim; // dimension of the uncertain inputs and parameters of the system
-// dimension of uncertain input
-extern int jacdim; // Jacobian will be dimension jacdim = sysdim + inputsdim
+extern int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
+extern int jacdim; // Jacobian will be dimension jacdim = sysdim + fullinputsdim
 extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
 
 extern double t_end; // ending time of integration

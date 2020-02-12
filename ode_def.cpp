@@ -23,9 +23,10 @@ The place to define initial conditions and parameters the systems of ODEs or DDE
 using namespace std;
 
 int sysdim; // dimension of system of ODE/DDE
-int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + inputsdim
+int inputsdim; // dimension of the uncertain inputs and parameters of the system
+int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
+int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + fullinputsdim
 int sysdim_params;
-int inputsdim; // params that appear in the Jacobian but are not defined as solutions of ODE
 
 double t_end; // ending time of integration
 double t_begin; // starting time of initialization
@@ -78,108 +79,81 @@ void define_system_dim(int argc, char* argv[])
         if (syschoice == 1)  // running example
         {
             sysdim = 1;
-            jacdim = 1;
             sysdim_params = 1;
         }
         else if (syschoice == 2)  // Brusselator
         {
             sysdim = 2;
-            jacdim = 2;
             sysdim_params = 2;
         }
         else if (syschoice == 3)  // ballistic
         {
             sysdim = 4;
-            jacdim = 4;
         }
         else if (syschoice == 4)  // ballistic linearise + masse incertaine
         {
             sysdim = 4;
             inputsdim = 1;
-            jacdim = sysdim+inputsdim;
         }
         else if (syschoice == 5)  // self-driving car
         {
             sysdim = 2;
-            jacdim = 2;
             sysdim_params = 2;
         }
-     /*   else if (syschoice == 6)  //  self-driving car
-        {
-            sysdim = 2;
-            jacdim = 4;
-       //     sysdim_params = 2;
-        } */
         else if (syschoice == 6)  //  self-driving car
         {
             sysdim = 2;
             inputsdim = 2;
-            jacdim = sysdim+inputsdim;
             //     sysdim_params = 2;
         }
         else if (syschoice == 7)  //  self-driving car
         {
             sysdim = 4;
-            jacdim = 4;
             //     sysdim_params = 2;
         }
         else if (syschoice == 8)
         {
             sysdim = 1;
-            jacdim = 1;
         }
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
-            jacdim = 4;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {
             sysdim = 7;
-            jacdim = 7;
             sysdim_params = 1;
         }
         else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
         {
             sysdim = 2;
-            jacdim = 2;
         }
         else if (syschoice == 15) // Van der Pol oscillator [Arch 2018 and Sparse Polynomial zonotopes]
         {
             sysdim = 2;
-            jacdim = 2;
         }
         else if(syschoice == 17) // quadrotor model [Arch 2019]
         {
             sysdim = 12;
-            jacdim = 12;
         }
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
             sysdim = 14;
-            jacdim = 14;
             // sysdim_params = 3;
             // 0 for sysdim params
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
             inputsdim = 1;
-            jacdim = sysdim+inputsdim;
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
             inputsdim = 1;
-            jacdim = sysdim + inputsdim;
-            
         }
         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
             inputsdim = 1;
-            jacdim = sysdim + inputsdim;
         }
-        
-        
-        // jacdim = 4
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -188,7 +162,6 @@ void define_system_dim(int argc, char* argv[])
         if (syschoice == 1)  // running example
         {
             sysdim = 1;
-            jacdim = 1;
       //      nb_subdiv_init = 2;
       //      nb_subdiv_init = 10;
       //      recovering = 0.1; // recovering between 2 subdivisions when subdividing initial parameters
@@ -197,49 +170,40 @@ void define_system_dim(int argc, char* argv[])
         if (syschoice == 2)  //
         {
             sysdim = 2;
-            jacdim = 2;
         }
         else if (syschoice == 3) // Xue 2017 (Ex 3)
         {
             sysdim = 7;
-            jacdim = 7;
         }
         else if (syschoice == 4) // Szczelina 1 and 2 2014
         {
             sysdim = 1;
-            jacdim = 1;
         }
         else if (syschoice == 5) // Szczelina 2 2014
         {
             sysdim = 1;
-            jacdim = 1;
         }
         else if (syschoice == 6) // self-driving car
         {
             sysdim = 2;
-            jacdim = 2;
             sysdim_params = 2;
         }
         else if (syschoice == 8) // self-driving car but with coeff in interv
         {
             sysdim = 2;
             inputsdim = 2;
-            jacdim = 4;
         }
         else if (syschoice == 9) 
         {
             sysdim = 1;
-            jacdim = 1;
         }
         else if (syschoice == 10) // platoon of 5 vehicles
         {
             sysdim = 9;
-            jacdim = 9;
         }
         else if (syschoice == 11) // platoon of 7 vehicles
         {
             sysdim = 19;
-            jacdim = 19;
         }
     }
     
@@ -291,7 +255,7 @@ void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jac
         cout << "Error reading " << params_filename << ": file not found" << endl;
     while (fgets(buff,LINESZ,params_file)) {
         sscanf(buff, "system-dimension = %d\n", &sysdim);
-        sscanf(buff, "jacobian-dimension = %d\n", &jacdim);
+        sscanf(buff, "inputs-dimension = %d\n", &inputsdim);
         sscanf(buff, "sys-parameters-dimension = %d\n", &sysdim_params);
         sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
     }
@@ -455,10 +419,12 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
         }
     }
+    fullinputsdim = 0;
     for (int i=0; i<inputsdim; i++)
-        jacdim += nb_inputs[i]-1;
+        fullinputsdim += nb_inputs[i];
+    
     // correspondance between variable inputs wwhich sucessive bounds are stored in inputs of size [jacdim]
-    index_param = vector<int>(jacdim-sysdim);
+    index_param = vector<int>(fullinputsdim);
     index_param_inv = vector<int>(inputsdim);
     int j = 0;
     for (int i = 0; i < inputsdim ; i++) {
@@ -472,7 +438,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     // ******* end for piecewise constant inputs ********
     
     initial_values = vector<AAF>(sysdim);
-    inputs = vector<AAF>(jacdim-sysdim);
+    inputs = vector<AAF>(fullinputsdim);
     if (sysdim_params > 0)
         params = vector<AAF>(sysdim_params);
     
@@ -902,7 +868,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     // common to EDO and DDE
     center_initial_values = vector<AAF>(sysdim);
-    center_inputs = vector<AAF>(jacdim-sysdim);
+    center_inputs = vector<AAF>(fullinputsdim);
+    
+    jacdim = sysdim+fullinputsdim;
+    
     eps = vector<interval>(jacdim);
     for (int i=0 ; i<sysdim ; i++)
     {
@@ -910,7 +879,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         center_initial_values[i] = mid(temp);
         eps[i] = temp-mid(temp);
     }
-    for (int i=0 ; i<jacdim-sysdim ; i++)
+    for (int i=0 ; i<fullinputsdim ; i++)
     {
         if (is_uncontrolled[i])
             uncontrolled ++;
