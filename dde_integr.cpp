@@ -195,7 +195,7 @@ void gTaylor(vector<AAF> &g, Dde dde_x, Dde dde_g, double tau, int order)
 
 
 // sets initial conditions and parameters for the ODE system
-void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, double tau, int order)
+void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, double tau, int order)
 {
     // when solution is given explicitely on [-d0,tau]
     
@@ -207,7 +207,7 @@ void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, double tau, int order)
     for (int j=0; j<p+1 ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
         t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
-        dde_x[j].x = Initfunc(t,ix);    // InitByFunc(dde_x[j].x,t); // marche po :(
+        dde_x[j].x = Initfunc(t,ix,inputs);    // InitByFunc(dde_x[j].x,t); // marche po :(
       
         for (int i=0 ; i<sysdim ; i++)
             dde_x[j].x[i].eval(order);
@@ -227,7 +227,7 @@ void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, double tau, int order)
     for (int j=0; j<p ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
         t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
-        dde_g[j].x = Initfunc(t,ix);
+        dde_g[j].x = Initfunc(t,ix,inputs);
         for (int i=0 ; i<sysdim ; i++)
             dde_g[j].x[i].eval(order);
         t = t + tau;
@@ -238,11 +238,14 @@ void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, double tau, int order)
 
 
 // A completer. sets initial conditions and parameters for the ODE system
-void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, double tau, int order)
+void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, double tau, int order)
 {
-    vector<T<F<AAF>>> beta(jacdim);
-    for (int i= 0 ; i<jacdim; i++)
-        beta[i] = ix[i];
+    vector<T<F<AAF>>> beta_initial(sysdim);
+    vector<T<F<AAF>>> beta_inputs(jacdim-sysdim);
+    for (int i= 0 ; i<sysdim; i++)
+        beta_initial[i] = ix[i];
+    for (int i= 0 ; i<jacdim-sysdim; i++)
+        beta_inputs[i] = inputs[i];
     
     vector<DdeVar> x_init(p+1);
     vector<DdeVar> g_init(p+1);
@@ -255,17 +258,19 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, double tau, int order)
     // init by computing in x Taylor model of solution on [-d0,0]
     T<F<AAF>> t;
     
-    cout << "Start initialisation TM_Jac with ix=" << beta[0][0].x().convert_int() << endl;
+   // cout << "Start initialisation TM_Jac with ix=" << beta[0][0].x().convert_int() << endl;
     t = t0; // -d0; // -d0 + k.tau
     for (int j=0; j<p+1 ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
         t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
  
          // specify the variables to differentiate
-        for (int i=0 ; i<jacdim ; i++)
-            beta[i][0].diff(i,jacdim);   // ddeVAR_x[j].x[i][0].diff(i,sysdim);
+        for (int i=0 ; i<sysdim ; i++)
+            beta_initial[i][0].diff(i,jacdim);   // ddeVAR_x[j].x[i][0].diff(i,sysdim);
+        for (int i= 0 ; i<jacdim-sysdim; i++)
+            beta_inputs[i][0].diff(sysdim+i,jacdim);
         
-        x_init[j].x  = Initfunc(t,beta); // ddeVAR_x[j].x = Initfunc(t,beta);
+        x_init[j].x  = Initfunc(t,beta_initial,beta_inputs); // ddeVAR_x[j].x = Initfunc(t,beta);
         
         
         // InitByFunc(dde_x[j].x,t); // marche po :(
@@ -312,7 +317,7 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, double tau, int order)
         t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
     //    for (int i=0 ; i<jacdim ; i++)
     //        beta[i][0].diff(i,jacdim);
-         g_init[j].x  = Initfunc(t,beta); //  ddeVAR_g[j].x = Initfunc(t,beta);
+         g_init[j].x  = Initfunc(t,beta_initial,beta_inputs); //  ddeVAR_g[j].x = Initfunc(t,beta);
         
         for (int i=0 ; i<sysdim ; i++)
             g_init[j].x[i].eval(order); //  ddeVAR_g[j].x[i].eval(order);
@@ -353,7 +358,7 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
     vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_joint(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
     
     if (innerapprox == 0) {
-        TMcenter.init_dde(tn,inputs,tau,order);
+        TMcenter.init_dde(tn,initial_values,inputs,tau,order);
         
         for (int i= 0 ; i<sysdim; i++)
             Xouter[i] = TMcenter.x[0][i].convert_int();
@@ -369,8 +374,8 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
     else
     {
    //     cout << "eps=" << eps[0] << endl;
-        TMcenter.init_dde(tn,center_inputs,tau,order);
-        TMJac.init_dde(tn,inputs,tau,order);
+        TMcenter.init_dde(tn,center_initial_values,center_inputs,tau,order);
+        TMJac.init_dde(tn,initial_values,inputs,tau,order);
         
         //
         for (int i= 0 ; i<sysdim; i++) {
@@ -833,37 +838,5 @@ HybridStep_dde HybridStep_dde::init_nextbigstep(double tau)
 }
 
 
-// for running example
-/*void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv)
-{
-    vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);
-    
-    double tn = t0; // -d0;
-    
-    stringstream file_name;
-    ofstream outFile_exact[sysdim];
-    for (int j=0 ; j<sysdim; j++)
-    {
-        file_name.str("");
-        file_name << "output/x"<<j+1<<"exact.out";
-        outFile_exact[j].open(file_name.str().c_str());
-    }
-    
-    vector<interval> Xouter(sysdim);
-    while (tn+d0 <= t_end)
-    {
-        for (int s=0 ; s<nb_subdiv+1; s++)
-        {
-            Xouter = AnalyticalSol(tn+s*tau,inputs,d0);
-            for (int j=0 ; j<sysdim; j++)
-                outFile_exact[j] << tn+s*tau << "\t" << inf(Xouter[j]) << "\t" << sup(Xouter[j]) << endl;
-        }
-        //  on [0,d0], exact solution can be computed expliciitely
-        tn = tn+d0;
-    }
 
-    for (int j=0 ; j<sysdim; j++)
-        outFile_exact[j].close();
-}
-*/
 

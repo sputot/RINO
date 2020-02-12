@@ -32,6 +32,8 @@ double t_begin; // starting time of initialization
 
 // parameters of the system of the ODEs
 vector<AAF> params;  // params of the ODE (nondeterministic disturbances)
+vector<AAF> initial_values;
+vector<AAF> center_initial_values;
 vector<AAF> inputs; // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
 vector<AAF> center_inputs;
 vector<int> index_param;
@@ -218,11 +220,6 @@ void define_system_dim(int argc, char* argv[])
             jacdim = 2;
             sysdim_params = 2;
         }
-        else if (syschoice == 7) // self-driving car but with coeff in interv
-        {
-            sysdim = 4;
-            jacdim = 4;
-        }
         else if (syschoice == 8) // self-driving car but with coeff in interv
         {
             sysdim = 2;
@@ -259,8 +256,8 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
    
     // par défaut
     for (int i=0 ; i<sysdim ; i++) {
-        x[i] = inputs[i];
-        xcenter[i] = center_inputs[i];
+        x[i] = initial_values[i];
+        xcenter[i] = center_initial_values[i];
     }
     
     // param_inputs between 0 and jacdim-sysdim, inputs between 0 and sysdim_jacparams
@@ -270,34 +267,16 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
                 index_param[j] = i;
                 if (k == 0)
                     index_param_inv[i] = j;
-                param_inputs[j] = inputs[sysdim+j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
+                param_inputs[j] = inputs[j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
                 if (innerapprox == 1)
-                    param_inputs_center[j] = center_inputs[sysdim+j]; // center_inputs[sysdim+i].convert_int();
+                    param_inputs_center[j] = center_inputs[j]; // center_inputs[sysdim+i].convert_int();
                 else
-                    param_inputs_center[j] = inputs[sysdim+j]; // inputs[sysdim+i].convert_int();
+                    param_inputs_center[j] = inputs[j]; // inputs[sysdim+i].convert_int();
                 j++;
             }
         }
     
     setId(J);
-    
-    
-    
- /*   if (syschoice == 6) // self-driving car; sysdim = 2, jacdim = 4
-    {
-        x[0] = inputs[0];
-        x[1] = inputs[1];
-        xcenter[0] = center_inputs[0];
-        xcenter[1] = center_inputs[1];
-        J[0][0] = 1.;
-        for (int i=1 ; i<=3 ; i++)
-            J[0][i] = 0.;
-        J[1][0] = 0.0;
-        J[1][1] = 1.;
-        for (int i=2 ; i<=3 ; i++)
-            J[1][i] = 0.;
-    }
-   */
     
 }
 
@@ -370,8 +349,11 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             int i = 0;
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
-                inputs[i] = interval(a,b);
-               // cout <<"input="<<inputs[i].convert_int()<<endl;
+                if (i<sysdim)
+                    initial_values[i] = interval(a,b);
+                else
+                    inputs[i-sysdim] = interval(a,b);
+                cout <<"input="<<interval(a,b)<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -489,22 +471,17 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     }
     // ******* end for piecewise constant inputs ********
     
-    inputs = vector<AAF>(jacdim);
+    initial_values = vector<AAF>(sysdim);
+    inputs = vector<AAF>(jacdim-sysdim);
     if (sysdim_params > 0)
         params = vector<AAF>(sysdim_params);
     
     uncontrolled = 0;
     controlled = 0;
     is_uncontrolled = vector<bool>(sysdim+sysdim_params);
-  //  variable = 0;
-  //  is_variable = vector<bool>(sysdim+sysdim_params);
-    // nb_inputs = vector<int>(jacdim);
-//    is_initialcondition = vector<bool>(sysdim+sysdim_params);
+  
     for (int i=0 ; i<jacdim; i++) {
         is_uncontrolled[i] = false;  // controlled input or parameter
-     //   is_variable[i] = false;     // variable input or parameter
-       // nb_inputs[i] = 1; // > 1 if variable input
- //       is_initialcondition[i] = true; // by definition, initial conditions are controlled and constant
     }
     
     refined_mean_value = false;
@@ -518,7 +495,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 2.;
             order = 3;
             
-            inputs[0] = interval(0.9,1);
+            initial_values[0] = interval(0.9,1);
             params[0] = 1.0;
         }
         else if (syschoice == 2) // Brusselator
@@ -527,8 +504,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 10.;
             order = 4;
             
-            inputs[0] = interval(0.9,1);
-            inputs[1] = interval(0,0.1);
+            initial_values[0] = interval(0.9,1);
+            initial_values[1] = interval(0,0.1);
             
             params[0] = 1;
             params[1] = 1.5;
@@ -539,12 +516,12 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 4.;
             order = 3;
             
-            inputs[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
+            initial_values[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
             //  ix[1] = mid(3.14159/180*interval(2.5,3.5)) + interval(-0.00872664, -0.00497644); // almost fault trajectories
-            inputs[1] = interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)) + interval( -0.00497644,0.00872664); // complement = safe trajectories
-            inputs[2] = interval(0.0,0.01);
-            inputs[3] = interval(0.0,0.01);
+            initial_values[1] = interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)) + interval( -0.00497644,0.00872664); // complement = safe trajectories
+            initial_values[2] = interval(0.0,0.01);
+            initial_values[3] = interval(0.0,0.01);
         }
         else if (syschoice == 4) // ballistic linearise
         {
@@ -552,14 +529,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 1.4;
             order = 3;
             
-            inputs[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
+            initial_values[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
             //  ix[1] = mid(3.14159/180*interval(2.5,3.5)) + interval(-0.00872664, -0.00497644); // almost fault trajectories
-            inputs[1] =  interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)); // + interval( -0.00497644,0.00872664); // complement = safe trajectories
-            inputs[2] = interval(0.0,0.01);
-            inputs[3] = interval(0.0,0.25); // interval(0.0,0.01);
-            inputs[4]= interval(11.,15.); // 14.... la masse (incontrollable)
-          //  is_initialcondition[4] = false;
+            initial_values[1] =  interval(0.0436,0.0611); // 3.14159/180*interval(2.5,3.5); // mid(3.14159/180*interval(2.5,3.5)); // + interval( -0.00497644,0.00872664); // complement = safe trajectories
+            initial_values[2] = interval(0.0,0.01);
+            initial_values[3] = interval(0.0,0.25); // interval(0.0,0.01);
+            inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[4] = true;
   //          is_variable[4] = true;
        //     nb_subdiv_init = 2;
@@ -571,8 +547,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;  // order of Taylor Models
             // initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
+            initial_values[0] = interval(-0.1,0.1);
+            initial_values[1] = interval(0,0.1);
             //  uncertain parameter 
             params[0] =  interval(1.9,2.1);  // Kp
             params[1] =  interval(2.9,3.1);    // Kd
@@ -583,13 +559,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] =  interval(1.9,2.1);  // Kp
-            inputs[3] =  interval(2.9,3.1);    // Kd
-            //     inputs[4] = 0;
-        //    is_initialcondition[2] = false;
-        //    is_initialcondition[3] = false;
+            initial_values[0] = interval(-0.1,0.1);
+            initial_values[1] = interval(0,0.1);
+            inputs[0] =  interval(1.9,2.1);  // Kp
+            inputs[1] =  interval(2.9,3.1);    // Kd
             is_uncontrolled[3] = true; // Kd uncontrolled
          //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
@@ -602,18 +575,14 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] =  interval(1.9,2.1);  // Kp
-            inputs[3] =  interval(2.9,3.1);    // Kd
-       //     inputs[4] = 0;
-       //     is_initialcondition[2] = false;
-       //     is_initialcondition[3] = false;
-            is_uncontrolled[3] = true; // Kd uncontrolled
+            initial_values[0] = interval(-0.1,0.1);
+            initial_values[1] = interval(0,0.1);
+            initial_values[2] =  interval(1.9,2.1);  // Kp
+            initial_values[3] =  interval(2.9,3.1);    // Kd
+         //   is_uncontrolled[3] = true; // Kd uncontrolled
             // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
          //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-        
           //   is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
         }
         else if (syschoice == 8)
@@ -621,20 +590,17 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             tau = 0.01;
             t_end = 5.;
             order = 3;
-            inputs[0] = interval(0.4,0.5);
+            initial_values[0] = interval(0.4,0.5);
         }
         else if (syschoice == 11)
         {
             tau = 1.;
             t_end = 2.;
             order = 4;
-            inputs[0] = 1;
-            inputs[1] = 0;
-            inputs[2] = interval(0,0.1);
-            inputs[3] = interval(0,0.1);
-        //    is_initialcondition[2] = false;
-        //    is_initialcondition[3] = false;
-            //is_initialcondition[2] = false;
+            initial_values[0] = 1;
+            initial_values[1] = 0;
+            inputs[0] = interval(0,0.1);
+            inputs[1] = interval(0,0.1);
         //    is_variable[2] = true;
         //    is_variable[3] = true;
         }
@@ -645,13 +611,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 3;
             interval W = interval(-0.05,0.05);
             // to express that it is the same interval: use params[0] = interval(-0.1,0.1) and inputs[0] = 1.2 + params[0]; etc
-            inputs[0] = 1.2 + W;
-            inputs[1] = 1.05 + W;
-            inputs[2] = 1.5 + W;
-            inputs[3] = 2.4 + W;
-            inputs[4] = 1. + W;
-            inputs[5] = 0.1 + W;
-            inputs[6] = 0.45 + W;
+            initial_values[0] = 1.2 + W;
+            initial_values[1] = 1.05 + W;
+            initial_values[2] = 1.5 + W;
+            initial_values[3] = 2.4 + W;
+            initial_values[4] = 1. + W;
+            initial_values[5] = 0.1 + W;
+            initial_values[6] = 0.45 + W;
         }
         else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
         {
@@ -659,8 +625,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 6.;
             order = 10;
             // for mu = 1
-            inputs[0] = interval(1.25,1.55);
-            inputs[1] = interval(2.35,2.45);
+            initial_values[0] = interval(1.25,1.55);
+            initial_values[1] = interval(2.35,2.45);
            // for mu = 2
             // inputs[0] = interval(1.55,1.85);
            // inputs[1] = interval(2.35,2.45);
@@ -671,8 +637,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 3.15;
             order = 10;
             // for mu = 1
-            inputs[0] = interval(1.23,1.57);
-            inputs[1] = interval(2.34,2.46);
+            initial_values[0] = interval(1.23,1.57);
+            initial_values[1] = interval(2.34,2.46);
             // for mu = 2
             // inputs[0] = interval(1.55,1.85);
             // inputs[1] = interval(2.35,2.45);
@@ -683,15 +649,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5;
             order = 3;
             for (int j=0 ; j<sysdim; j++)
-                inputs[j] = 0;
+                initial_values[j] = 0;
             // positions
-            inputs[0] = interval(-0.4,0.4);
-            inputs[1] = interval(-0.4,0.4);
-            inputs[2] = interval(-0.4,0.4);
+            initial_values[0] = interval(-0.4,0.4);
+            initial_values[1] = interval(-0.4,0.4);
+            initial_values[2] = interval(-0.4,0.4);
             // velocities
-            inputs[3] = interval(-0.4,0.4);
-            inputs[4] = interval(-0.4,0.4);
-            inputs[5] = interval(-0.4,0.4);
+            initial_values[3] = interval(-0.4,0.4);
+            initial_values[4] = interval(-0.4,0.4);
+            initial_values[5] = interval(-0.4,0.4);
         }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
@@ -700,11 +666,11 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 3;
             
             for (int j=0 ; j<sysdim; j++)
-                inputs[j] = 0;
+                initial_values[j] = 0;
             
-            inputs[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            inputs[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
-            inputs[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
+            initial_values[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
             
             // roll yaw pitch (degree) inputs value (here we consider input as initial)
            // inputs[0] = interval(3.0 , 5.0) * M_PI/180.0;
@@ -717,28 +683,26 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
           //  inputs[5] = interval(-0.01,0.01);;
             
             // err_p , err_q , err_r
-            inputs[6] = 0.0;
-            inputs[7] = 0.0;
-            inputs[8] = 0.0;
+            initial_values[6] = 0.0;
+            initial_values[7] = 0.0;
+            initial_values[8] = 0.0;
             
             // body speed u , v and w -> for embedded verif we instead use world speed
-            inputs[9] = 0.0;
-            inputs[10] = 0.0;
-            inputs[11] = 0.0;
+            initial_values[9] = 0.0;
+            initial_values[10] = 0.0;
+            initial_values[11] = 0.0;
             
             // Z and err_Vz
           //  inputs[12] = interval(-0.1 , 0.1);
-            inputs[13] = 0.0;
+            initial_values[13] = 0.0;
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
             order = 4;
-            inputs[0] = 0;
-            inputs[1] = 0;
-            inputs[2] = interval(0,1.);
-        //    is_initialcondition[2] = false;
-         //   is_variable[2] = true;
+            initial_values[0] = 0;
+            initial_values[1] = 0;
+            initial_values[2] = interval(0,1.);
         //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
@@ -746,15 +710,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             tau = 1.0;
             t_end = 2;
             order = 3;
-            inputs[0] = 0;
-            inputs[1] = 0;
-            inputs[2] = interval(0,1.);
+            initial_values[0] = 0;
+            initial_values[1] = 0;
+            inputs[0] = interval(0,1.);
             for (int i=0; i<sysdim_jacparams; i++) {
                 for (int j=1; j<nb_inputs[i]; j++)
-                    inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
+                    inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
             }
-       //     is_initialcondition[2] = false;
-           // is_variable[2] = true;
           //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
@@ -762,15 +724,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             tau = 1.;
             t_end = 2;
             order = 3;
-            inputs[0] = 0;
-            inputs[1] = 0;
-            inputs[2] = interval(0,1.);
+            initial_values[0] = 0;
+            initial_values[1] = 0;
+            inputs[0] = interval(0,1.);
             for (int i=0; i<sysdim_jacparams; i++) {
                 for (int j=1; j<nb_inputs[i]; j++)
-                    inputs[sysdim+index_param_inv[i]+j] = inputs[sysdim+index_param_inv[i]].convert_int();
+                    inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
             }
-         //   is_initialcondition[2] = false;
-            // is_variable[2] = true;
             //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
@@ -788,7 +748,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             // order = 3;
             order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(0.33,1.0);
+            initial_values[0] = interval(0.33,1.0);
             // nb_subdiv_init = 5;
         }
         else if (syschoice == 2)
@@ -799,8 +759,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 10.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(0.9,1.1);
-            inputs[1] = interval(0.9,1.1);
+            initial_values[0] = interval(0.9,1.1);
+            initial_values[1] = interval(0.9,1.1);
         }
         else if (syschoice == 3)  // Xue 2017 (Ex 3)
         {
@@ -810,13 +770,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 0.1;
             order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(1.1,1.2); // et non (1.1,1.3) comme indique dans le papier
-            inputs[1] = interval(0.95,1.15);
-            inputs[2] = interval(1.4,1.6);
-            inputs[3] = interval(2.3,2.5);
-            inputs[4] = interval(0.9,1.1);
-            inputs[5] = interval(0.0,0.2);
-            inputs[6] = interval(0.35,0.55);
+            initial_values[0] = interval(1.1,1.2); // et non (1.1,1.3) comme indique dans le papier
+            initial_values[1] = interval(0.95,1.15);
+            initial_values[2] = interval(1.4,1.6);
+            initial_values[3] = interval(2.3,2.5);
+            initial_values[4] = interval(0.9,1.1);
+            initial_values[5] = interval(0.0,0.2);
+            initial_values[6] = interval(0.35,0.55);
         }
         else if (syschoice == 4)  // Szczelina 1  2014
         {
@@ -826,7 +786,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 2.;
             order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(0.9,1.1);
+            initial_values[0] = interval(0.9,1.1);
         }
         else if (syschoice == 5) // Szczelina 2  2014
         {
@@ -836,7 +796,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 2.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(0.9,1.1);
+            initial_values[0] = interval(0.9,1.1);
         }
         else if (syschoice == 6) // self-driving car; sysdim = 2, jacdim = 2
         {
@@ -846,28 +806,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
+            initial_values[0] = interval(-0.1,0.1);
+            initial_values[1] = interval(0,0.1);
             params[0] =  interval(1.9,2.1); // 2;  // Kp
             params[1] =  interval(2.9,3.1);  // 3;   // Kd
-        }
-        else if (syschoice == 7) // self-driving car bt with coeff in interv; sysdim = 4, jacdim = 4
-        {                         // this one can be forgotten ?
-            d0 = 0.2;
-            nb_subdiv = 5;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
-            t_end = 5.;
-            order = 3;  // order of Taylor Models
-          //  uncontrolled = 2; // the last 2 parameters/inputs are uncontrolled (forall parameters)
-            // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] = interval(1.9,2.1);  // Kp
-            inputs[3] = interval(2.9,3.1);   // Kd
-         //   is_initialcondition[2] = false;
-         //   is_initialcondition[3] = false;
-         //   is_uncontrolled[2] = true;
-            is_uncontrolled[3] = true;
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
         {
@@ -877,12 +819,10 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
-            inputs[0] = interval(-0.1,0.1);
-            inputs[1] = interval(0,0.1);
-            inputs[2] = interval(1.9,2.1);  // Kp
-            inputs[3] = interval(2.9,3.1);   // Kd
-      //      is_initialcondition[2] = false;
-       //     is_initialcondition[3] = false;
+            initial_values[0] = interval(-0.1,0.1);
+            initial_values[1] = interval(0,0.1);
+            inputs[0] = interval(1.9,2.1);  // Kp
+            inputs[1] = interval(2.9,3.1);   // Kd
         //    is_uncontrolled[2] = true;
             is_uncontrolled[3] = true;
         }
@@ -893,7 +833,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_begin = 0;
             t_end = 2;
             order = 5;
-            inputs[0] = interval(3.,6.);
+            initial_values[0] = interval(3.,6.);
         }
         else if (syschoice == 10)  // platoon of 5 vehicles
         {
@@ -902,15 +842,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 10;
             nb_subdiv = 3;
             order = 3;
-            inputs[0] = interval(-0.01,0.01);
-            inputs[1] = interval(-1.2,-0.8);
-            inputs[2] = interval(1.99,2.01);
-            inputs[3] = interval(-2.2,-1.8);
-            inputs[4] = interval(1.99,2.01);
-            inputs[5] = interval(-3.2,-2.8);
-            inputs[6] = interval(1.99,2.01);
-            inputs[7] = interval(-4.2,-3.8);
-            inputs[8] = interval(1.99,2.01);
+            initial_values[0] = interval(-0.01,0.01);
+            initial_values[1] = interval(-1.2,-0.8);
+            initial_values[2] = interval(1.99,2.01);
+            initial_values[3] = interval(-2.2,-1.8);
+            initial_values[4] = interval(1.99,2.01);
+            initial_values[5] = interval(-3.2,-2.8);
+            initial_values[6] = interval(1.99,2.01);
+            initial_values[7] = interval(-4.2,-3.8);
+            initial_values[8] = interval(1.99,2.01);
         }
         else if (syschoice == 11)  // platoon of 10 vehicles
         {
@@ -919,25 +859,25 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 10;
             nb_subdiv = 3;
             order = 3;
-            inputs[0] = interval(-0.01,0.01);
-            inputs[1] = interval(-1.2,-0.8);
-            inputs[2] = interval(1.99,2.01);
-            inputs[3] = interval(-2.2,-1.8);
-            inputs[4] = interval(1.99,2.01);
-            inputs[5] = interval(-3.2,-2.8);
-            inputs[6] = interval(1.99,2.01);
-            inputs[7] = interval(-4.2,-3.8);
-            inputs[8] = interval(1.99,2.01);
-            inputs[9] = interval(-5.2,-4.8);
-            inputs[10] = interval(1.99,2.01);
-            inputs[11] = interval(-6.2,-5.8);
-            inputs[12] = interval(1.99,2.01);
-            inputs[13] = interval(-7.2,-6.8);
-            inputs[14] = interval(1.99,2.01);
-            inputs[15] = interval(-8.2,-7.8);
-            inputs[16] = interval(1.99,2.01);
-            inputs[17] = interval(-9.2,-8.8);
-            inputs[18] = interval(1.99,2.01);
+            initial_values[0] = interval(-0.01,0.01);
+            initial_values[1] = interval(-1.2,-0.8);
+            initial_values[2] = interval(1.99,2.01);
+            initial_values[3] = interval(-2.2,-1.8);
+            initial_values[4] = interval(1.99,2.01);
+            initial_values[5] = interval(-3.2,-2.8);
+            initial_values[6] = interval(1.99,2.01);
+            initial_values[7] = interval(-4.2,-3.8);
+            initial_values[8] = interval(1.99,2.01);
+            initial_values[9] = interval(-5.2,-4.8);
+            initial_values[10] = interval(1.99,2.01);
+            initial_values[11] = interval(-6.2,-5.8);
+            initial_values[12] = interval(1.99,2.01);
+            initial_values[13] = interval(-7.2,-6.8);
+            initial_values[14] = interval(1.99,2.01);
+            initial_values[15] = interval(-8.2,-7.8);
+            initial_values[16] = interval(1.99,2.01);
+            initial_values[17] = interval(-9.2,-8.8);
+            initial_values[18] = interval(1.99,2.01);
         }
     }
     
@@ -961,18 +901,25 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     
     // common to EDO and DDE
-    center_inputs = vector<AAF>(jacdim);
+    center_initial_values = vector<AAF>(sysdim);
+    center_inputs = vector<AAF>(jacdim-sysdim);
     eps = vector<interval>(jacdim);
-    for (int i=0 ; i<jacdim ; i++)
+    for (int i=0 ; i<sysdim ; i++)
     {
-        if (is_uncontrolled[i])
+        temp = initial_values[i].convert_int();
+        center_initial_values[i] = mid(temp);
+        eps[i] = temp-mid(temp);
+    }
+    for (int i=0 ; i<jacdim-sysdim ; i++)
+    {
+        if (is_uncontrolled[i+sysdim])
             uncontrolled ++;
-        if (!is_uncontrolled[i] && (i >= sysdim))
+        if (!is_uncontrolled[i+sysdim])
             controlled++;
         
         temp = inputs[i].convert_int();
         center_inputs[i] = mid(temp);
-        eps[i] = temp-mid(temp);
+        eps[i+sysdim] = temp-mid(temp);
     }
     
   //  cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
@@ -993,52 +940,69 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         
 }
 
-void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdivide)
+void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide)
 {
  //   center_inputs = vector<AAF>(jacdim);
  //   eps = vector<interval>(jacdim);
     
-    interval save = inputs_save[param_to_subdivide].convert_int();
-    double delta = (save.sup()-save.inf())/nb_subdiv_init;
-    if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
-        inputs[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
-    else if (current_subdiv == 1)
-        inputs[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1),save.inf()+delta*(current_subdiv+recovering));
-    else if (current_subdiv == nb_subdiv_init)
-        inputs[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
-    cout << "inputs[param_to_subdivide] " << inputs[param_to_subdivide] << endl;
-    
-   
-     interval   temp = inputs[param_to_subdivide].convert_int();
-        center_inputs[param_to_subdivide] = mid(temp);
+    if (param_to_subdivide < sysdim)
+    {
+        interval save = initial_values_save[param_to_subdivide].convert_int();
+        double delta = (save.sup()-save.inf())/nb_subdiv_init;
+        if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
+            initial_values[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
+        else if (current_subdiv == 1)
+            initial_values[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1),save.inf()+delta*(current_subdiv+recovering));
+        else if (current_subdiv == nb_subdiv_init)
+            initial_values[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
+ //       cout << "initial_values_save[param_to_subdivide] " << inputs[param_to_subdivide] << endl;
+        
+        interval temp = initial_values[param_to_subdivide].convert_int();
+        center_initial_values[param_to_subdivide] = mid(temp);
         eps[param_to_subdivide] = temp-mid(temp);
+    }
+    else
+    {
+        interval save = inputs_save[param_to_subdivide-sysdim].convert_int();
+        double delta = (save.sup()-save.inf())/nb_subdiv_init;
+        if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
+            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
+        else if (current_subdiv == 1)
+            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1),save.inf()+delta*(current_subdiv+recovering));
+        else if (current_subdiv == nb_subdiv_init)
+            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
+      //  cout << "inputs[param_to_subdivide] " << inputs[param_to_subdivide-sysdim] << endl;
     
+         interval temp = inputs[param_to_subdivide-sysdim].convert_int();
+            center_inputs[param_to_subdivide-sysdim] = mid(temp);
+            eps[param_to_subdivide-sysdim] = temp-mid(temp);
+    }
 }
 
 
 // initial condition on [t0,t0+d0] given as x = g(t)
-vector <T<AAF>> Initfunc(const  T<AAF> &t, vector<AAF> &beta)
+vector <T<AAF>> Initfunc(const  T<AAF> &t, vector<AAF> &beta_initial, vector<AAF> &beta_inputs)
 {
     vector<T<AAF>> res(sysdim);
     
     // by default
     for (int i=0 ; i<sysdim; i++)
-    res[i] = beta[i];
+    res[i] = beta_initial[i];
     
     if (syschoice == 1)  // running example
-        res[0] = (1+beta[0]*t)*(1+beta[0]*t);  // ix[0] = beta
+        res[0] = (1+beta_initial[0]*t)*(1+beta_initial[0]*t);  // ix[0] = beta
     else if (syschoice == 2) //  example 5.15
     {
-        res[0] = beta[0]*exp(t);
-        res[1] = beta[1]*(1-exp(-1));
+        res[0] = beta_initial[0]*exp(t);
+        res[1] = beta_initial[1]*(1-exp(-1));
     }
     else if (syschoice == 4) // Szczelina_1 2014
     {
-        res[0] = beta[0]*sin(M_PI*t/2.0);
+        res[0] = beta_initial[0]*sin(M_PI*t/2.0);
     }
     else if (syschoice == 5) // Szczelina_2 2014
     {
-        res[0] = beta[0]*sin(M_PI*t/2.0);
+        res[0] = beta_initial[0]*sin(M_PI*t/2.0);
     }
     
     return res;
@@ -1047,28 +1011,28 @@ vector <T<AAF>> Initfunc(const  T<AAF> &t, vector<AAF> &beta)
 
 
 // initial condition on [-d0,0] given as x = g(t)
-vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta)
+vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial, vector<T<F<AAF>>> &beta_inputs)
 {
     vector<T<F<AAF>>> res(sysdim);
     
     // by default
     for (int i=0 ; i<sysdim; i++)
-    res[i] = beta[i];
+    res[i] = beta_initial[i];
     
     if (syschoice == 1)  // running example
-        res[0] = (1+beta[0]*t)*(1+beta[0]*t);  // ix[0] = beta
+        res[0] = (1+beta_initial[0]*t)*(1+beta_initial[0]*t);  // ix[0] = beta
     else if (syschoice == 2) //  example 5.15
     {
-        res[0] = beta[0]*exp(t);
-        res[1] = beta[1]*(1-exp(-1));
+        res[0] = beta_initial[0]*exp(t);
+        res[1] = beta_initial[1]*(1-exp(-1));
     }
     else if (syschoice == 4) // Szczelina_1 2014
     {
-        res[0] = beta[0]*sin(M_PI*t/2.0);
+        res[0] = beta_initial[0]*sin(M_PI*t/2.0);
     }
     else if (syschoice == 5) // Szczelina_2 2014
     {
-        res[0] = beta[0]*sin(M_PI*t/2.0);
+        res[0] = beta_initial[0]*sin(M_PI*t/2.0);
     }
     return res;
 }
@@ -1076,14 +1040,14 @@ vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta)
 
 
 // analytical solution if any (for comparison purpose)
-void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
+void AnalyticalSol(int current_iteration, double d0)
 {
   //  vector<interval> res(sysdim);
     vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);
     
     double t = t_print[current_iteration];
-    double beta_inf = beta[0].convert_int().inf();
-    double beta_sup = beta[0].convert_int().sup();
+    double beta_inf = initial_values[0].convert_int().inf();
+    double beta_sup = initial_values[0].convert_int().sup();
     
     // running example
     //res[0] = (1+beta[0]*t)*(1+beta[0]*t);  // ix[0] = beta
@@ -1134,13 +1098,13 @@ void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
         // example 5.15
         if (t <0)
         {
-            Xexact_print[0][current_iteration][0] = beta[0].convert_int()*exp(t);
-            Xexact_print[0][current_iteration][1] = beta[1].convert_int()*(1-exp(-1.));
+            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int()*exp(t);
+            Xexact_print[0][current_iteration][1] = initial_values[1].convert_int()*(1-exp(-1.));
         }
         else
         {
-            Xexact_print[0][current_iteration][0] = beta[0].convert_int()*exp(t);
-            Xexact_print[0][current_iteration][1] = beta[1].convert_int()*(exp(t)-exp(t-1.));
+            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int()*exp(t);
+            Xexact_print[0][current_iteration][1] = initial_values[1].convert_int()*(exp(t)-exp(t-1.));
         }
     }
     }
@@ -1150,34 +1114,34 @@ void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0)
     else if ((systype == 0) && ((syschoice == 19) || (syschoice == 20)|| (syschoice == 21)))
     {
         if (current_iteration == 0)
-            Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
+            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
         else {
             if (jacdim>sysdim+sysdim_jacparams) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
-                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[0].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
             else {
                 double delta_t = t_print[current_iteration]-t_print[0];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
-                Xexact_print[0][current_iteration][0] = inputs[0].convert_int() + inputs[2].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = initial_values[0].convert_int() + inputs[0].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
         }
     }
     else if ((systype == 0) && ((syschoice == 22)))
     {
         if (current_iteration == 0)
-            Xexact_print[0][current_iteration][0] = inputs[0].convert_int();
+            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
         else {
             if (jacdim>sysdim+sysdim_jacparams) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
-                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[2].convert_int()+inputs[2].convert_int()*inputs[2].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[0].convert_int()+inputs[0].convert_int()*inputs[0].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
             else {
                 double delta_t = t_print[current_iteration]-t_print[0];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
-                Xexact_print[0][current_iteration][0] = inputs[0].convert_int() + (inputs[2].convert_int()+inputs[2].convert_int()*inputs[2].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = initial_values[0].convert_int() + (inputs[0].convert_int()+inputs[0].convert_int()*inputs[0].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
         }
     }

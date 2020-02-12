@@ -49,8 +49,8 @@ int syschoice; // choice of system to analyze
 
 void print_initstats(vector<AAF> &x);
 
-void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double d0);
-void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0);
+void print_ErrorMeasures(int current_iteration, double d0);
+void print_finalsolution(int max_it, double d0);
 
 
 
@@ -92,8 +92,11 @@ int main(int argc, char* argv[])
 
     init_system(argc, argv, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
-    vector<AAF> inputs_save(jacdim);
-    for (int i=0 ; i<jacdim; i++)
+    vector<AAF> initial_values_save(sysdim);
+    vector<AAF> inputs_save(jacdim-sysdim);
+    for (int i=0 ; i<sysdim; i++)
+        initial_values_save[i] = initial_values[i];
+    for (int i=0 ; i<jacdim-sysdim; i++)
         inputs_save[i] = inputs[i];
     
     DdeFunc bf;    // contains the differential system - defined in ode_def.h
@@ -109,7 +112,7 @@ int main(int argc, char* argv[])
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, inputs_save, component_to_subdiv);
+                init_subdiv(current_subdiv, initial_values_save, inputs_save, component_to_subdiv);
             
             // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
             current_iteration = 0;
@@ -157,7 +160,7 @@ int main(int argc, char* argv[])
             }
         }
         
-        print_finalsolution(inputs_save, ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
+        print_finalsolution(ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
     }
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
@@ -172,17 +175,12 @@ int main(int argc, char* argv[])
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, inputs_save, component_to_subdiv);
-            
-            
-            
-    //        cout << "center_inputs[0]" << center_inputs[0] << endl;
-    //        cout << inputs[0] << endl;
+                init_subdiv(current_subdiv, initial_values_save, inputs_save, component_to_subdiv);
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
             tn = t_begin;
-            print_initstats(inputs);
+            print_initstats(initial_values);
             
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
@@ -215,7 +213,7 @@ int main(int argc, char* argv[])
             
             
         }
-        print_finalsolution(inputs_save, ceil((t_end-t_begin)/tau), d0);
+        print_finalsolution(ceil((t_end-t_begin)/tau), d0);
     }
     
     print_finalstats(begin);
@@ -223,7 +221,7 @@ int main(int argc, char* argv[])
 }
 
 // printig solution from all stored results of subdivisiions
-void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
+void print_finalsolution(int max_it, double d0)
 {
     // print final solution + output some stats / error information
     bool no_hole = true;
@@ -260,14 +258,14 @@ void print_finalsolution(vector<AAF> inputs_save, int max_it, double d0)
             //  outFile_inner[i] << t_print[current_iteration] << "\t" << inf(Xinner_print[0][current_iteration][i]) << "\t" << sup(Xinner_print[0][current_iteration][i]) << endl;
         }
         
-        print_ErrorMeasures(current_iteration,inputs_save,d0);
+        print_ErrorMeasures(current_iteration,d0);
     }
     
     if (no_hole)
         cout << "NO HOLE when joining the inner-approx tubes";
 }
 
-void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double d0)
+void print_ErrorMeasures(int current_iteration, double d0)
 {
     double aux, minwidth_ratio, sum, rel_sum;
   //  vector<interval> Xexact(sysdim);
@@ -286,7 +284,7 @@ void print_ErrorMeasures(int current_iteration, vector<AAF> inputs_save, double 
     
     
     // fills Xexact_print with analytical solution
-    AnalyticalSol(current_iteration, inputs_save,d0);
+    AnalyticalSol(current_iteration, d0);
    // cout << "before testing x_exact, current_iteration=" << current_iteration << "t_print[current_iteration] " << t_print[current_iteration]  << endl;
     if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
     {

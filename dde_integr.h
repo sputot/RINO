@@ -168,7 +168,7 @@ public:
     }
     
     // compute Taylor models corresponding to initial conditions
-    void init_dde(double t0, vector<AAF> &ix, double tau, int order);
+    void init_dde(double t0, vector<AAF> &ix,  vector<AAF> &inputs, double tau, int order);
     void build(DdeFunc bf, vector<AAF> &param_inputs, int s, double d0, double tau, int order);
     void eval(vector<AAF> &res, int s, double h, int order);
     void init_nextsmallstep(int s);
@@ -229,7 +229,7 @@ public:
     }
     
     // compute Taylor models corresponding to initial conditions on [-d0,0] or [0,d0] depending on the value of t0 (-d0 or 0)
-    void init_dde(double t0, vector<AAF> &x, double tau, int order);
+    void init_dde(double t0, vector<AAF> &x, vector<AAF> &inputs, double tau, int order);
     
     void build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau, int order);
     // eval TM at tn+tau and store in xp1

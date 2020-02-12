@@ -34,6 +34,8 @@ extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
 
 extern vector<AAF> params;      // params of the ODE (nondeterministic disturbances)
+extern vector<AAF> initial_values; // uncertain initial conditions
+extern vector<AAF> center_initial_values;
 extern vector<AAF> inputs;   // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
 extern vector<AAF> center_inputs;
 extern vector<int> index_param;
@@ -69,11 +71,11 @@ void define_system_dim(int argc, char* argv[]);  // define the dimensions of you
 void set_initialconditions(vector<AAF> &params_inputs, vector<AAF> &param_inputs_center, vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J);
 
 // for DDEs : functions that initialize the DDE on first time period
-vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta);
-vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta);
+vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta_initial, vector<AAF> &beta_inputs);
+vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial, vector<T<F<AAF>>> &beta_inputs);
 
 // defining analytical solution if any for comparison
-void AnalyticalSol(int current_iteration, vector<AAF> &beta, double d0);
+void AnalyticalSol(int current_iteration, double d0);
 
 // reading sysdim, jacdim, etc
 void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init);
@@ -85,7 +87,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
 void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
 
 // specific to subdivisions
-void init_subdiv(int current_subdiv, vector<AAF> inputs_save, int param_to_subdivide);
+void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide);
 
 
 // define here  your ODE system yp = \dot y = f(y)
@@ -371,17 +373,10 @@ public:
             yp[0] = y[1];
             yp[1] = -params[0] *(y_prev[0] - 1.0) - params[1]*y_prev[1];   // pr = 1 is the reference position
         }
-        else if (syschoice == 7)  // self-driving car with uncertain (but constant) coefficients
-        {
-            yp[0] = y[1];
-            yp[1] = -y[2] *(y_prev[0] - 1.0) - y[3]*y_prev[1];   // pr = 1 is the reference position
-            yp[2] = 0;
-            yp[3] = 0;
-        }
         else if (syschoice == 8)  // self-driving car with uncertain (but constant) coefficients
         {
             yp[0] = y[1];
-            yp[1] = -param_inputs[2] *(y_prev[0] - 1.0) - param_inputs[3]*y_prev[1];   // pr = 1 is the reference position
+            yp[1] = -param_inputs[0] *(y_prev[0] - 1.0) - param_inputs[1]*y_prev[1];   // pr = 1 is the reference position
         }
         else if (syschoice == 9) // Ex 4 of Zou CAV 2015
         {
@@ -540,10 +535,10 @@ public:
             Jp[0][1] = J[1][1];
             Jp[0][2] = J[1][2];
             Jp[0][3] = J[1][3];
-            Jp[1][0] = - inputs[2]*J_prev[0][0]   - inputs[3]*J_prev[1][0];
-            Jp[1][1] = - inputs[2]*J_prev[0][1]   - inputs[3]*J_prev[1][1];
-            Jp[1][2] = -x_prev[0] - inputs[2]*J_prev[0][2] + 1 - inputs[3]*J_prev[1][2];
-            Jp[1][3] = - inputs[2]*J_prev[0][3] - x_prev[1] - inputs[3]*J_prev[1][3];
+            Jp[1][0] = - inputs[0]*J_prev[0][0]   - inputs[1]*J_prev[1][0];
+            Jp[1][1] = - inputs[0]*J_prev[0][1]   - inputs[1]*J_prev[1][1];
+            Jp[1][2] = -x_prev[0] - inputs[0]*J_prev[0][2] + 1 - inputs[1]*J_prev[1][2];
+            Jp[1][3] = - inputs[0]*J_prev[0][3] - x_prev[1] - inputs[1]*J_prev[1][3];
         }
         else if (syschoice == 9) // Ex 4 of Zou CAV 2015
         {
