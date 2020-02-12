@@ -54,8 +54,8 @@ More documentation on how to use these (and better input mechanisms) should come
 system-dimension = 4
 # dimension of the uncertain parameter and inputs
 inputs-dimension = 2
-time-horizon = 5.
 
+time-horizon = 5.
 # time step: only for ODEs
 sampling-time = 0.02
 
@@ -71,10 +71,15 @@ order = 3
 
 # ranges for initial conditions
 initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+# accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
+# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
 
 # ranges for (constant or piecewise constant) inputs
-# along with, for each input, number of steps (default is 1 for constant, x for piecewise constant with x different steps)
-inputs = ([-0.1,0.1],1) ([-0.1,0.1],10)
+# if all inputs are constant you can simply write 
+inputs = [-0.1,0.1] [-0.1,0.1]
+# for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
+inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
 
 # which dimensions of the inputs (starting from zero) are disturbances (the others are control inputs)
 uncontrolled = 0
