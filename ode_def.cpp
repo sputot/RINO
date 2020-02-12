@@ -33,12 +33,17 @@ double t_begin; // starting time of initialization
 
 // parameters of the system of the ODEs
 vector<AAF> params;  // params of the ODE (nondeterministic disturbances)
+
 vector<AAF> initial_values;
 vector<AAF> center_initial_values;
-vector<AAF> inputs; // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
-vector<AAF> center_inputs;
+
+vector<AAF> inputs; // uncertain inputs and parameters
+vector<AAF> fullinputs; // uncertain inputs and parameters
+vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+vector<AAF> center_fullinputs;
 vector<int> index_param;
 vector<int> index_param_inv;
+
 vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
@@ -58,7 +63,6 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 //vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
 //int variable; // number of non constant parameters
 //vector<bool> is_variable;  // for each parameter, constant or variable
-vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 bool refined_mean_value;
 
@@ -225,19 +229,13 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
     }
     
     // param_inputs between 0 and jacdim-sysdim, inputs between 0 and inputsdim
-        int j = 0;
-        for (int i = 0; i < inputsdim ; i++) {
-            for (int k=0; k<nb_inputs[i] ; k++) {
-                index_param[j] = i;
-                if (k == 0)
-                    index_param_inv[i] = j;
-                param_inputs[j] = inputs[j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
-                if (innerapprox == 1)
-                    param_inputs_center[j] = center_inputs[j]; // center_inputs[sysdim+i].convert_int();
-                else
-                    param_inputs_center[j] = inputs[j]; // inputs[sysdim+i].convert_int();
-                j++;
-            }
+        for (int j = 0; j < fullinputsdim ; j++) {
+            
+            param_inputs[j] = fullinputs[j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
+            if (innerapprox == 1)
+                param_inputs_center[j] = center_fullinputs[j]; // center_inputs[sysdim+i].convert_int();
+            else
+                param_inputs_center[j] = fullinputs[j]; // inputs[sysdim+i].convert_int();
         }
     
     setId(J);
@@ -270,6 +268,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
     char initialcondition[LINESZ];
     const char space[2] = " ";
     double a, b;
+    int c;
     
     cout << "****** Reading system parameter from file " <<  params_filename << " ******" << endl;
     FILE *params_file = fopen(params_filename,"r");
@@ -314,7 +313,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
                 initial_values[i] = interval(a,b);
-                cout <<"input="<<interval(a,b)<<endl;
+                cout <<"intial_value="<<interval(a,b)<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -326,9 +325,15 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             token = strtok(NULL,space);
             int i = 0;
             while( token != NULL ) {
-                sscanf(token,"[%lf,%lf]",&a,&b);
+                if (sscanf(token,"([%lf,%lf],%d)",&a,&b,&c) == 3)
+                    nb_inputs[i] = c;
+                else {
+                    nb_inputs[i] = 1;
+                    sscanf(token,"[%lf,%lf]",&a,&b);
+                }
                 inputs[i] = interval(a,b);
-                cout <<"input="<<interval(a,b)<<endl;
+           //     cout <<"input="<<interval(a,b)<<endl;
+           //     cout <<"nb_inputs["<<i<<"]="<<nb_inputs[i]<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -413,54 +418,25 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
-    // ******* for variable inputs ********
-    nb_inputs = vector<int>(inputsdim);
+    // inputs
+    inputs = vector<AAF>(inputsdim);      // bounds
+    nb_inputs = vector<int>(inputsdim);   // number of instances for each input
     for (int i=0; i<inputsdim; i++)
         nb_inputs[i] = 1;
-    
-    if (systype == 0) // ODE
-    {
-        t_begin = 0;
-        if (syschoice == 21)  // running example
-        {
-            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
-        }
-        else if (syschoice == 22)  // running example
-        {
-            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
-        }
-    }
-    fullinputsdim = 0;
-    for (int i=0; i<inputsdim; i++)
-        fullinputsdim += nb_inputs[i];
-    
-    // correspondance between variable inputs wwhich sucessive bounds are stored in inputs of size [jacdim]
-    index_param = vector<int>(fullinputsdim);
-    index_param_inv = vector<int>(inputsdim);
-    int j = 0;
-    for (int i = 0; i < inputsdim ; i++) {
-        for (int k=0; k<nb_inputs[i] ; k++) {
-            index_param[j] = i;
-            if (k == 0)
-                index_param_inv[i] = j;
-            j++;
-        }
-    }
-    // ******* end for piecewise constant inputs ********
-    
-    initial_values = vector<AAF>(sysdim);
-    inputs = vector<AAF>(fullinputsdim);
-    if (sysdim_params > 0)
-        params = vector<AAF>(sysdim_params);
-    
     uncontrolled = 0;
     controlled = 0;
     is_uncontrolled = vector<bool>(inputsdim);
-  
-    for (int i=0 ; i<inputsdim; i++) {
+    for (int i=0 ; i<inputsdim; i++)
         is_uncontrolled[i] = false;  // controlled input or parameter
-    }
     
+    // initial values
+    initial_values = vector<AAF>(sysdim);
+    
+    // parameters not part of the jacobian
+    if (sysdim_params > 0)
+        params = vector<AAF>(sysdim_params);
+    
+
     refined_mean_value = false;
     
     if (systype == 0) // ODE
@@ -676,11 +652,11 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
-            order = 4;
+            order = 3;
             initial_values[0] = 0;
             initial_values[1] = 0;
-            initial_values[2] = interval(0,1.);
-        //    nb_inputs[2] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            inputs[0] = interval(0,1.);
+            // nb_inputs[2] = 1; // default value: constant coeff
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
@@ -690,11 +666,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
-            for (int i=0; i<inputsdim; i++) {
-                for (int j=1; j<nb_inputs[i]; j++)
-                    inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
-            }
-          //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
@@ -704,10 +676,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
-            for (int i=0; i<inputsdim; i++) {
-                for (int j=1; j<nb_inputs[i]; j++)
-                    inputs[index_param_inv[i]+j] = inputs[index_param_inv[i]].convert_int();
-            }
+            nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
         }
@@ -865,6 +834,33 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
         read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);
     
+    // ******************* for piecewise constant inputs
+    fullinputsdim = 0;
+    for (int i=0; i<inputsdim; i++) {
+        cout << "nb_inputs=" <<nb_inputs[i]<<endl;
+        fullinputsdim += nb_inputs[i];
+    }
+    cout << "fullinputsdim=" << fullinputsdim << endl;
+    
+    // correspondance between variable inputs wwhich sucessive bounds are stored in inputs of size [jacdim]
+    index_param = vector<int>(fullinputsdim);
+    index_param_inv = vector<int>(inputsdim);
+    int j = 0;
+    for (int i = 0; i < inputsdim ; i++) {
+        for (int k=0; k<nb_inputs[i] ; k++) {
+            index_param[j] = i;
+            if (k == 0)
+                index_param_inv[i] = j;
+            j++;
+        }
+    }
+    
+    fullinputs = vector<AAF>(fullinputsdim);
+    for (int i=0; i<inputsdim; i++) {
+        for (int j=0; j<nb_inputs[i]; j++)
+            fullinputs[index_param_inv[i]+j] = inputs[i].convert_int();
+    }
+    // ****************** end  for piecewise constant inputs
     
     if (systype == 0)
     {
@@ -879,7 +875,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     
     // common to EDO and DDE
     center_initial_values = vector<AAF>(sysdim);
-    center_inputs = vector<AAF>(fullinputsdim);
+    center_fullinputs = vector<AAF>(fullinputsdim);
     
     jacdim = sysdim+fullinputsdim;
     
@@ -897,8 +893,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         if (!is_uncontrolled[i])
             controlled++;
         
-        temp = inputs[i].convert_int();
-        center_inputs[i] = mid(temp);
+        temp = fullinputs[i].convert_int();
+        center_fullinputs[i] = mid(temp);
         eps[i+sysdim] = temp-mid(temp);
     }
     
@@ -946,15 +942,15 @@ void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF
         interval save = inputs_save[param_to_subdivide-sysdim].convert_int();
         double delta = (save.sup()-save.inf())/nb_subdiv_init;
         if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
-            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
+            fullinputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
         else if (current_subdiv == 1)
-            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1),save.inf()+delta*(current_subdiv+recovering));
+            fullinputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1),save.inf()+delta*(current_subdiv+recovering));
         else if (current_subdiv == nb_subdiv_init)
-            inputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
+            fullinputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
       //  cout << "inputs[param_to_subdivide] " << inputs[param_to_subdivide-sysdim] << endl;
     
-         interval temp = inputs[param_to_subdivide-sysdim].convert_int();
-            center_inputs[param_to_subdivide-sysdim] = mid(temp);
+         interval temp = fullinputs[param_to_subdivide-sysdim].convert_int();
+            center_fullinputs[param_to_subdivide-sysdim] = mid(temp);
             eps[param_to_subdivide-sysdim] = temp-mid(temp);
     }
 }

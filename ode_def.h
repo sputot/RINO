@@ -34,10 +34,15 @@ extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
 
 extern vector<AAF> params;      // params of the ODE (nondeterministic disturbances)
+
 extern vector<AAF> initial_values; // uncertain initial conditions
 extern vector<AAF> center_initial_values;
-extern vector<AAF> inputs;   // uncertain inputs and parameters : some will be used in initial condition, some as uncertain parameters
-extern vector<AAF> center_inputs;
+
+extern vector<AAF> inputs;   // uncertain inputs and parameters
+extern vector<AAF> fullinputs; // uncertain inputs and parameters
+extern vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+
+extern vector<AAF> center_fullinputs;
 extern vector<int> index_param;
 extern vector<int> index_param_inv;
 extern vector<interval> eps;
@@ -59,7 +64,6 @@ extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controll
 //extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
 //extern int variable;  // number of non constant parameters
 //extern vector<bool> is_variable; // for each parameter, constant or variable
-extern vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
 extern bool refined_mean_value;
 
@@ -535,10 +539,10 @@ public:
             Jp[0][1] = J[1][1];
             Jp[0][2] = J[1][2];
             Jp[0][3] = J[1][3];
-            Jp[1][0] = - inputs[0]*J_prev[0][0]   - inputs[1]*J_prev[1][0];
-            Jp[1][1] = - inputs[0]*J_prev[0][1]   - inputs[1]*J_prev[1][1];
-            Jp[1][2] = -x_prev[0] - inputs[0]*J_prev[0][2] + 1 - inputs[1]*J_prev[1][2];
-            Jp[1][3] = - inputs[0]*J_prev[0][3] - x_prev[1] - inputs[1]*J_prev[1][3];
+            Jp[1][0] = - fullinputs[0]*J_prev[0][0]   - fullinputs[1]*J_prev[1][0];
+            Jp[1][1] = - fullinputs[0]*J_prev[0][1]   - fullinputs[1]*J_prev[1][1];
+            Jp[1][2] = -x_prev[0] - fullinputs[0]*J_prev[0][2] + 1 - fullinputs[1]*J_prev[1][2];
+            Jp[1][3] = - fullinputs[0]*J_prev[0][3] - x_prev[1] - fullinputs[1]*J_prev[1][3];
         }
         else if (syschoice == 9) // Ex 4 of Zou CAV 2015
         {

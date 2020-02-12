@@ -144,13 +144,13 @@ public:
         {
             if (innerapprox == 0)
             {
-                dde_x[i] = Dde(bf, prev_dde_x[i].x,inputs);
-                dde_g[i] = Dde(bf, prev_dde_g[i].x,inputs);
+                dde_x[i] = Dde(bf, prev_dde_x[i].x,fullinputs);
+                dde_g[i] = Dde(bf, prev_dde_g[i].x,fullinputs);
             }
             else
             {
-                dde_x[i] = Dde(bf, prev_dde_x[i].x,center_inputs);
-                dde_g[i] = Dde(bf, prev_dde_g[i].x,center_inputs);
+                dde_x[i] = Dde(bf, prev_dde_x[i].x,center_fullinputs);
+                dde_g[i] = Dde(bf, prev_dde_g[i].x,center_fullinputs);
             }
         }
     }

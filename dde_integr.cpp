@@ -358,7 +358,7 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
     vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_joint(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
     
     if (innerapprox == 0) {
-        TMcenter.init_dde(tn,initial_values,inputs,tau,order);
+        TMcenter.init_dde(tn,initial_values,fullinputs,tau,order);
         
         for (int i= 0 ; i<sysdim; i++)
             Xouter[i] = TMcenter.x[0][i].convert_int();
@@ -374,8 +374,8 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
     else
     {
    //     cout << "eps=" << eps[0] << endl;
-        TMcenter.init_dde(tn,center_initial_values,center_inputs,tau,order);
-        TMJac.init_dde(tn,initial_values,inputs,tau,order);
+        TMcenter.init_dde(tn,center_initial_values,center_fullinputs,tau,order);
+        TMJac.init_dde(tn,initial_values,fullinputs,tau,order);
         
         //
         for (int i= 0 ; i<sysdim; i++) {
@@ -473,7 +473,7 @@ void Dde_TM_Jac::build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau,
         for (j=0 ; j<jacdim ; j++)
             ddeJAC_x[s].J[i][j] = J[s][i][j];
     
-    bf(ddeVAR_x[s].xp,ddeVAR_x[s].x,prev_ddeVAR_x[s].x,inputs);
+    bf(ddeVAR_x[s].xp,ddeVAR_x[s].x,prev_ddeVAR_x[s].x,fullinputs);
     
     // ne sert plus a rien?
     bbf(ddeJAC_x[s].Jp,ddeJAC_x[s].J,prev_ddeJAC_x[s].J,ddeVAR_x[s].x,prev_ddeVAR_x[s].x);
@@ -487,7 +487,7 @@ void Dde_TM_Jac::build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau,
     vector<AAF> x_prev_range(sysdim);
     for (j=0 ; j<sysdim ; j++)
         x_prev_range[j] = prev_ddeVAR_g[s].x[j][0]; // dde_g[s].x_prev[j][0];
-    g_rough = fixpoint(bf,x[s],x_prev_range,inputs,tau);
+    g_rough = fixpoint(bf,x[s],x_prev_range,fullinputs,tau);
     
     for (int i=0 ; i<sysdim ; i++)
         g_rough[i].sumup(tol_noise); // group terms smaller than eps*radius in a new error term
@@ -499,7 +499,7 @@ void Dde_TM_Jac::build(DdeFunc bf, DdeJacFunc bbf, int s, double d0, double tau,
     // ne sert plus a rien ?
     for (j=0 ; j<sysdim ; j++)
         ddeVAR_g[s].x[j][0] = g_rough[j]; // initialize with enclosure of the flow on the time step
-     bf(ddeVAR_g[s].xp,ddeVAR_g[s].x,prev_ddeVAR_g[s].x,inputs);
+     bf(ddeVAR_g[s].xp,ddeVAR_g[s].x,prev_ddeVAR_g[s].x,fullinputs);
     
     for (i=0 ; i<sysdim ; i++)
         for (j=0 ; j<jacdim ; j++)
@@ -566,9 +566,9 @@ void HybridStep_dde::TM_build(int s)
 {
 //    cout << "Building TM valid on [" <<tn+s*tau << "," << tn+(s+1)*tau << "]" << endl;
     if (innerapprox == 0)
-        TMcenter.build(bf,inputs,s,d0,tau,order);
+        TMcenter.build(bf,fullinputs,s,d0,tau,order);
     else
-        TMcenter.build(bf,center_inputs,s,d0,tau,order);
+        TMcenter.build(bf,center_fullinputs,s,d0,tau,order);
 
     if (innerapprox == 1)
         TMJac.build(bf,bbf,s,d0,tau,order);

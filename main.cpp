@@ -93,11 +93,11 @@ int main(int argc, char* argv[])
     init_system(argc, argv, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
     vector<AAF> initial_values_save(sysdim);
-    vector<AAF> inputs_save(jacdim-sysdim);
+    vector<AAF> fullinputs_save(fullinputsdim);
     for (int i=0 ; i<sysdim; i++)
         initial_values_save[i] = initial_values[i];
-    for (int i=0 ; i<jacdim-sysdim; i++)
-        inputs_save[i] = inputs[i];
+    for (int i=0 ; i<fullinputsdim; i++)
+        fullinputs_save[i] = fullinputs[i];
     
     DdeFunc bf;    // contains the differential system - defined in ode_def.h
     DdeJacFunc bbf;
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, initial_values_save, inputs_save, component_to_subdiv);
+                init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
             
             // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
             current_iteration = 0;
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, initial_values_save, inputs_save, component_to_subdiv);
+                init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
