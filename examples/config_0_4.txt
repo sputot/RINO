@@ -1,11 +1,11 @@
 # linearized ballistic
 
-system-dimension = 5
+system-dimension = 4
 jacobian-dimension = 5
 time-horizon = 1.39
 sampling-time = 0.1
 order = 3
 inputs = [181,185] [0.0436,0.0611] [0,0.01] [0,0.25] [11,15]
-uncontrolled = 4
-variable = 4
+uncontrolled = 0
+variable = 
 initial-condition = 
