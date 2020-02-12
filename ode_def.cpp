@@ -310,8 +310,15 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             token = strtok(NULL,space);
             token = strtok(NULL,space);
             int i = 0;
+            // only one component can be subdivided for now (we keep the last if several...)
             while( token != NULL ) {
-                sscanf(token,"[%lf,%lf]",&a,&b);
+                if (sscanf(token,"([%lf,%lf],%d)",&a,&b,&c) == 3) {
+                    nb_subdiv_init = c;
+                    component_to_subdiv = i;
+                    cout << "component "<< i << " should be dubdivided " << c << "times" << endl;
+                }
+                else
+                    sscanf(token,"[%lf,%lf]",&a,&b);
                 initial_values[i] = interval(a,b);
                 cout <<"intial_value="<<interval(a,b)<<endl;
                 i++;
@@ -491,8 +498,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[0] = true;
   //          is_variable[4] = true;
-       //     nb_subdiv_init = 2;
-            component_to_subdiv = 4;
+           // nb_subdiv_init = 2;
+          //  component_to_subdiv = 3;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
