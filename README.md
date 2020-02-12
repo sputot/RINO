@@ -53,7 +53,7 @@ More documentation on how to use these (and better input mechanisms) should come
 # dimension of the ODE
 system-dimension = 4
 # dimension of the uncertain parameter and inputs
-inputs-dimension = 0
+inputs-dimension = 1
 time-horizon = 5.
 
 # time step: only for ODEs
@@ -70,14 +70,12 @@ nb-time-subdivisions = 3
 order = 3
 
 # ranges for inputs and initial conditions
-inputs = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
-# which dimensions correspond to the actual system 
-initial-condition = 0 1
-# which dimensions of the system are disturbances 
-uncontrolled = 3
-# the remaining dimensions (not uncontrolled or initial-conditions: here, 2) of the system are controlled inputs
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+inputs = [-0.1,0.1]
+# which dimensions of the inputs (starting from zero) are disturbances (the others are control inputs)
+uncontrolled = 0
 # which dimensions are time-varying inputs or parameters
-variable = 2 3
+variable =
 
 
 # for the visualization: if 0, only .png files are produced
