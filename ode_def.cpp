@@ -305,6 +305,20 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
                 token = strtok(NULL,space);
             }
         }
+        if (sscanf(buff, "initial-values = %s\n", initialcondition) == 1)
+        {
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i = 0;
+            while( token != NULL ) {
+                sscanf(token,"[%lf,%lf]",&a,&b);
+                initial_values[i] = interval(a,b);
+                cout <<"input="<<interval(a,b)<<endl;
+                i++;
+                token = strtok(NULL,space);
+            }
+        }
         if (sscanf(buff, "inputs = %s\n", initialcondition) == 1)
         {
             char *token = strtok(buff,space);
@@ -313,10 +327,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             int i = 0;
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
-                if (i<sysdim)
-                    initial_values[i] = interval(a,b);
-                else
-                    inputs[i-sysdim] = interval(a,b);
+                inputs[i] = interval(a,b);
                 cout <<"input="<<interval(a,b)<<endl;
                 i++;
                 token = strtok(NULL,space);
