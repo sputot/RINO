@@ -53,7 +53,7 @@ More documentation on how to use these (and better input mechanisms) should come
 # dimension of the ODE
 system-dimension = 4
 # dimension of the uncertain parameter and inputs
-inputs-dimension = 1
+inputs-dimension = 2
 time-horizon = 5.
 
 # time step: only for ODEs
@@ -69,9 +69,13 @@ nb-time-subdivisions = 3
 # order for Taylor models
 order = 3
 
-# ranges for inputs and initial conditions
+# ranges for initial conditions
 initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
-inputs = [-0.1,0.1]
+
+# ranges for (constant or piecewise constant) inputs
+# along with, for each input, number of steps (default is 1 for constant, x for piecewise constant with x different steps)
+inputs = ([-0.1,0.1],1) ([-0.1,0.1],10)
+
 # which dimensions of the inputs (starting from zero) are disturbances (the others are control inputs)
 uncontrolled = 0
 # which dimensions are time-varying inputs or parameters
