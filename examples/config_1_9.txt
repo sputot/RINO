@@ -7,8 +7,6 @@ delay = 1.
 starting-time = 0.0
 nb-time-subdivisions = 20
 order = 5
-inputs = [3.,6.]
+initial-values = [3.,6.]
 uncontrolled = 
 variable =
-initial-condition = 
-

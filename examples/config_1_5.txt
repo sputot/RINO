@@ -7,8 +7,6 @@ delay = 1.
 starting-time = -1.
 nb-time-subdivisions = 10
 order = 3
-inputs = [0.9,1.1]
+initial-values = [0.9,1.1]
 uncontrolled = 
 variable =
-initial-condition = 
-
