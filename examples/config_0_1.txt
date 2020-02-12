@@ -1,7 +1,7 @@
 # running example
 
 system-dimension = 1
-jacobian-dimension = 1
+inputs-dimension = 0
 sys-parameters-dimension = 1
 time-horizon = 2.
 sampling-time = 0.1

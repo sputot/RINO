@@ -1,7 +1,7 @@
 # Brusselator
 
 system-dimension = 2
-jacobian-dimension = 2
+inputs-dimension = 0
 sys-parameters-dimension = 2
 time-horizon = 10.
 sampling-time = 0.05

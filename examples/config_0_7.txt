@@ -1,7 +1,7 @@
 # self-driving car with time-varying parameters
 
 system-dimension = 4
-jacobian-dimension = 4
+inputs-dimension = 0
 time-horizon = 5.
 sampling-time = 0.02
 order = 3

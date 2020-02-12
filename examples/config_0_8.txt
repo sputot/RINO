@@ -1,5 +1,5 @@
 system-dimension = 1
-jacobian-dimension = 1
+inputs-dimension = 0
 time-horizon = 5.
 sampling-time = 0.01
 order = 3

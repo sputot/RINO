@@ -1,7 +1,7 @@
 # self-driving car 
 
 system-dimension = 2
-jacobian-dimension = 2
+inputs-dimension = 0
 sys-parameters-dimension = 2
 time-horizon = 5.
 sampling-time = 0.05

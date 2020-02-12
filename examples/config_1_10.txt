@@ -1,7 +1,7 @@
 # DDE platoon 5 vehicles
 
 system-dimension = 9
-jacobian-dimension = 9
+inputs-dimension = 0
 time-horizon = 10.
 delay = 0.3
 starting-time = -0.3

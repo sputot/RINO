@@ -1,7 +1,7 @@
 # HSCC 2019 crazyflie example 
 
 system-dimension = 14
-jacobian-dimension = 14
+inputs-dimension = 0
 time-horizon = 2.
 sampling-time = 0.03
 order = 3

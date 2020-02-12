@@ -1,7 +1,7 @@
 # self-driving car with constant or piecewise constant parameters
 
 system-dimension = 2
-jacobian-dimension = 4
+inputs-dimension = 2
 time-horizon = 5.
 sampling-time = 0.02
 order = 3

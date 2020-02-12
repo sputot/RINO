@@ -1,7 +1,7 @@
 # linearized ballistic
 
 system-dimension = 4
-jacobian-dimension = 5
+inputs-dimension = 1
 time-horizon = 1.39
 sampling-time = 0.1
 order = 3

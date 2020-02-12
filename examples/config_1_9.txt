@@ -1,7 +1,7 @@
 # DDE 
 
 system-dimension = 1
-jacobian-dimension = 1
+inputs-dimension = 0
 time-horizon = 2.
 delay = 1.
 starting-time = 0.0

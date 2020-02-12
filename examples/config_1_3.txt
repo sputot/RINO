@@ -1,7 +1,7 @@
 # DDE Xue 2017
 
 system-dimension = 7
-jacobian-dimension = 7
+inputs-dimension = 0
 time-horizon = 0.1
 delay = 0.01
 starting-time = 0.0
