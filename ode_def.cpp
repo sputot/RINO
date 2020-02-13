@@ -124,6 +124,11 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 6;
             inputsdim = 2;
         }
+        else if (syschoice == 10)  // 10-D near-hover quadrotor
+        {
+            sysdim = 10;
+            inputsdim = 6;
+        }
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
@@ -304,7 +309,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             int i;
             while( token != NULL ) {
                 sscanf(token,"%d",&i);
-                variables_to_display[i] = true;
+                variables_to_display[i-1] = true;
              //   cout <<"input="<<inputs[i].convert_int()<<endl;
                 token = strtok(NULL,space);
             }
@@ -375,7 +380,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             int i;
             while( token != NULL ) {
                 sscanf(token,"%d",&i);
-                is_uncontrolled[i] = true;
+                is_uncontrolled[i-1] = true;
           //      cout <<"is_uncontrolled="<<i<<endl;
                 token = strtok(NULL,space);
             }
@@ -570,6 +575,28 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[4] = interval(-0.1,0.1);     // omega
             inputs[0] = interval(0,18.39375);           // T1
             inputs[1] = interval(0,18.39375);           // T2
+        }
+        else if (syschoice == 10)
+        {
+            tau = 0.01;
+            t_end = 1.;
+            order = 3;
+            initial_values[0] = interval(-1.,1.);       // px
+            initial_values[1] = interval(-0.1,0.1);     // vx
+            initial_values[2] = interval(-0.1,0.1);     // thetax
+            initial_values[3] = interval(-0.1,0.1);     // omegax
+            initial_values[4] = interval(-1.,1.);       // py
+            initial_values[5] = interval(-0.1,0.1);     // vy
+            initial_values[6] = interval(-0.1,0.1);     // thetay
+            initial_values[7] = interval(-0.1,0.1);     // omegay
+            initial_values[8] = interval(-2.5,2.5);     // pz
+            initial_values[9] = interval(-0.1,0.1);     // vz
+            inputs[0] = interval(-0.5,0.5); is_uncontrolled[0] = true;  // disturbance dx
+            inputs[1] = interval(-0.5,0.5); is_uncontrolled[1] = true;  // disturbance dy
+            inputs[1] = interval(-0.5,0.5); is_uncontrolled[2] = true;  // disturbance dz
+            inputs[3] = interval(-0.17453,0.17453);     // control input Sx - desired pitch angle (+/-Pi/18)
+            inputs[4] = interval(-0.17453,0.17453);     // control input Sy - desired roll angle
+            inputs[5] = interval(0,19.62);              // control input Sz - vertical thrust <= 2g
         }
         else if (syschoice == 11)
         {

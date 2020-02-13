@@ -355,11 +355,11 @@ void run_pythonscript_visualization()
         if (variables_to_display[i]) {
             j++;
             if (init) {
-                sprintf(displayed_variables,"-%d",i);
+                sprintf(displayed_variables,"-%d",i+1);
                 init = false;
             }
             else
-                sprintf(displayed_variables,"%s-%d",displayed_variables,i);
+                sprintf(displayed_variables,"%s-%d",displayed_variables,i+1);
         }
     }
     if (!init)
