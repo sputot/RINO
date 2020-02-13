@@ -9,7 +9,7 @@ It relies on Taylor model based reachability analysis to compute outer envelopes
 
 You need g++, LAPACK and BLAS installed.
 
-Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/~xsc/software/filib.html (we used Version 3.0.2), and set variable $FILIBHOME
+Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/wrswt/software/filib.html (we used Version 3.0.2), and set variable $FILIBHOME
 
 Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME
 
