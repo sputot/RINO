@@ -76,13 +76,12 @@ initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
 initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
 
 # ranges for (constant or piecewise constant) inputs
-# if all inputs are constant you can simply write 
-inputs = [-0.1,0.1] [-0.1,0.1]
+# if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
 # for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
 inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
 
-# which dimensions of the inputs (starting from zero) are disturbances (the others are control inputs)
-uncontrolled = 0
+# which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
+uncontrolled = 1
 # which dimensions are time-varying inputs or parameters
 variable =
 
