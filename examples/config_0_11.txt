@@ -1,0 +1,11 @@
+# Dubbins vehicle
+
+system-dimension = 3
+inputs-dimension = 4
+time-horizon = 1.
+sampling-time = 0.01
+order = 3
+initial-values = [-1,1] [-0.1,0.1] [-0.1,0.1] 
+inputs = [-1,1] [-1,1] [-5,5] [-1,1]
+uncontrolled = 1 2 3
+variable =
