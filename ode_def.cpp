@@ -119,6 +119,11 @@ void define_system_dim(int argc, char* argv[])
         {
             sysdim = 1;
         }
+        else if (syschoice == 9)  // Acrobatic quadcopter
+        {
+            sysdim = 6;
+            inputsdim = 2;
+        }
         else if (syschoice == 11)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
@@ -551,6 +556,20 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             t_end = 5.;
             order = 3;
             initial_values[0] = interval(0.4,0.5);
+        }
+        else if (syschoice == 9)   // acrobatic quadrotor
+        {
+            tau = 0.01;
+            t_end = 0.5;
+            order = 4;
+            initial_values[0] = interval(-1.,1.);       // px
+            initial_values[1] = interval(-0.1,0.1);        // vx
+            initial_values[2] = interval(-1.,1.);       // py
+            initial_values[3] = interval(-0.1,0.1);        // vy
+            initial_values[4] = interval(-0.1,0.1);     // phi
+            initial_values[4] = interval(-0.1,0.1);     // omega
+            inputs[0] = interval(0,18.39375);           // T1
+            inputs[1] = interval(0,18.39375);           // T2
         }
         else if (syschoice == 11)
         {

@@ -159,6 +159,21 @@ public:
           {
               yp[0] = - y[0]*y[0]*y[0];
           }
+          else if (syschoice == 9)  // acrobatic quadcopter
+          {
+              double Cv = 0.25;     // transitional drag
+              double Cphi = 0.02255; // rotational drag
+              double g = 9.81;
+              double m = 1.25;      // mass
+              double l = 0.5;       // length of quadrotor"s center to an edge
+              double Iyy = 0.03;    // moment of inertia
+              yp[0] = -y[1];     // px
+              yp[1] = -(-Cv/m*y[1] - (param_inputs[0]+param_inputs[1])/m*sin(y[4]));     // vx
+              yp[2] = -y[3];     // py
+              yp[3] = -(-(g+Cv*y[2]/m) + (param_inputs[0]+param_inputs[1])/m*cos(y[4]));     // vy
+              yp[4] = -y[5];     // phi
+              yp[5] = -(-Cphi/Iyy*y[5] + l/Iyy*(param_inputs[1]-param_inputs[0]));     // omega
+          }
           else if (syschoice == 11)  // academic example to investigate time-varying parameters
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
