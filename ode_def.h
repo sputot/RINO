@@ -195,7 +195,7 @@ public:
               yp[8] = -(y[9] + param_inputs[2]);        // pz' = vz + dz
               yp[9] = -(kT*param_inputs[5] - g);        // vz' = kT.Tz - g
           }
-          else if (syschoice == 11)  // academic example to investigate time-varying parameters
+          else if (syschoice == 12)  // academic example to investigate time-varying parameters
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
               yp[1] = 1;

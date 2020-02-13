@@ -129,7 +129,7 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 10;
             inputsdim = 6;
         }
-        else if (syschoice == 11)  // academic example to investigate time-varying parameters
+        else if (syschoice == 12)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
         }
@@ -598,7 +598,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[4] = interval(-0.17453,0.17453);     // control input Sy - desired roll angle
             inputs[5] = interval(0,19.62);              // control input Sz - vertical thrust <= 2g
         }
-        else if (syschoice == 11)
+        else if (syschoice == 12)
         {
             tau = 1.;
             t_end = 2.;
