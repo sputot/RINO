@@ -174,6 +174,27 @@ public:
               yp[4] = -y[5];     // phi
               yp[5] = -(-Cphi/Iyy*y[5] + l/Iyy*(param_inputs[1]-param_inputs[0]));     // omega
           }
+          else if (syschoice == 10)  // 10-D near-hover quadrotor
+          {
+              double n0 = 10;
+              double d0 = 10;
+              double d1 = 8;
+              double kT = 0.91;
+              double m = 1.3;
+              double g = 9.81;
+              // param_inputs[0] .. param_inputs[2] : disturbances dx, dy, dz
+              // param_inputs[3] .. param_inputs[5] : control inputs Sx, Sy, Tz
+              yp[0] = -(y[1] + param_inputs[0]);       // px' = vx + dx
+              yp[1] = -(g*tan(y[2]));                  // vx' = g.tan(thetax)
+              yp[2] = -(-d1*y[2] +y[3]);               // thetax' = -d1.thetax + omegax
+              yp[3] = -(-d0*y[2] + n0*param_inputs[3]); // omegax' = -d0.thetax + no.Sx
+              yp[4] = -(y[5] + param_inputs[1]);        // py' = vy + dy
+              yp[5] = -(g*tan(y[6]));                   // vy' = g.tan(thetay)
+              yp[6] = -(-d1*y[6] +y[7]);                // thetay' = -d1.thetay + omegay
+              yp[7] = -(-d0*y[6] + n0*param_inputs[4]);  // omegay' = -d0.thetay + no.Sy
+              yp[8] = -(y[9] + param_inputs[2]);        // pz' = vz + dz
+              yp[9] = -(kT*param_inputs[5] - g);        // vz' = kT.Tz - g
+          }
           else if (syschoice == 11)  // academic example to investigate time-varying parameters
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
