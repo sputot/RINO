@@ -1,11 +1,11 @@
-# self-driving car with constant or piecewise constant parameters
+# 6D acrobatic quadcopter
 
-system-dimension = 2
+system-dimension = 6
 inputs-dimension = 2
-time-horizon = 5.
-sampling-time = 0.02
-order = 3
-initial-values = [-0.1,0.1] [0,0.1]
-inputs = [1.9,2.1] [2.9,3.1]
+time-horizon = 0.5
+sampling-time = 0.01
+order = 4
+initial-values = [-1,1] [-0.1,0.1] [-1,1] [-0.1,0.1] [-0.1,0.1] [-0.1,0.1]
+inputs = ([0,18.39375],1) ([0,18.39375],1)
 uncontrolled =
 variable =
