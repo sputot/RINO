@@ -1,0 +1,11 @@
+# 10D near-hover quadrotor
+
+system-dimension = 10
+inputs-dimension = 6
+time-horizon = 1.
+sampling-time = 0.01
+order = 3
+initial-values = [-1,1] [-0.1,0.1] [-0.1,0.1] [-0.1,0.1] [-1,1] [-0.1,0.1] [-0.1,0.1] [-0.1,0.1] [-2.5,2.5] [-0.1,0.1]
+inputs = [-0.5,0.5] [-0.5,0.5] [-0.5,0.5] [-0.17453,0.17453] [-0.17453,0.17453] [0,19.62]
+uncontrolled = 1 2 3
+variable =
