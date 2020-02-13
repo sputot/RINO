@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[474]:
+# In[ ]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -43,7 +43,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[475]:
+# In[ ]:
 
 
 width_in_inches = 12
@@ -97,7 +97,7 @@ def print_xy(varx,vary):
 print_xy("x1","x2")
 
 
-# In[476]:
+# In[ ]:
 
 
 # if print_robust = True: print robust approx
@@ -299,6 +299,8 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                 plt.savefig(f_output) # save to file
                 if (print_interactive):
                     plt.show() # print 
+                plt.close()
+                fig = plt.figure()
     if (only_one_graph or subplots):
         if (only_one_graph):
             plt.title("All components")
@@ -308,9 +310,10 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.savefig(f_output)    
         if (print_interactive):
             plt.show() # print all components on same graph
+        plt.close()
 
 
-# In[477]:
+# In[ ]:
 
 
 print_robust = False
@@ -321,7 +324,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[478]:
+# In[ ]:
 
 
 print_robust = False
@@ -332,7 +335,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[479]:
+# In[ ]:
 
 
 print_robust = True
@@ -343,7 +346,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[480]:
+# In[ ]:
 
 
 print_robust = True
@@ -354,7 +357,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[481]:
+# In[ ]:
 
 
 print_robust = False
@@ -364,7 +367,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[482]:
+# In[ ]:
 
 
 print_robust = False
@@ -374,7 +377,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[483]:
+# In[ ]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -389,9 +392,10 @@ plt.title("Min over all xi components of width ratios (a verifier)")
 plt.savefig("width_ratio.png") # save to file
 if (print_interactive):
     plt.show() # print
+plt.close()
 
 
-# In[484]:
+# In[ ]:
 
 
 print_interactive = False
@@ -418,9 +422,10 @@ plt.title("Mean on xi of distance")
 plt.savefig("meanerror.png") # save to file
 if (print_interactive):
     plt.show() # print
+plt.close()
 
 
-# In[485]:
+# In[ ]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
@@ -445,4 +450,5 @@ plt.title("Mean on xi of relative distance")
 plt.savefig("meanrelativeerror.png") # save to file
 if (print_interactive):
     plt.show() # print
+plt.close()
 
