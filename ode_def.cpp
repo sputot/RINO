@@ -129,6 +129,11 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 10;
             inputsdim = 6;
         }
+        else if (syschoice == 11)  // Dubbins vehicle
+        {
+            sysdim = 3;
+            inputsdim = 4;
+        }
         else if (syschoice == 12)  // academic example to investigate time-varying parameters
         {
             sysdim = 2;
@@ -576,7 +581,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(0,18.39375);           // T1
             inputs[1] = interval(0,18.39375);           // T2
         }
-        else if (syschoice == 10)
+        else if (syschoice == 10) // 10-D near-hover quadrotor
         {
             tau = 0.01;
             t_end = 1.;
@@ -597,6 +602,19 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[3] = interval(-0.17453,0.17453);     // control input Sx - desired pitch angle (+/-Pi/18)
             inputs[4] = interval(-0.17453,0.17453);     // control input Sy - desired roll angle
             inputs[5] = interval(0,19.62);              // control input Sz - vertical thrust <= 2g
+        }
+        else if (syschoice == 11)   // Dubbins vehicle
+        {
+            tau = 0.01;
+            t_end = 1.;
+            order = 3;
+            initial_values[0] = interval(-1.,1.);       // px
+            initial_values[1] = interval(-0.1,0.1);      // vx
+            initial_values[2] = interval(-0.1,0.1);     // theta
+            inputs[0] = interval(-1,1); is_uncontrolled[0] = true;  // disturbance b1
+            inputs[1] = interval(-1,1); is_uncontrolled[1] = true;  // disturbance b2
+            inputs[1] = interval(-5,5); is_uncontrolled[2] = true;  // disturbance b3
+            inputs[3] = interval(-1,1);                  // control a
         }
         else if (syschoice == 12)
         {

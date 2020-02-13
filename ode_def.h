@@ -195,6 +195,15 @@ public:
               yp[8] = -(y[9] + param_inputs[2]);        // pz' = vz + dz
               yp[9] = -(kT*param_inputs[5] - g);        // vz' = kT.Tz - g
           }
+          else if (syschoice == 11)  // Dubbins vehicle
+          {
+              double v = 5;         // constant velocity
+              // param_inputs[0] .. param_inputs[2] : disturbances b1, b2, b3
+              // param_inputs[3]  : control input a : angular control
+              yp[0] = v*cos(y[2]) + param_inputs[0];        // px' = v.cos(theta) + b1
+              yp[1] = v*sin(y[2]) + param_inputs[1];        // py' = v.sin(theta) + b2
+              yp[2] = param_inputs[3] + param_inputs[2];    // theta' = a + b3
+          }
           else if (syschoice == 12)  // academic example to investigate time-varying parameters
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
