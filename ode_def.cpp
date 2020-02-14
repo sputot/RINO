@@ -572,9 +572,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             tau = 0.01;
             t_end = 0.5;
             order = 4;
-            initial_values[0] = interval(-0.5,0.5);       // px
+            initial_values[0] = interval(-1.,1.);       // px
             initial_values[1] = interval(-0.1,0.1);        // vx
-            initial_values[2] = interval(-0.5,0.5);       // py
+            initial_values[2] = interval(-1.,1.);       // py
             initial_values[3] = interval(-0.1,0.1);        // vy
             initial_values[4] = interval(-0.1,0.1);     // phi
             initial_values[4] = interval(-0.1,0.1);     // omega
@@ -608,8 +608,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             tau = 0.01;
             t_end = 1.;
             order = 3;
-            initial_values[0] = interval(-1.,1.);       // px
-            initial_values[1] = interval(-0.1,0.1);      // vx
+            initial_values[0] = interval(-0.5,0.5);       // px
+            initial_values[1] = interval(-0.5,0.5);     // py
             initial_values[2] = interval(-0.1,0.1);     // theta
             inputs[0] = interval(-1,1); is_uncontrolled[0] = true;  // disturbance b1
             inputs[1] = interval(-1,1); is_uncontrolled[1] = true;  // disturbance b2
