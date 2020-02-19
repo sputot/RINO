@@ -15,13 +15,20 @@
 #include "tadiff.h"
 #include "fadiff.h"
 #include "fadbad_aa.h"
+#include "ode_def.h"
 
 class DiscreteFunc {
 public:
     template <class C>
     vector<C> operator()(vector<C> x) {
-        vector<C> z(x.size());
-        z[0] = x[0]*x[0] - x[0];
+        vector<C> z(sysdim);
+        
+        if (syschoice == 1)
+            z[0] = x[0]*x[0] - x[0];
+        else if (syschoice == 2)
+            z[0] = x[1]*x[1] - x[0];
+        
+            
         return z;
     }
 };

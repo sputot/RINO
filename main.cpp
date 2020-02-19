@@ -70,16 +70,7 @@ int main(int argc, char* argv[])
     systype = 1; // EDO = 0, DDE = 1, discrete systems = 2
     syschoice = 1;
     
-    if (argc == 2) {
-        systype = atoi(argv[1]);
-        if (systype == 2) {
-            range_discrete_system();
-            return 0;
-        }
-        else
-            cout << "I did not understand your command " << endl;
-    }
-    else if (argc >= 3)
+    if (argc >= 3)
     {
         systype = atoi(argv[1]);
         syschoice = atoi(argv[2]);
@@ -97,6 +88,12 @@ int main(int argc, char* argv[])
     
     /*******************************************************************************************/
    
+    if (systype == 2) {
+        range_discrete_system();
+        return 0;
+    }
+    
+    
    
     
     clock_t begin = clock();
