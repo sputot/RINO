@@ -22,6 +22,7 @@
 #include "inner.h"
 #include "ode_integr.h"
 #include "dde_integr.h"
+#include "discrete_system.h"
 //#include "tinyxml2.h"
 #include <iostream>
 #include <ostream>
@@ -66,9 +67,19 @@ int main(int argc, char* argv[])
    
     /********* DEFINING SYSTEM *******************/
     // default is running example of CAV 2018 paper
-    systype = 1; // EDO = 0, DDE = 1
+    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2
     syschoice = 1;
-    if (argc >= 3)
+    
+    if (argc == 2) {
+        systype = atoi(argv[1]);
+        if (systype == 2) {
+            range_discrete_system();
+            return 0;
+        }
+        else
+            cout << "I did not understand your command " << endl;
+    }
+    else if (argc >= 3)
     {
         systype = atoi(argv[1]);
         syschoice = atoi(argv[2]);
