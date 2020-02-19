@@ -303,6 +303,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         sscanf(buff, "nb-time-subdivisions = %d\n", &nb_subdiv); // for DDEs : subdiv of time interval d0 : tau is deduced
         sscanf(buff, "order = %d\n", &order);
         sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
+        sscanf(buff, "refined-mean-value = %d\n", &refined_mean_value);
         if (sscanf(buff, "variables-to-display = %s\n", initialcondition) == 1)
         {
             for (int i=0; i< sysdim; i++)

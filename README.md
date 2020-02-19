@@ -69,6 +69,9 @@ nb-time-subdivisions = 3
 # order for Taylor models
 order = 3
 
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+
 # ranges for initial conditions
 initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
 # accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
