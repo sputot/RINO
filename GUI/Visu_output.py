@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[142]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -43,7 +43,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[ ]:
+# In[143]:
 
 
 width_in_inches = 12
@@ -57,28 +57,25 @@ from os import path
 def print_xy(varx,vary):
     fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     # print maximal outer and inner approximations for each component separately
-    fx_inner = varx + 'inner_joint.out'
-    fy_inner = vary + 'inner_joint.out'
+    fxy_inner = varx + vary + 'joint_inner.out'
     fx_outer = varx + 'outer.out'
     fy_outer = vary + 'outer.out'
     if (path.isfile(fx_outer) and path.isfile(fy_outer)):
-        with open(fx_outer, 'r') as x_outer, open(fx_inner, 'r') as x_inner, open(fy_outer, 'r') as y_outer, open(fy_inner, 'r') as y_inner:
+        with open(fx_outer, 'r') as x_outer, open(fxy_inner, 'r') as xy_inner, open(fy_outer, 'r') as y_outer:
             linesx_outer = x_outer.readlines()
             tx_outer = [float(line.split()[0]) for line in linesx_outer]
             xmin_outer = [float(line.split()[1]) for line in linesx_outer]
             xmax_outer = [float(line.split()[2]) for line in linesx_outer]
-            linesx_inner = x_inner.readlines()     
-            tx_inner = [float(line.split()[0]) for line in linesx_inner]
-            xmin_inner = [float(line.split()[1]) for line in linesx_inner]
-            xmax_inner = [float(line.split()[2]) for line in linesx_inner]
             linesy_outer = y_outer.readlines()
             ty_outer = [float(line.split()[0]) for line in linesy_outer]
             ymin_outer = [float(line.split()[1]) for line in linesy_outer]
             ymax_outer = [float(line.split()[2]) for line in linesy_outer]
-            linesy_inner = y_inner.readlines()     
-            ty_inner = [float(line.split()[0]) for line in linesy_inner]
-            ymin_inner = [float(line.split()[1]) for line in linesy_inner]
-            ymax_inner = [float(line.split()[2]) for line in linesy_inner]
+            linesxy_inner = xy_inner.readlines()     
+            tx_inner = [float(line.split()[0]) for line in linesxy_inner]
+            xmin_inner = [float(line.split()[1]) for line in linesxy_inner]
+            xmax_inner = [float(line.split()[2]) for line in linesxy_inner]
+            ymin_inner = [float(line.split()[3]) for line in linesxy_inner]
+            ymax_inner = [float(line.split()[4]) for line in linesxy_inner]
 
             for xo1,xo2,xi1,xi2,yo1,yo2,yi1,yi2 in zip(xmin_outer,xmax_outer,xmin_inner,xmax_inner,ymin_outer,ymax_outer,ymin_inner,ymax_inner):
                 car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1)
@@ -89,7 +86,7 @@ def print_xy(varx,vary):
         ax.autoscale()
         ax.set_xlabel(varx)
         ax.set_ylabel(vary)
-        f_output="joint_" + varx + vary
+        f_output= varx + vary
         plt.savefig(f_output)
         if (print_interactive):
             plt.show() 
