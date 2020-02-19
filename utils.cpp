@@ -26,7 +26,8 @@ vector<ofstream> outFile_outer_robust;  // robust outer-approximated range for e
 vector<ofstream> outFile_outer;   //  maximal outer-approximated range for each variable of the system
 vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
 vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each variable of the system
-vector<ofstream> outFile_inner_joint;   //  maximal inner-approximated range for each variable of the system
+vector<ofstream> outFile_inner_joint;   //  maximal inner-approximated range for each variable of the system // obsolete
+vector<vector<ofstream>> outFile_joint_inner;   // output inner-approximated range for each couple of variables of the system
 vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
 vector<ofstream> outFile_center;
 vector<ofstream> outFile_exact; // analytical solution if any
@@ -64,6 +65,10 @@ void open_outputfiles()
     }
     outFile_center  = vector<ofstream>(sysdim);
     
+    outFile_joint_inner = vector<vector<ofstream>>(sysdim);
+    for (int i=0 ; i<sysdim ; i++)
+        outFile_joint_inner[i] = vector<ofstream>(sysdim);
+    
     stringstream file_name;
     
     for (int i=0 ; i<sysdim ; i++) {
@@ -94,11 +99,15 @@ void open_outputfiles()
         outFile_center[i].open(file_name.str().c_str());
         file_name.str("");
         file_name << "output/x" << i+1 << "inner.out";
-        outFile_inner[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner_joint.out";
-        outFile_inner_joint[i].open(file_name.str().c_str());
-        
+        outFile_inner[i].open(file_name.str().c_str());   
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            file_name.str("");
+            file_name << "output/x" << i+1 << "x" << j+1 << "joint_inner.out";
+            outFile_joint_inner[i][j].open(file_name.str().c_str());
+        }
     }
     
     

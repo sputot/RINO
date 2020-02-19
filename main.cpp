@@ -234,7 +234,6 @@ void print_finalsolution(int max_it, double d0)
             Xouter_print[0][current_iteration][i] = Xouter_print[1][current_iteration][i];
             Xouter_robust_print[0][current_iteration][i] = Xouter_robust_print[1][current_iteration][i];
             Xinner_print[0][current_iteration][i] = Xinner_print[1][current_iteration][i];
-            Xinner_joint_print[0][current_iteration][i] = Xinner_joint_print[1][current_iteration][i];
             Xinner_robust_print[0][current_iteration][i] = Xinner_robust_print[1][current_iteration][i];
             for (int j=2; j <=nb_subdiv_init; j++)
             {
@@ -249,7 +248,6 @@ void print_finalsolution(int max_it, double d0)
                 }
                 // Warning: joining tubes is correct for inner approx only if no hole
                 Xinner_print[0][current_iteration][i] = hull(Xinner_print[0][current_iteration][i],Xinner_print[j][current_iteration][i]);
-                Xinner_joint_print[0][current_iteration][i] = hull(Xinner_joint_print[0][current_iteration][i],Xinner_joint_print[j][current_iteration][i]);
                 Xinner_robust_print[0][current_iteration][i] = hull(Xinner_robust_print[0][current_iteration][i],Xinner_robust_print[j][current_iteration][i]);
             }
             if (nb_subdiv_init > 1)
@@ -380,33 +378,39 @@ void run_pythonscript_visualization()
 
 void print_initstats(vector<AAF> &x)
 {
-   
+    interval range_x;
+    
     // print initial conditions of the ODE
     for (int i=0 ; i<sysdim ; i++) {
+        range_x = x[i].convert_int();
         // print in exit files
-        outFile_outer[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        outFile_outer[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
         if (uncontrolled > 0) {
-            outFile_inner_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-            outFile_outer_robust[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+            outFile_inner_robust[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
+            outFile_outer_robust[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
         }
         if (controlled > 0 || uncontrolled > 0) {
-            outFile_inner_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-            outFile_outer_minimal[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+            outFile_inner_minimal[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
+            outFile_outer_minimal[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
         }
-        outFile_center[i] << 0<< "\t" << mid(x[i].convert_int()) << "\t" << mid(x[i].convert_int()) << endl;
-        outFile_inner[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
-        outFile_inner_joint[i] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << endl;
+        outFile_center[i] << 0<< "\t" << mid(range_x) << "\t" << mid(range_x) << endl;
+        outFile_inner[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
         
-        Xouter_print[current_subdiv][0][i] = x[i].convert_int();
-        Xouter_robust_print[current_subdiv][0][i] = x[i].convert_int();
-        Xouter_minimal_print[current_subdiv][0][i] = x[i].convert_int();
-        Xinner_print[current_subdiv][0][i] = x[i].convert_int();
-        Xinner_joint_print[current_subdiv][0][i] = x[i].convert_int();
-        Xinner_robust_print[current_subdiv][0][i] = x[i].convert_int();
-        Xinner_minimal_print[current_subdiv][0][i] = x[i].convert_int();
-        Xexact_print[current_subdiv][0][i] = x[i].convert_int();
+        Xouter_print[current_subdiv][0][i] = range_x;
+        Xouter_robust_print[current_subdiv][0][i] = range_x;
+        Xouter_minimal_print[current_subdiv][0][i] = range_x;
+        Xinner_print[current_subdiv][0][i] = range_x;
+        Xinner_robust_print[current_subdiv][0][i] = range_x;
+        Xinner_minimal_print[current_subdiv][0][i] = range_x;
+        Xexact_print[current_subdiv][0][i] = range_x;
     }
     outFile_width_ratio << 0 << "\t" << 1.0 << endl;
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            outFile_joint_inner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+        }
+    }
     
     // a changer un jour pour t_begin (notamment pour DDE)?
     t_print[0] = 0;
@@ -449,8 +453,13 @@ void print_finalstats(clock_t begin)
         outFile_outer[i].close();
         outFile_exact[i].close();
         outFile_inner[i].close();
-        outFile_inner_joint[i].close();
         outFile_center[i].close();
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < i-sysdim ; j++) {
+            outFile_joint_inner[i][j].close();
+        }
     }
     outFile_width_ratio.close();
     outFile_meanerror_outer.close();

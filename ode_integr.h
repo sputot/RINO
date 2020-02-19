@@ -257,7 +257,7 @@ public:
     void init_nextstep(double _tau);
     
     
-    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_joint, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
+    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
     
 
     

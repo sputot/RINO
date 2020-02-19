@@ -355,7 +355,7 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
 // sets initial conditions and parameters for the ODE system
 void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interval> &eps*/)
 {
-    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_joint(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
+    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
     
     if (innerapprox == 0) {
         TMcenter.init_dde(tn,initial_values,fullinputs,tau,order);
@@ -383,7 +383,7 @@ void  HybridStep_dde::init_dde(/*vector<AAF> &x, vector<AAF> &x0, vector<interva
             Xcenter[i] = TMcenter.x[0][i].convert_int();
         }
         //
-        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
         intersectViVi(Xouter,TMJac.x[0]);
         print_solutionstep(-1,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter); // initial solution t=-d0
         
@@ -738,7 +738,7 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
 //  A completer pour la sous-approx
 void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
 {
-    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_joint(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
+    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
     
     TM_eval(s);
     
@@ -761,7 +761,7 @@ void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
             Xcenter[i] = TMcenter.xp1[s][i].convert_int();
         }
        
-        InnerOuter(Xinner,Xinner_joint,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
      //   cout << "Xouter[0]" << Xouter[0] << endl;
         intersectViVi(Xouter,TMJac.xp1[s]);
        // for (int i = 0 ; i<sysdim ; i++)
