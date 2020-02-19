@@ -90,8 +90,8 @@ def print_xy(varx,vary):
         plt.savefig(f_output)
         if (print_interactive):
             plt.show() 
-        
-print_xy("x1","x2")
+        plt.close()
+#print_xy("x1","x2")
 
 
 
