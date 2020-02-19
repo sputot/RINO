@@ -35,5 +35,6 @@ public:
 
 void range_discrete_system(void);
 
+void evaluate_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<bool> &is_existential);
 
 #endif
