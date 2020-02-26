@@ -53,7 +53,7 @@ public:
             z[0] = 2.0*x[0]*x[0] + 1.0*x[1]*x[1] - 2.0*x[0]*x[1] - 1.0;
             z[1] = x[0]*x[0] - x[1]*x[1] + 3.0*x[0]*x[1] - 3.0;
         }
-        else if (syschoice == 9) { // skewed inner-approx is empty - try to see with zonotope ?
+        else if (syschoice == 9) { // 
             z[0] = 2.0*x[0]*x[0] - x[0]*x[1] - 1.0;
             z[1] = x[0]*x[0] + x[1]*x[1]  - 2.0;
         }
