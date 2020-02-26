@@ -37,9 +37,25 @@ public:
             z[0] = 5.0*x[0]*x[0] + x[1]*x[1]  - 2.0*x[0]*x[1] - 4.0;
             z[1] = x[0]*x[0] + 5.0*x[1]*x[1] - 2.0*x[0]*x[1] - 4.0;
         }
-        else if (syschoice == 5) { // example 5.1 Goldstzjen
+        else if (syschoice == 5) { // example 5.1 Goldstzjen - surprising that square joint inner-approx is empty !?
             z[0] = x[0]*x[0]*x[0]*x[0]*x[0]*x[0] + x[1]*x[1]*x[1]*x[1]*x[1]*x[1] + x[0]*x[1] - 3.0;
             z[1] = x[0]*x[0]*x[0]*x[0]*x[0]*x[0] - x[1]*x[1]*x[1]*x[1]*x[1]*x[1] - x[0]*x[1] + 1.0;
+        }
+        else if (syschoice == 6) { //
+            z[0] = x[0]*x[0]*x[0] + x[1]*x[1]*x[1] + 2.0*x[0]*x[1] - 4.0;
+            z[1] = x[0]*x[0]*x[0] - x[1]*x[1]*x[1] - 2.0*x[0]*x[1] + 2.0;
+        }
+        else if (syschoice == 7) { // skewed inner-approx is not very good - try to see with zonotope ?
+            z[0] = 2.0*x[0]*x[0] + 2.0*x[1]*x[1] - 2.0*x[0]*x[1] - 2.0;
+            z[1] = x[0]*x[0] - x[1]*x[1] + 4.0*x[0]*x[1] - 4.0;
+        }
+        else if (syschoice == 8) { // skewed inner-approx is empty - try to see with zonotope ?
+            z[0] = 2.0*x[0]*x[0] + 1.0*x[1]*x[1] - 2.0*x[0]*x[1] - 1.0;
+            z[1] = x[0]*x[0] - x[1]*x[1] + 3.0*x[0]*x[1] - 3.0;
+        }
+        else if (syschoice == 9) { // skewed inner-approx is empty - try to see with zonotope ?
+            z[0] = 2.0*x[0]*x[0] - x[0]*x[1] - 1.0;
+            z[1] = x[0]*x[0] + x[1]*x[1]  - 2.0;
         }
         return z;
     }
