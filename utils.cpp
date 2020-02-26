@@ -99,13 +99,13 @@ void open_outputfiles()
         outFile_center[i].open(file_name.str().c_str());
         file_name.str("");
         file_name << "output/x" << i+1 << "inner.out";
-        outFile_inner[i].open(file_name.str().c_str());   
+        outFile_inner[i].open(file_name.str().c_str());
     }
     
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
             file_name.str("");
-            file_name << "output/x" << i+1 << "x" << j+1 << "joint_inner.out";
+            file_name << "output/x" << i+1 << "x" << j+1 << "inner_joint.out";
             outFile_joint_inner[i][j].open(file_name.str().c_str());
         }
     }

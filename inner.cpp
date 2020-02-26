@@ -120,7 +120,8 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     //    innerjoint_impro = innerjoint_impro + controlled_impro;
         
         
-        Xinner[i] = Kaucher_add_pro_impro(ix0[i], aux_impro + uncontrolled_impro);
+    Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro + uncontrolled_impro);
+    // Xinner[i] = Kaucher_add_pro_impro(ix0[i] + uncontrolled_pro, aux_impro + controlled_pro);
         
    //     innerjoint_pro = ix0[i] + innerjoint_pro;
     //    Xinner_joint[i] = Kaucher_add_pro_impro(innerjoint_pro, innerjoint_impro + uncontrolled_impro);

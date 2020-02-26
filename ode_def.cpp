@@ -579,8 +579,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[3] = interval(-0.1,0.1);        // vy
             initial_values[4] = interval(-0.1,0.1);     // phi
             initial_values[4] = interval(-0.1,0.1);     // omega
-            inputs[0] = interval(0,18.39375);           // T1
-            inputs[1] = interval(0,18.39375);           // T2
+            inputs[0] = interval(9,9.5125); // interval(0,18.39375);           // T1
+            inputs[1] = interval(9,9.5125); // interval(0,18.39375);           // T2
         }
         else if (syschoice == 10) // 10-D near-hover quadrotor
         {
