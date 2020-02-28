@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[286]:
+# In[325]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -43,7 +43,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[287]:
+# In[326]:
 
 
 width_in_inches = 12
@@ -96,7 +96,7 @@ def print_xy(varx,vary):
 
 
 
-# In[288]:
+# In[327]:
 
 
 # print joint ranges of variables to display
@@ -111,7 +111,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[289]:
+# In[328]:
 
 
 # if print_robust = True: print robust approx
@@ -187,15 +187,19 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         xmin_inner = []
                         xmax_inner = []
                 if (subplots):
-                    ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
+                    ax.plot(t_outer ,xmax_outer, color='black', label='maximal outer approx')
+                    ax.plot(t_outer ,xmin_outer, color='black')
                     if (lines_exact):
-                        ax.plot(t_exact ,xmin_exact, t_exact, xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
+                        ax.plot(t_exact ,xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
+                        ax.plot(t_exact ,xmin_exact, color='black', linestyle='dashed')
                     ax.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
                     ax.title.set_text(variable)
                 else:
-                    plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black', label='maximal outer approx')
+                    plt.plot(t_outer , xmax_outer, color='black', label='maximal outer approx')
+                    plt.plot(t_outer ,xmin_outer, color='black')
                     if (lines_exact):
-                        plt.plot(t_exact ,xmin_exact, t_exact, xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
+                        plt.plot(t_exact , xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
+                        plt.plot(t_exact ,xmin_exact, color='black', linestyle='dashed')
                 #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                 #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                     plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
@@ -217,9 +221,11 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         else:
                           #  plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
                             if (subplots):
-                                ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                                ax.plot(t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                                ax.plot(t_outer ,xmin_outer, color='blue')
                             else:
-                                plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                                plt.plot(t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                                plt.plot(t_outer ,xmin_outer, color='blue')
                             t_outer = [] 
                             xmin_outer = []
                             xmax_outer = []
@@ -243,11 +249,13 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                             xmin_inner = []
                             xmax_inner = []
                     if (subplots):
-                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                        ax.plot(t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                        ax.plot(t_outer ,xmin_outer, color='blue')
                         ax.fill_between(t_inner,xmin_inner,xmax_inner, label='minimal inner approx')
                         ax.title.set_text(variable)
                     else:
-                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                        plt.plot(t_outer, xmax_outer, color='blue', label='minimal outer approx')
+                        plt.plot(t_outer ,xmin_outer, color='blue')
                        # plt.legend(pltlines[:2], label='minimal outer approx')
                     #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                     #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
@@ -270,9 +278,11 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         else:
                           #  plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='black')
                             if (subplots):
-                                ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                                ax.plot(t_outer, xmax_outer, color='green', label='robust outer approx')
+                                ax.plot(t_outer ,xmin_outer, color='green')
                             else:
-                                plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                                plt.plot(t_outer, xmax_outer, color='green', label='robust outer approx')
+                                plt.plot(t_outer ,xmin_outer, color='green', label='robust outer approx')
                             t_outer = [] 
                             xmin_outer = []
                             xmax_outer = []
@@ -327,7 +337,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[290]:
+# In[329]:
 
 
 print_robust = False
@@ -338,7 +348,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[291]:
+# In[330]:
 
 
 print_robust = False
@@ -349,7 +359,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[292]:
+# In[331]:
 
 
 print_robust = True
@@ -360,7 +370,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[293]:
+# In[332]:
 
 
 print_robust = True
@@ -371,7 +381,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[294]:
+# In[333]:
 
 
 print_robust = False
@@ -381,7 +391,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[295]:
+# In[334]:
 
 
 print_robust = False
@@ -391,7 +401,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[296]:
+# In[335]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -409,7 +419,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[297]:
+# In[336]:
 
 
 print_interactive = False
@@ -439,7 +449,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[298]:
+# In[337]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
