@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[325]:
+# In[381]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -14,6 +14,14 @@ import numpy as np
 import glob
 import os
 
+import matplotlib.pylab as pylab
+params = {'legend.fontsize': 'x-large',
+          'figure.figsize': (15, 5),
+         'axes.labelsize': 'x-large',
+         'axes.titlesize':'x-large',
+         'xtick.labelsize':'x-large',
+         'ytick.labelsize':'x-large'}
+pylab.rcParams.update(params)
 
 print_interactive = True
 #variables_to_display="all"
@@ -43,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[326]:
+# In[382]:
 
 
 width_in_inches = 12
@@ -96,7 +104,7 @@ def print_xy(varx,vary):
 
 
 
-# In[327]:
+# In[383]:
 
 
 # print joint ranges of variables to display
@@ -111,7 +119,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[328]:
+# In[384]:
 
 
 # if print_robust = True: print robust approx
@@ -282,7 +290,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                                 ax.plot(t_outer ,xmin_outer, color='green')
                             else:
                                 plt.plot(t_outer, xmax_outer, color='green', label='robust outer approx')
-                                plt.plot(t_outer ,xmin_outer, color='green', label='robust outer approx')
+                                plt.plot(t_outer ,xmin_outer, color='green')
                             t_outer = [] 
                             xmin_outer = []
                             xmax_outer = []
@@ -306,11 +314,13 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                             xmin_inner = []
                             xmax_inner = []
                     if (subplots):
-                        ax.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                        ax.plot(t_outer, xmax_outer, color='green', label='robust outer approx')
+                        ax.plot(t_outer,xmin_outer, color='green')
                         ax.fill_between(t_inner,xmin_inner,xmax_inner, label='robust inner approx')
                         ax.title.set_text(variable)
                     else:
-                        plt.plot(t_outer ,xmin_outer, t_outer, xmax_outer, color='green', label='robust outer approx')
+                        plt.plot(t_outer, xmax_outer, color='green', label='robust outer approx')
+                        plt.plot(t_outer ,xmin_outer,color='green')
                     #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
                     #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                         plt.fill_between(t_inner,xmin_inner,xmax_inner, label='robust inner approx')
@@ -337,7 +347,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[329]:
+# In[385]:
 
 
 print_robust = False
@@ -348,7 +358,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[330]:
+# In[386]:
 
 
 print_robust = False
@@ -359,7 +369,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[331]:
+# In[387]:
 
 
 print_robust = True
@@ -370,7 +380,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[332]:
+# In[388]:
 
 
 print_robust = True
@@ -381,7 +391,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[333]:
+# In[389]:
 
 
 print_robust = False
@@ -391,7 +401,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[334]:
+# In[390]:
 
 
 print_robust = False
@@ -401,7 +411,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[335]:
+# In[391]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -419,7 +429,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[336]:
+# In[392]:
 
 
 print_interactive = False
@@ -449,7 +459,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[337]:
+# In[393]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
