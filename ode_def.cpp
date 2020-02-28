@@ -124,6 +124,11 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 6;
             inputsdim = 2;
         }
+        else if (syschoice == 99)  // Acrobatic quadcopter  with m et Iyy as disturbances
+        {
+            sysdim = 6;
+            inputsdim = 4;
+        }
         else if (syschoice == 10)  // 10-D near-hover quadrotor
         {
             sysdim = 10;
@@ -572,7 +577,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 3;
             initial_values[0] = interval(0.4,0.5);
         }
-        else if (syschoice == 9)   // acrobatic quadrotor
+        else if (syschoice == 9) // acrobatic quadrotor
         {
             tau = 0.01;
             t_end = 0.5;
@@ -585,6 +590,24 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[4] = interval(-0.1,0.1);     // omega
             inputs[0] = interval(9,9.5125); // interval(0,18.39375);           // T1
             inputs[1] = interval(9,9.5125); // interval(0,18.39375);           // T2
+        }
+        else if (syschoice == 99)  // acrobatic quadrotor  with m et Iyy as disturbances
+        {
+            tau = 0.01;
+            t_end = 0.5;
+            order = 4;
+            initial_values[0] = interval(-1.,1.);       // px
+            initial_values[1] = interval(-0.1,0.1);        // vx
+            initial_values[2] = interval(-1.,1.);       // py
+            initial_values[3] = interval(-0.1,0.1);        // vy
+            initial_values[4] = interval(-0.1,0.1);     // phi
+            initial_values[4] = interval(-0.1,0.1);     // omega
+            inputs[0] = interval(9,9.5125); // interval(0,18.39375);           // T1
+            inputs[1] = interval(9,9.5125); // interval(0,18.39375);           // T2
+            inputs[2] = interval(1.25,1.25);     // m
+            is_uncontrolled[2] = true;
+            inputs[3] = interval(0.03,0.03);     // Iyy
+            is_uncontrolled[3] = true; 
         }
         else if (syschoice == 10) // 10-D near-hover quadrotor
         {

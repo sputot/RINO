@@ -174,6 +174,21 @@ public:
               yp[4] = -y[5];     // phi
               yp[5] = -(-Cphi/Iyy*y[5] + l/Iyy*(param_inputs[1]-param_inputs[0]));     // omega
           }
+          else if (syschoice == 99)  // acrobatic quadcopter with m et Iyy as disturbances
+          {
+              double Cv = 0.25;     // transitional drag
+              double Cphi = 0.02255; // rotational drag
+              double g = 9.81;
+              // double m = 1.25;      // mass : param_inputs[2]
+              double l = 0.5;       // length of quadrotor"s center to an edge
+              // double Iyy = 0.03;    // moment of inertia : param_inputs[3]
+              yp[0] = -y[1];     // px
+              yp[1] = -(-Cv/param_inputs[2]*y[1] - (param_inputs[0]+param_inputs[1])/param_inputs[2]*sin(y[4]));     // vx
+              yp[2] = -y[3];     // py
+              yp[3] = -(-(g+Cv*y[2]/param_inputs[2]) + (param_inputs[0]+param_inputs[1])/param_inputs[2]*cos(y[4]));     // vy
+              yp[4] = -y[5];     // phi
+              yp[5] = -(-Cphi/param_inputs[3]*y[5] + l/param_inputs[3]*(param_inputs[1]-param_inputs[0]));     // omega
+          }
           else if (syschoice == 10)  // 10-D near-hover quadrotor
           {
               double n0 = 10;
