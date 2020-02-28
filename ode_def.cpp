@@ -173,6 +173,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             inputsdim = 1;
         }
+        else if (syschoice == 23) {   // pursuer-evader example Mitchell
+            sysdim = 3;
+            inputsdim = 2;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -751,6 +755,17 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
+        }
+        else if (syschoice == 23) {   // pursuer-evader example Mitchell
+            tau = 0.1;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-5,5);
+            initial_values[1] = interval(-5,5);
+            initial_values[2] = interval(-1,1);
+            inputs[0] = interval(-1,1.);    // angular velocity a of the evader (control)
+            inputs[1] = interval(-1,1.);    // angular velocity b of the pursuer (disturbance)
+            is_uncontrolled[1] = true;  // disturbance
         }
     }
     if (systype == 1) // DDE

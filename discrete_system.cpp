@@ -57,11 +57,15 @@ void range_discrete_system(void) {
         jacdim = 2;
         sysdim = 2;
     }
+    else if (syschoice == 10) {
+        jacdim = 3;
+        sysdim = 3;
+    }
+    else if (syschoice == 11) {
+        jacdim = 3;
+        sysdim = 3;
+    }
     initial_values = vector<AAF>(jacdim);
-    
-    vector<bool> is_existential(jacdim);
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
         
     if (syschoice == 1) {
         initial_values[0] = interval(2,3);
@@ -82,21 +86,36 @@ void range_discrete_system(void) {
         initial_values[0] = interval(0.99,1.01);
         initial_values[1] = interval(0.99,1.01);
     }
-    else if (syschoice == 6) { // example 5.1 Goldstzjen
+    else if (syschoice == 6) { //
         initial_values[0] = interval(0.9,1.1);
         initial_values[1] = interval(0.9,1.1);
     }
-    else if (syschoice == 7) { // example 5.1 Goldstzjen
+    else if (syschoice == 7) { //
         initial_values[0] = interval(0.9,1.1);
         initial_values[1] = interval(0.9,1.1);
     }
-    else if (syschoice == 8) { // example 5.1 Goldstzjen
+    else if (syschoice == 8) { //
         initial_values[0] = interval(0.9,1.1);
         initial_values[1] = interval(0.9,1.1);
     }
-    else if (syschoice == 9) { // example 5.1 Goldstzjen
+    else if (syschoice == 9) { //
         initial_values[0] = interval(0.9,1.1);
         initial_values[1] = interval(0.9,1.1);
+    }
+    else if (syschoice == 10) {
+        initial_values[0] = interval(0.9,1.1);
+        initial_values[1] = interval(0.9,1.1);
+        initial_values[2] = interval(0.9,1.1);
+    }
+    else if (syschoice == 11) {
+        initial_values[0] = interval(0.9,1.1);
+        initial_values[1] = interval(0.9,1.1);
+        initial_values[2] = interval(0.9,1.1);
+    }
+    else if (syschoice == 12) {
+        initial_values[0] = interval(-1.0,1.0);
+        initial_values[1] = interval(-1.0,1.0);
+        initial_values[2] = interval(-1.0,1.0);
     }
     
     vector<F<AAF>> x(jacdim);
@@ -138,7 +157,7 @@ void range_discrete_system(void) {
     }
     
   
-    
+   
     
     
     for (int i=0; i < sysdim ; i++) {
@@ -268,10 +287,10 @@ void range_discrete_system(void) {
     }
     
     evaluate_projections(z0, Jacf_refined);
-    if (sysdim >= 2)
+    if (sysdim >= 2) {
         joint_ranges(z0,Jacf_refined,0,1);
-    if (sysdim >= 2)
         preconditioned_joint_ranges(z0,Jacf_refined,0,1);
+    }
     
     
 }
@@ -357,14 +376,14 @@ interval evaluate_outerrange_x(vector<interval> &z0,  vector<vector<interval>> &
 
 
 
-interval evaluate_innerrange_x(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<bool> &is_existential, int i) {
+interval evaluate_innerrange_x(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<int> &exist_quantified, int i) {
     interval inner_impro, inner_pro;
     interval z_inner;
     
         inner_impro = 0;
         inner_pro = z0[i];
         for (int j=0; j < jacdim ; j++) {
-            if (is_existential[j])
+            if (exist_quantified[j] == i) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],eps[j]);
             else
                 inner_pro += Jacf[i][j]*eps[j];
@@ -385,47 +404,58 @@ void joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int var
     file_name << "output/x" << varx+1 << "x" << vary+1 << "joint_inner.out";
     outFile_jointinner.open(file_name.str().c_str(),fstream::app);
     
+    // for each input, index of the output in which it is existentially quantified
+    vector<int> exist_quantified(jacdim);
     
-
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[0] = false;
-    interval inner_x = evaluate_innerrange_x(z0,Jacf,is_existential,varx);
-    
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[1] = false;
-    interval inner_y = evaluate_innerrange_x(z0,Jacf,is_existential,vary);
-    
-    cout << "joint inner range: (pi : 1 -> 2, 2 -> 1)" << endl;
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[varx] = vary;
+    exist_quantified[vary] = varx;
+    if (jacdim >=3)
+        exist_quantified[2] = 0;
+    interval inner_x = evaluate_innerrange_x(z0,Jacf,exist_quantified,varx);
+    interval inner_y = evaluate_innerrange_x(z0,Jacf,exist_quantified,vary);
+    cout << "joint inner range: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
     cout << "inner_x=" << inner_x << endl;
     cout << "inner_y=" << inner_y << endl;
-    
     outFile_jointinner << inf(inner_x) << "\t" << sup(inner_x) << "\t" << inf(inner_y) << "\t" << sup(inner_y) <<  endl;
     
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[1] = false;
-     inner_x = evaluate_innerrange_x(z0,Jacf,is_existential,0);
-    
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[0] = false;
-     inner_y = evaluate_innerrange_x(z0,Jacf,is_existential,1);
-    
-    cout << "joint inner range: (pi : 1 -> 1, 2 -> 2)" << endl;
+    exist_quantified[varx] = varx;
+    exist_quantified[vary] = vary;
+    if (jacdim >=3)
+        exist_quantified[2] = 0;
+    inner_x = evaluate_innerrange_x(z0,Jacf,exist_quantified,varx);
+    inner_y = evaluate_innerrange_x(z0,Jacf,exist_quantified,vary);
+    cout << "joint inner range: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
     cout << "inner_x=" << inner_x << endl;
     cout << "inner_y=" << inner_y << endl;
-    
     outFile_jointinner << inf(inner_x) << "\t" << sup(inner_x) << "\t" << inf(inner_y) << "\t" << sup(inner_y) <<  endl;
     
     outFile_jointinner.close();
 }
 
 
-void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary) {
+void print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, ofstream &outFile) {
+    // resulting quadrilatere A * inner is an inner approximation of the range of f
+    double inner_x1, inner_y1, inner_x2, inner_y2, inner_x3, inner_y3, inner_x4, inner_y4;
+    inner_x1 = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    inner_y1 = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    inner_x2 = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    inner_y2 = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    inner_x3 = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    inner_y3 = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    inner_x4 = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    inner_y4 = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
     
-    vector<bool> is_existential(jacdim);
+  //  cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "(" << inner_x1 <<", " << inner_y1 << ")  (" << inner_x2 <<", " << inner_y2 << ")  (" << inner_x3 <<", " << inner_y3 << ")  (" << inner_x4 <<", " << inner_y4 << ")" << endl;
+    //  cout << "inner_x=" << inner_x << endl;
+    //  cout << "inner_y=" << inner_y << endl;
+    
+    outFile << inner_x1 << "\t" << inner_y1 << "\t" << inner_x2 << "\t" << inner_y2 << "\t" <<  inner_x3 << "\t" << inner_y3 << "\t" << inner_x4 << "\t" << inner_y4 << endl;
+}
+
+
+void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary) {
     
     ofstream outFile_skewedinner;
     stringstream file_name;
@@ -486,81 +516,110 @@ void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>>
     // outer range
     interval temp_outer_x = evaluate_outerrange_x(f0,CJacf,varx);
     interval temp_outer_y = evaluate_outerrange_x(f0,CJacf,vary);
-    double outer_x1, outer_y1, outer_x2, outer_y2, outer_x3, outer_y3, outer_x4, outer_y4;
-    outer_x1 = inf(temp_outer_x)*A[varx][varx] + inf(temp_outer_y)*A[varx][vary];
-    outer_y1 = inf(temp_outer_x)*A[vary][varx] + inf(temp_outer_y)*A[vary][vary];
-    outer_x2 = inf(temp_outer_x)*A[varx][varx] + sup(temp_outer_y)*A[varx][vary];
-    outer_y2 = inf(temp_outer_x)*A[vary][varx] + sup(temp_outer_y)*A[vary][vary];
-    outer_x3 = sup(temp_outer_x)*A[varx][varx] + sup(temp_outer_y)*A[varx][vary];
-    outer_y3 = sup(temp_outer_x)*A[vary][varx] + sup(temp_outer_y)*A[vary][vary];
-    outer_x4 = sup(temp_outer_x)*A[varx][varx] + inf(temp_outer_y)*A[varx][vary];
-    outer_y4 = sup(temp_outer_x)*A[vary][varx] + inf(temp_outer_y)*A[vary][vary];
-    
     cout << "outer skewed box:" << endl;
-    cout << "(" << outer_x1 <<", " << outer_y1 << ")  (" << outer_x2 <<", " << outer_y2 << ")  (" << outer_x3 <<", " << outer_y3 << ")  (" << outer_x4 <<", " << outer_y4 << ")" << endl;
-    
-    outFile_skewedouter << outer_x1 << "\t" << outer_y1 << "\t" << outer_x2 << "\t" << outer_y2 << "\t" <<  outer_x3 << "\t" << outer_y3 << "\t" << outer_x4 << "\t" << outer_y4 << endl;
-    
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[0] = false;
-    interval temp_inner_x = evaluate_innerrange_x(f0,CJacf,is_existential,varx);
-    
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[1] = false;
-    interval temp_inner_y = evaluate_innerrange_x(f0,CJacf,is_existential,vary);
+    print_skewbox(temp_outer_x, temp_outer_y, A,  varx,  vary, outFile_skewedouter);
     
     
-
+    // for each input, index of the output in which it is existentially quantified
+    vector<int> exist_quantified(jacdim);
+    interval temp_inner_x, temp_inner_y;
     
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = vary;
+    exist_quantified[1] = varx;
+    if (jacdim >=3)
+        exist_quantified[2] = 2;
+    temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+    temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
+    
+    // cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
     // resulting quadrilatere A * inner is an inner approximation of the range of f
-    double inner_x1, inner_y1, inner_x2, inner_y2, inner_x3, inner_y3, inner_x4, inner_y4;
-    inner_x1 = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    inner_y1 = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
-    inner_x2 = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    inner_y2 = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    inner_x3 = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    inner_y3 = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    inner_x4 = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    inner_y4 = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
     
-    cout << "inner skewed box: (pi : 1 -> 2, 2 -> 1)" << endl;
-    cout << "(" << inner_x1 <<", " << inner_y1 << ")  (" << inner_x2 <<", " << inner_y2 << ")  (" << inner_x3 <<", " << inner_y3 << ")  (" << inner_x4 <<", " << inner_y4 << ")" << endl;
-  //  cout << "inner_x=" << inner_x << endl;
-  //  cout << "inner_y=" << inner_y << endl;
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = varx;
+    exist_quantified[1] = vary;
+    if (jacdim >=3)
+        exist_quantified[2] = 2;
+    temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+    temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
     
-    outFile_skewedinner << inner_x1 << "\t" << inner_y1 << "\t" << inner_x2 << "\t" << inner_y2 << "\t" <<  inner_x3 << "\t" << inner_y3 << "\t" << inner_x4 << "\t" << inner_y4 << endl;
+    //cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
     
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[1] = false;
-    temp_inner_x = evaluate_innerrange_x(f0,CJacf,is_existential,0);
     
-    for (int i=0; i < jacdim ; i++)
-        is_existential[i] = true;
-    is_existential[0] = false;
-    temp_inner_y = evaluate_innerrange_x(f0,CJacf,is_existential,1);
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = vary;
+    exist_quantified[1] = varx;
+    if (jacdim >=3)
+        exist_quantified[2] = varx;
+     temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+     temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
     
-   // inner_x = temp_inner_x*A[varx][varx] + temp_inner_y*A[varx][vary];
-   // inner_y = temp_inner_x*A[vary][varx] + temp_inner_y*A[vary][vary];
+   // cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
+    // resulting quadrilatere A * inner is an inner approximation of the range of f
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
     
-    inner_x1 = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    inner_y1 = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
-    inner_x2 = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    inner_y2 = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    inner_x3 = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    inner_y3 = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    inner_x4 = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    inner_y4 = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = varx;
+    exist_quantified[1] = vary;
+    if (jacdim >=3)
+        exist_quantified[2] = varx;
+    temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+    temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
     
-    cout << "inner skewed box: (pi : 1 -> 1, 2 -> 2)" << endl;
-    cout << "(" << inner_x1 <<", " << inner_y1 << ")  (" << inner_x2 <<", " << inner_y2 << ")  (" << inner_x3 <<", " << inner_y3 << ")  (" << inner_x4 <<", " << inner_y4 << ")" << endl;
-  //  cout << "inner_x=" << inner_x << endl;
-  //  cout << "inner_y=" << inner_y << endl;
+   // cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
     
-    outFile_skewedinner << inner_x1 << "\t" << inner_y1 << "\t" << inner_x2 << "\t" << inner_y2 << "\t" <<  inner_x3 << "\t" << inner_y3 << "\t" << inner_x4 << "\t" << inner_y4 << endl;
-  //  outFile_skewedouter << inf(inner_x) << "\t" << sup(inner_x) << "\t" << inf(inner_y) << "\t" << sup(inner_y) <<  endl;
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = vary;
+    exist_quantified[1] = varx;
+    if (jacdim >=3)
+        exist_quantified[2] = vary;
+     temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+     temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
+    
+   // cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
+    // resulting quadrilatere A * inner is an inner approximation of the range of f
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
+    
+    // TO BE generalized for more then 2 variables/components
+    exist_quantified[0] = varx;
+    exist_quantified[1] = vary;
+    if (jacdim >=3)
+        exist_quantified[2] = vary;
+    temp_inner_x = evaluate_innerrange_x(f0,CJacf,exist_quantified,varx);
+    temp_inner_y = evaluate_innerrange_x(f0,CJacf,exist_quantified,vary);
+    
+    //cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
+    cout << "inner skewed box: (pi : ";
+    for (int j = 0 ; j < jacdim ; j++)
+        cout << j+1 << " -> " << exist_quantified[j]+1 << ", " ;
+    cout << ")" << endl;
+    print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, outFile_skewedinner);
+    
+    
+    
     
     outFile_skewedinner.close();
     outFile_skewedouter.close();

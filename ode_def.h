@@ -381,6 +381,14 @@ public:
              yp[0] = 2 + 2*(param_inputs[0]+param_inputs[0]*param_inputs[0])*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
+         else if (syschoice == 23) {   // pursuer-evader example Mitchell
+             double v = 5.0;  // linear velocity
+             // param_inputs[0] : angular velocity a of the evader (control)
+             // param_inputs[1] : angular velocity b of the pursuer (disturbance)
+             yp[0] = -v + v*cos(y[2]) + param_inputs[0]*y[1];
+             yp[1] = v*sin(y[2]) - param_inputs[0]*y[1];
+             yp[2] = param_inputs[1] - param_inputs[0];
+         }
     }
 };
 
