@@ -280,10 +280,11 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
                 range_l = Kaucher_add_pro_impro(range_l,range_l_impro);
                 
-                if (uncontrolled > 0)
+                // A REPRENDRE - CF 2D
+          /*      if (uncontrolled > 0)
                     outFile_joint_robustinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
                 if (uncontrolled > 0 || controlled > 0)
-                    outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                    outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl; */
                 outFile_joint_maxinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
             }
         }

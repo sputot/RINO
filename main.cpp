@@ -517,7 +517,7 @@ void print_finalstats(clock_t begin)
         }
     }
     
-    if (controlled > 0) {
+    if (uncontrolled > 0) {
         for (int i=0 ; i<sysdim ; i++) {
             for (int j=i+1 ; j < sysdim ; j++) {
                 outFile_joint_robustinner[i][j].close();
