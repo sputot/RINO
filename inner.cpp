@@ -123,10 +123,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro + uncontrolled_impro);
     // Xinner[i] = Kaucher_add_pro_impro(ix0[i] + uncontrolled_pro, aux_impro + controlled_pro);
         
-   //     innerjoint_pro = ix0[i] + innerjoint_pro;
-    //    Xinner_joint[i] = Kaucher_add_pro_impro(innerjoint_pro, innerjoint_impro + uncontrolled_impro);
-        // added here so that we can store the different joint inner-approximations
-//        outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
+
         
         if (uncontrolled > 0)
         {
@@ -153,8 +150,8 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     // computing joint inner-approximations
     // for any pair (i,k) of system outputs which we wish to jointly inner-approximate
     //    component j for j < sysdim/2 is existential in z_i and universal in z_k
-    //    except i is existential in z_i and k is existential in z_k
     //    same for inputs
+    // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
     interval range_i, range_k, range_i_impro, range_k_impro;
     for (int i=0 ; i<sysdim; i++) {
         for (int k=i+1 ; k<sysdim; k++) {
@@ -192,7 +189,71 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         }
     }
     
+    // computing joint inner-approximations
+    // for any pair (i,k,l) of system outputs which we wish to jointly inner-approximate
+    //    component j for j < sysdim/3 is existential in z_i and universal in z_k and z_l
+    //    component j for sysdim/3 <= j < 2*sysdim/3 is existential in z_k and universal in z_i and z_l
+    //    component j for 2sysdim/3 <= j  is existential in z_l and universal in z_i and z_k
+    //    same for inputs
     // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
+    interval range_l, range_l_impro;
+    for (int i=0 ; i<sysdim; i++) {
+        for (int k=i+1 ; k<sysdim; k++) {
+            for (int l=k+1 ; l<sysdim; l++) {
+                range_i = ix0[i];   // center and uncontrolled (forall) part
+                range_i_impro = 0;      // controlled (existential) part
+                range_k = ix0[k];
+                range_k_impro = 0;
+                range_l = ix0[l];
+                range_l_impro = 0;
+                for (int j=0 ; j<sysdim/3 ; j++) {
+                    range_k = range_k + Jaux[k][j]*eps[j];
+                    range_l = range_l + Jaux[l][j]*eps[j];
+                    range_i_impro = range_i_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
+                }
+                for (int j=sysdim/3 ; j<2*sysdim/3 ; j++) {
+                    range_i = range_i + Jaux[i][j]*eps[j];
+                    range_l = range_l + Jaux[l][j]*eps[j];
+                    range_k_impro = range_k_impro + Kaucher_multeps(Jaux[k][j],eps[j]);
+                }
+                for (int j=2*sysdim/3 ; j<sysdim ; j++) {
+                    range_i = range_i + Jaux[i][j]*eps[j];
+                    range_k = range_k + Jaux[k][j]*eps[j];
+                    range_l_impro = range_l_impro + Kaucher_multeps(Jaux[l][j],eps[j]);
+                }
+                for (int j=0 ; j<fullinputsdim/3 ; j++) {
+                    if (is_uncontrolled[j])
+                        range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
+                    else
+                        range_i_impro = range_i_impro + Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
+                    range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
+                    range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                }
+                for (int j=fullinputsdim/3 ; j<2*fullinputsdim/3 ; j++) {
+                    range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
+                    if (is_uncontrolled[j])
+                        range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
+                    else
+                        range_k_impro = range_k_impro + Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
+                    range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                }
+                for (int j=2*fullinputsdim/2 ; j<fullinputsdim ; j++) {
+                    range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
+                    range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
+                    if (is_uncontrolled[j])
+                        range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                    else
+                        range_l_impro = range_l_impro + Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
+                }
+                
+                range_i = Kaucher_add_pro_impro(range_i,range_i_impro);
+                range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
+                range_l = Kaucher_add_pro_impro(range_l,range_l_impro);
+                
+                outFile_joint_inner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+            }
+        }
+    }
     
     
 }

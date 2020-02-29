@@ -419,6 +419,14 @@ void print_initstats(vector<AAF> &x)
             outFile_joint_inner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
         }
     }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+                outFile_joint_inner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
+                inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+            }
+        }
+    }
     
     // a changer un jour pour t_begin (notamment pour DDE)?
     t_print[0] = 0;
