@@ -416,14 +416,46 @@ void print_initstats(vector<AAF> &x)
     
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
-            outFile_joint_inner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            outFile_joint_maxinner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
         }
     }
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
             for (int k=j+1 ; k < sysdim ; k++) {
-                outFile_joint_inner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
+                outFile_joint_maxinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
                 inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+            }
+        }
+    }
+    
+    if (uncontrolled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                outFile_joint_robustinner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    outFile_joint_robustinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
+                    inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                }
+            }
+        }
+    }
+    
+    if (uncontrolled > 0 || controlled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                outFile_joint_mininner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    outFile_joint_mininner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
+                    inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                }
             }
         }
     }
@@ -473,10 +505,48 @@ void print_finalstats(clock_t begin)
     }
     
     for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < i-sysdim ; j++) {
-            outFile_joint_inner[i][j].close();
+        for (int j=i+1 ; j < sysdim ; j++) {
+            outFile_joint_maxinner[i][j].close();
         }
     }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+            outFile_joint_maxinner3d[i][j][k].close();
+            }
+        }
+    }
+    
+    if (controlled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                outFile_joint_robustinner[i][j].close();
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    outFile_joint_robustinner3d[i][j][k].close();
+                }
+            }
+        }
+    }
+    
+    if (controlled > 0 || uncontrolled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                outFile_joint_mininner[i][j].close();
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    outFile_joint_mininner3d[i][j][k].close();
+                }
+            }
+        }
+    }
+    
     outFile_width_ratio.close();
     outFile_meanerror_outer.close();
     outFile_meanerror_inner.close();

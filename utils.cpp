@@ -26,8 +26,12 @@ vector<ofstream> outFile_outer_robust;  // robust outer-approximated range for e
 vector<ofstream> outFile_outer;   //  maximal outer-approximated range for each variable of the system
 vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
 vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each variable of the system
-vector<vector<ofstream>> outFile_joint_inner;   // output inner-approximated range for each couple of variables of the system
-vector<vector<vector<ofstream>>> outFile_joint_inner3d;   // output inner-approximated range for each triple of variables of the system
+vector<vector<ofstream>> outFile_joint_mininner;   // output inner-approximated range for each couple of variables of the system
+vector<vector<vector<ofstream>>> outFile_joint_mininner3d;   // output inner-approximated range for each triple of variables of the system
+vector<vector<ofstream>> outFile_joint_robustinner;   // output inner-approximated range for each couple of variables of the system
+vector<vector<vector<ofstream>>> outFile_joint_robustinner3d;   // output inner-approximated range for each triple of variables of the system
+vector<vector<ofstream>> outFile_joint_maxinner;   // output inner-approximated range for each couple of variables of the system
+vector<vector<vector<ofstream>>> outFile_joint_maxinner3d;   // output inner-approximated range for each triple of variables of the system
 vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
 vector<ofstream> outFile_center;
 vector<ofstream> outFile_exact; // analytical solution if any
@@ -64,15 +68,40 @@ void open_outputfiles()
     }
     outFile_center  = vector<ofstream>(sysdim);
     
-    outFile_joint_inner = vector<vector<ofstream>>(sysdim);
+    outFile_joint_maxinner = vector<vector<ofstream>>(sysdim);
     for (int i=0 ; i<sysdim ; i++)
-        outFile_joint_inner[i] = vector<ofstream>(sysdim);
+        outFile_joint_maxinner[i] = vector<ofstream>(sysdim);
     
-    outFile_joint_inner3d = vector<vector<vector<ofstream>>>(sysdim);
+    outFile_joint_maxinner3d = vector<vector<vector<ofstream>>>(sysdim);
     for (int i=0 ; i<sysdim ; i++) {
-        outFile_joint_inner3d[i] = vector<vector<ofstream>>(sysdim);
+        outFile_joint_maxinner3d[i] = vector<vector<ofstream>>(sysdim);
         for (int j=0 ; j<sysdim ; j++)
-            outFile_joint_inner3d[i][j] = vector<ofstream>(sysdim);
+            outFile_joint_maxinner3d[i][j] = vector<ofstream>(sysdim);
+    }
+    
+    if (uncontrolled > 0) {
+        outFile_joint_robustinner = vector<vector<ofstream>>(sysdim);
+        for (int i=0 ; i<sysdim ; i++)
+            outFile_joint_robustinner[i] = vector<ofstream>(sysdim);
+        
+        outFile_joint_robustinner3d = vector<vector<vector<ofstream>>>(sysdim);
+        for (int i=0 ; i<sysdim ; i++) {
+            outFile_joint_robustinner3d[i] = vector<vector<ofstream>>(sysdim);
+            for (int j=0 ; j<sysdim ; j++)
+                outFile_joint_robustinner3d[i][j] = vector<ofstream>(sysdim);
+        }
+    }
+    if (uncontrolled > 0 || controlled > 0) {
+        outFile_joint_mininner = vector<vector<ofstream>>(sysdim);
+        for (int i=0 ; i<sysdim ; i++)
+            outFile_joint_mininner[i] = vector<ofstream>(sysdim);
+        
+        outFile_joint_mininner3d = vector<vector<vector<ofstream>>>(sysdim);
+        for (int i=0 ; i<sysdim ; i++) {
+            outFile_joint_mininner3d[i] = vector<vector<ofstream>>(sysdim);
+            for (int j=0 ; j<sysdim ; j++)
+                outFile_joint_mininner3d[i][j] = vector<ofstream>(sysdim);
+        }
     }
     
     stringstream file_name;
@@ -111,20 +140,56 @@ void open_outputfiles()
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
             file_name.str("");
-            file_name << "output/x" << i+1 << "x" << j+1 << "inner_joint.out";
-            outFile_joint_inner[i][j].open(file_name.str().c_str());
+            file_name << "output/x" << i+1 << "x" << j+1 << "maxinner_joint.out";
+            outFile_joint_maxinner[i][j].open(file_name.str().c_str());
         }
     }
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
             for (int k=j+1 ; k < sysdim ; k++) {
                 file_name.str("");
-                file_name << "output/x" << i+1 << "x" << j+1 <<  "x" << k+1 << "inner_joint3d.out";
-                outFile_joint_inner3d[i][j][k].open(file_name.str().c_str());
+                file_name << "output/x" << i+1 << "x" << j+1 <<  "x" << k+1 << "maxinner_joint3d.out";
+                outFile_joint_maxinner3d[i][j][k].open(file_name.str().c_str());
             }
         }
     }
     
+    if (uncontrolled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                file_name.str("");
+                file_name << "output/x" << i+1 << "x" << j+1 << "robustinner_joint.out";
+                outFile_joint_robustinner[i][j].open(file_name.str().c_str());
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    file_name.str("");
+                    file_name << "output/x" << i+1 << "x" << j+1 <<  "x" << k+1 << "robustinner_joint3d.out";
+                    outFile_joint_robustinner3d[i][j][k].open(file_name.str().c_str());
+                }
+            }
+        }
+    }
+    if (uncontrolled > 0 || controlled > 0) {
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                file_name.str("");
+                file_name << "output/x" << i+1 << "x" << j+1 << "mininner_joint.out";
+                outFile_joint_mininner[i][j].open(file_name.str().c_str());
+            }
+        }
+        for (int i=0 ; i<sysdim ; i++) {
+            for (int j=i+1 ; j < sysdim ; j++) {
+                for (int k=j+1 ; k < sysdim ; k++) {
+                    file_name.str("");
+                    file_name << "output/x" << i+1 << "x" << j+1 <<  "x" << k+1 << "mininner_joint3d.out";
+                    outFile_joint_mininner3d[i][j][k].open(file_name.str().c_str());
+                }
+            }
+        }
+    }
     
     outFile_width_ratio.open("output/width_ratio.out");
     outFile_meanerror_outer.open("output/meanerror_outer.out");

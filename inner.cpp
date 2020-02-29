@@ -185,7 +185,11 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
             range_i = Kaucher_add_pro_impro(range_i,range_i_impro);
             range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
             
-            outFile_joint_inner[i][k] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << endl;
+            if (uncontrolled > 0)
+                outFile_joint_robustinner[i][k] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << endl;
+            if (uncontrolled > 0 || controlled > 0)
+                outFile_joint_mininner[i][k] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << endl;
+            outFile_joint_maxinner[i][k] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << endl;
         }
     }
     
@@ -250,7 +254,11 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
                 range_l = Kaucher_add_pro_impro(range_l,range_l_impro);
                 
-                outFile_joint_inner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                if (uncontrolled > 0)
+                    outFile_joint_robustinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                if (uncontrolled > 0 || controlled > 0)
+                    outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                outFile_joint_maxinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
             }
         }
     }
