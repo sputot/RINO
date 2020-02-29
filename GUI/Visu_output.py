@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[682]:
+# In[702]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[683]:
+# In[703]:
 
 
 width_in_inches = 12
@@ -65,7 +65,7 @@ from os import path
 def print_xy(varx,vary):
     fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     # print maximal outer and inner approximations for each component separately
-    fxy_inner = varx + vary + 'inner_joint.out'
+    fxy_inner = varx + vary + 'maxinner_joint.out'
     fx_outer = varx + 'outer.out'
     fy_outer = vary + 'outer.out'
     if (path.isfile(fx_outer) and path.isfile(fy_outer)):
@@ -104,13 +104,13 @@ def print_xy(varx,vary):
 
 
 
-# In[684]:
+# In[704]:
 
 
 # print joint ranges of variables to display
-filenames_jointinner = sorted(glob.glob('*inner_joint.out'))
+filenames_jointinner = sorted(glob.glob('*maxinner_joint.out'))
 for f_inner in filenames_jointinner:
-    variable = f_inner.rsplit( "inner_joint.out", 1 )[ 0 ]  # get variable name out of file names
+    variable = f_inner.rsplit( "maxinner_joint.out", 1 )[ 0 ]  # get variable name out of file names
     varx = variable.rsplit( "x", 1 )[ 0 ]
     vary = 'x'+variable.rsplit( "x", 1 )[ 1 ]
     varx_nb = '-' + varx.split( "x", 1 )[1] + '-'
@@ -119,7 +119,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[685]:
+# In[705]:
 
 
 width_in_inches = 12
@@ -134,7 +134,7 @@ def print_xyz(varx,vary,varz):
     fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     ax = Axes3D(fig)
     # print maximal outer and inner approximations for each component separately
-    fxyz_inner = varx + vary + varz + 'inner_joint3d.out'
+    fxyz_inner = varx + vary + varz + 'maxinner_joint3d.out'
     fx_outer = varx + 'outer.out'
     fy_outer = vary + 'outer.out'
     fz_outer = varz + 'outer.out'
@@ -250,14 +250,14 @@ def print_xyz(varx,vary,varz):
 #print_xyz("x2","x6","x10")
 
 
-# In[686]:
+# In[706]:
 
 
 # print joint ranges of variables to display
-filenames_jointinner3d = sorted(glob.glob('*inner_joint3d.out'))
+filenames_jointinner3d = sorted(glob.glob('*maxinner_joint3d.out'))
 for f_inner in filenames_jointinner3d:
-    variable = f_inner.rsplit( "inner_joint3d.out", 1 )[ 0 ]  # get variable name out of file names
-    print(variable)
+    variable = f_inner.rsplit( "maxinner_joint3d.out", 1 )[ 0 ]  # get variable name out of file names
+   # print(variable)
     varxvary = variable.rsplit( "x", 1 )[ 0 ]
     varx = varxvary.rsplit( "x", 1 )[ 0 ]
     vary = 'x'+varxvary.rsplit( "x", 1 )[ 1 ]
@@ -269,7 +269,7 @@ for f_inner in filenames_jointinner3d:
         print_xyz(varx,vary,varz)
 
 
-# In[ ]:
+# In[707]:
 
 
 # if print_robust = True: print robust approx
@@ -497,7 +497,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[ ]:
+# In[708]:
 
 
 print_robust = False
@@ -508,7 +508,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[709]:
 
 
 print_robust = False
@@ -519,7 +519,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[710]:
 
 
 print_robust = True
@@ -530,7 +530,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[711]:
 
 
 print_robust = True
@@ -541,7 +541,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[712]:
 
 
 print_robust = False
@@ -551,7 +551,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[713]:
 
 
 print_robust = False
@@ -561,7 +561,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[714]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -579,7 +579,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[715]:
 
 
 print_interactive = False
@@ -609,7 +609,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[716]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
