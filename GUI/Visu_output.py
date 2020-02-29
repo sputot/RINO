@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[381]:
+# In[682]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[382]:
+# In[683]:
 
 
 width_in_inches = 12
@@ -94,7 +94,7 @@ def print_xy(varx,vary):
         ax.autoscale()
         ax.set_xlabel(varx)
         ax.set_ylabel(vary)
-        plt.legend()
+     #   plt.legend()
         f_output= varx + vary
         plt.savefig(f_output)
         if (print_interactive):
@@ -104,7 +104,7 @@ def print_xy(varx,vary):
 
 
 
-# In[383]:
+# In[684]:
 
 
 # print joint ranges of variables to display
@@ -119,7 +119,157 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[384]:
+# In[685]:
+
+
+width_in_inches = 12
+height_in_inches = 9
+dots_per_inch = 100
+#fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
+from mpl_toolkits.mplot3d import Axes3D
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
+
+def print_xyz(varx,vary,varz):
+   # fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
+    fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
+    ax = Axes3D(fig)
+    # print maximal outer and inner approximations for each component separately
+    fxyz_inner = varx + vary + varz + 'inner_joint3d.out'
+    fx_outer = varx + 'outer.out'
+    fy_outer = vary + 'outer.out'
+    fz_outer = varz + 'outer.out'
+    if (path.isfile(fx_outer) and path.isfile(fy_outer) and path.isfile(fz_outer)):
+        with open(fx_outer, 'r') as x_outer, open(fxyz_inner, 'r') as xyz_inner, open(fy_outer, 'r') as y_outer , open(fz_outer, 'r') as z_outer:
+            linesx_outer = x_outer.readlines()
+            tx_outer = [float(line.split()[0]) for line in linesx_outer]
+            xmin_outer = [float(line.split()[1]) for line in linesx_outer]
+            xmax_outer = [float(line.split()[2]) for line in linesx_outer]
+            linesy_outer = y_outer.readlines()
+            ty_outer = [float(line.split()[0]) for line in linesy_outer]
+            ymin_outer = [float(line.split()[1]) for line in linesy_outer]
+            ymax_outer = [float(line.split()[2]) for line in linesy_outer]
+            linesz_outer = z_outer.readlines()
+            tz_outer = [float(line.split()[0]) for line in linesz_outer]
+            zmin_outer = [float(line.split()[1]) for line in linesz_outer]
+            zmax_outer = [float(line.split()[2]) for line in linesz_outer]
+            linesxyz_inner = xyz_inner.readlines()     
+            tx_inner = [float(line.split()[0]) for line in linesxyz_inner]
+            xmin_inner = [float(line.split()[1]) for line in linesxyz_inner]
+            xmax_inner = [float(line.split()[2]) for line in linesxyz_inner]
+            ymin_inner = [float(line.split()[3]) for line in linesxyz_inner]
+            ymax_inner = [float(line.split()[4]) for line in linesxyz_inner]
+            zmin_inner = [float(line.split()[5]) for line in linesxyz_inner]
+            zmax_inner = [float(line.split()[6]) for line in linesxyz_inner]
+
+       #     x = [0,1,1,0,0,1,1,0]
+       ##     y = [0,0,1,1,0,0,1,1]
+        #    z = [0,0,0,0,1,1,1,1]
+        #    verts = [list(zip(x,y,z))]
+        #    ax.add_collection3d(Poly3DCollection(verts))
+            
+            points = np.array([[-1, -1, -1],
+                  [1, -1, -1 ],
+                  [1, 1, -1],
+                  [-1, 1, -1],
+                  [-1, -1, 1],
+                  [1, -1, 1 ],
+                  [1, 1, 1],
+                  [-1, 1, 1]])
+
+            
+            for xo1,xo2,yo1,yo2,zo1,zo2 in zip(xmin_outer,xmax_outer,ymin_outer,ymax_outer,zmin_outer,zmax_outer):
+                P = [[(xo2-xo1)/2 , 0 ,  0],
+                 [0 ,  (yo2-yo1)/2 ,  0],
+                 [0 ,  0 ,  (zo2-zo1)/2]]
+                
+                Z = np.array([[(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2]])
+                
+                for i in range(8): Z[i,:] += np.dot(points[i,:],P)
+
+                # plot vertices
+                ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
+
+                # list of sides' polygons of figure
+                verts = [[Z[0],Z[1],Z[2],Z[3]], 
+                [Z[4],Z[5],Z[6],Z[7]], 
+                [Z[0],Z[1],Z[5],Z[4]], 
+                [Z[2],Z[3],Z[7],Z[6]], 
+                [Z[1],Z[2],Z[6],Z[5]],
+                [Z[4],Z[7],Z[3],Z[0]]]
+
+                # plot sides
+            #    ax.add_collection3d(Poly3DCollection(verts, facecolors='cyan', linewidths=1, edgecolors='r', label='outer-approximation', alpha=.25))
+            
+            for xo1,xo2,yo1,yo2,zo1,zo2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner,zmin_inner,zmax_inner):
+                P = [[(xo2-xo1)/2 , 0 ,  0],
+                 [0 ,  (yo2-yo1)/2 ,  0],
+                 [0 ,  0 ,  (zo2-zo1)/2]]
+                
+                Z = np.array([[(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2],
+                  [(xo1+xo2)/2, (yo1+yo2)/2, (zo1+zo2)/2]])
+                
+                for i in range(8): Z[i,:] += np.dot(points[i,:],P)
+
+                # plot vertices
+                ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
+
+                # list of sides' polygons of figure
+                verts = [[Z[0],Z[1],Z[2],Z[3]], 
+                [Z[4],Z[5],Z[6],Z[7]], 
+                [Z[0],Z[1],Z[5],Z[4]], 
+                [Z[2],Z[3],Z[7],Z[6]], 
+                [Z[1],Z[2],Z[6],Z[5]],
+                [Z[4],Z[7],Z[3],Z[0]]]
+
+                # plot sides
+                ax.add_collection3d(Poly3DCollection(verts, facecolors='orange', linewidths=1, edgecolors='r', label='inner-approximation', alpha=.5))
+      
+        ax.autoscale()
+        ax.set_xlabel(varx)
+        ax.set_ylabel(vary)
+        ax.set_zlabel(varz)
+     #   plt.legend()
+        f_output= varx + vary + varz
+        plt.savefig(f_output)
+        if (print_interactive):
+            plt.show() 
+    plt.close()
+#print_xyz("x2","x6","x10")
+
+
+# In[686]:
+
+
+# print joint ranges of variables to display
+filenames_jointinner3d = sorted(glob.glob('*inner_joint3d.out'))
+for f_inner in filenames_jointinner3d:
+    variable = f_inner.rsplit( "inner_joint3d.out", 1 )[ 0 ]  # get variable name out of file names
+    print(variable)
+    varxvary = variable.rsplit( "x", 1 )[ 0 ]
+    varx = varxvary.rsplit( "x", 1 )[ 0 ]
+    vary = 'x'+varxvary.rsplit( "x", 1 )[ 1 ]
+    varz = 'x'+variable.rsplit( "x", 1 )[ 1 ]
+    varx_nb = '-' + varx.split( "x", 1 )[1] + '-'
+    vary_nb = '-' + vary.split( "x", 1 )[1] + '-'
+    varz_nb = '-' + varz.split( "x", 1 )[1] + '-'
+    if (re.match(varx_nb,variables_to_display) and re.match(vary_nb,variables_to_display) and re.match(varz_nb,variables_to_display)) or re.match("all",variables_to_display):
+        print_xyz(varx,vary,varz)
+
+
+# In[ ]:
 
 
 # if print_robust = True: print robust approx
@@ -347,7 +497,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[385]:
+# In[ ]:
 
 
 print_robust = False
@@ -358,7 +508,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[386]:
+# In[ ]:
 
 
 print_robust = False
@@ -369,7 +519,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[387]:
+# In[ ]:
 
 
 print_robust = True
@@ -380,7 +530,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[388]:
+# In[ ]:
 
 
 print_robust = True
@@ -391,7 +541,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[389]:
+# In[ ]:
 
 
 print_robust = False
@@ -401,7 +551,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[390]:
+# In[ ]:
 
 
 print_robust = False
@@ -411,7 +561,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[391]:
+# In[ ]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -429,7 +579,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[392]:
+# In[ ]:
 
 
 print_interactive = False
@@ -459,7 +609,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[393]:
+# In[ ]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
