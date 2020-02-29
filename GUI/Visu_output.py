@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[890]:
+# In[ ]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[891]:
+# In[ ]:
 
 
 width_in_inches = 12
@@ -88,10 +88,10 @@ def print_xy(varx,vary):
             ymax_inner = [float(line.split()[4]) for line in linesxy_inner]
 
             for xo1,xo2,yo1,yo2 in zip(xmin_outer,xmax_outer,ymin_outer,ymax_outer):
-                car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1,ec='black', alpha=0.1)
+                car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1,ec='black', color='black',alpha=0.1,zorder=1)
                 ax.add_patch(car_fig)
             for xi1,xi2,yi1,yi2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner):
-                car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='blue',alpha=0.5)
+                car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='blue',alpha=0.5,zorder=2)
                 ax.add_patch(car_fig2)
             
         if (path.isfile(fxy_robustinner)):
@@ -103,7 +103,7 @@ def print_xy(varx,vary):
                 ymin_inner = [float(line.split()[3]) for line in linesxy_inner]
                 ymax_inner = [float(line.split()[4]) for line in linesxy_inner]
                 for xi1,xi2,yi1,yi2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner):
-                    car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='orange',alpha=0.5)
+                    car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='orange',alpha=0.5,zorder=3)
                     ax.add_patch(car_fig2) 
 
         if (path.isfile(fxy_mininner)):
@@ -115,7 +115,7 @@ def print_xy(varx,vary):
                 ymin_inner = [float(line.split()[3]) for line in linesxy_inner]
                 ymax_inner = [float(line.split()[4]) for line in linesxy_inner]
                 for xi1,xi2,yi1,yi2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner):
-                    car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='green',alpha=0.7)
+                    car_fig2 = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='red',alpha=0.5,zorder=4)
                     ax.add_patch(car_fig2)    
             
         ax.autoscale()
@@ -131,7 +131,7 @@ def print_xy(varx,vary):
 
 
 
-# In[892]:
+# In[ ]:
 
 
 # print joint ranges of variables to display
