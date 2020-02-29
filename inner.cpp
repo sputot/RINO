@@ -227,6 +227,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     //    same for inputs
     // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
     interval range_l, range_l_impro;
+    interval robust_l, max_l, min_l, robust_l_impro, max_l_impro;
     for (int i=0 ; i<sysdim; i++) {
         for (int k=i+1 ; k<sysdim; k++) {
             for (int l=k+1 ; l<sysdim; l++) {
@@ -251,41 +252,84 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                     range_k = range_k + Jaux[k][j]*eps[j];
                     range_l_impro = range_l_impro + Kaucher_multeps(Jaux[l][j],eps[j]);
                 }
+                
+                robust_i = 0; max_i = 0; min_i = 0;
+                robust_i_impro = 0; max_i_impro = 0;
+                robust_k = 0; max_k = 0; min_k = 0;
+                robust_k_impro = 0; max_k_impro = 0;
+                
                 for (int j=0 ; j<fullinputsdim/3 ; j++) {
                     if (is_uncontrolled[j])
-                        range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
+                        robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
                     else
-                        range_i_impro = range_i_impro + Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
-                    range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
-                    range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                        robust_i_impro += Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
+                    min_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    max_i_impro += Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
+                    
+                    robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    min_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    max_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    
+                    robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                    min_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                    max_l += Jaux[l][j+sysdim]*eps[j+sysdim];
                 }
+                
                 for (int j=fullinputsdim/3 ; j<2*fullinputsdim/3 ; j++) {
-                    range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
+                    robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    min_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    max_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    
                     if (is_uncontrolled[j])
-                        range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
+                        robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
                     else
-                        range_k_impro = range_k_impro + Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
-                    range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                        robust_k_impro += Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
+                    min_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    max_k_impro += Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
+                    
+                    robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                    min_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                    max_l += Jaux[l][j+sysdim]*eps[j+sysdim];
                 }
                 for (int j=2*fullinputsdim/2 ; j<fullinputsdim ; j++) {
-                    range_i = range_i + Jaux[i][j+sysdim]*eps[j+sysdim];
-                    range_k = range_k + Jaux[k][j+sysdim]*eps[j+sysdim];
+                    robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    min_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    max_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                    
+                    robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    min_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    max_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                    
                     if (is_uncontrolled[j])
-                        range_l = range_l + Jaux[l][j+sysdim]*eps[j+sysdim];
+                        robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
                     else
-                        range_l_impro = range_l_impro + Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
+                        robust_l_impro += Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
+                    min_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                    max_l_impro += Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
                 }
                 
-                range_i = Kaucher_add_pro_impro(range_i,range_i_impro);
-                range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
-                range_l = Kaucher_add_pro_impro(range_l,range_l_impro);
+                robust_i = Kaucher_add_pro_impro(robust_i + range_i, range_i_impro + robust_i_impro);
+                robust_k = Kaucher_add_pro_impro(robust_k + range_k, range_k_impro + robust_k_impro);
+                robust_l = Kaucher_add_pro_impro(robust_l + range_l, range_l_impro + robust_l_impro);
                 
-                // A REPRENDRE - CF 2D
-          /*      if (uncontrolled > 0)
-                    outFile_joint_robustinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                min_i = Kaucher_add_pro_impro(min_i + range_i, range_i_impro);
+                min_k = Kaucher_add_pro_impro(min_k + range_k, range_k_impro);
+                min_l = Kaucher_add_pro_impro(min_l + range_l, range_l_impro);
+                
+                max_i = Kaucher_add_pro_impro(max_i + range_i, range_i_impro + max_i_impro);
+                max_k = Kaucher_add_pro_impro(max_k + range_k, range_k_impro + max_k_impro);
+                max_l = Kaucher_add_pro_impro(max_l + range_l, range_l_impro + max_l_impro);
+                
+               // range_i = Kaucher_add_pro_impro(range_i,range_i_impro);
+               // range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
+               // range_l = Kaucher_add_pro_impro(range_l,range_l_impro);
+                
+                
+                if (uncontrolled > 0)
+                    outFile_joint_robustinner3d[i][k][l] << tnp1 << "\t" << inf(robust_i) << "\t" << sup(robust_i) << "\t" << inf(robust_k) << "\t" << sup(robust_k) << "\t" << inf(robust_l) << "\t" << sup(robust_l) << endl;
                 if (uncontrolled > 0 || controlled > 0)
-                    outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl; */
-                outFile_joint_maxinner3d[i][k][l] << tnp1 << "\t" << inf(range_i) << "\t" << sup(range_i) << "\t" << inf(range_k) << "\t" << sup(range_k) << "\t" << inf(range_l) << "\t" << sup(range_l) << endl;
+                    outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(min_i) << "\t" << sup(min_i) << "\t" << inf(min_k) << "\t" << sup(min_k) << "\t" << inf(min_l) << "\t" << sup(min_l) << endl;
+                outFile_joint_maxinner3d[i][k][l] << tnp1 << "\t" << inf(max_i) << "\t" << sup(max_i) << "\t" << inf(max_k) << "\t" << sup(max_k) << "\t" << inf(max_l) << "\t" << sup(max_l) << endl;
             }
         }
     }
