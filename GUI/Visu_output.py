@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1039]:
+# In[1095]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[1040]:
+# In[1096]:
 
 
 width_in_inches = 12
@@ -131,7 +131,7 @@ def print_xy(varx,vary):
 
 
 
-# In[1041]:
+# In[1097]:
 
 
 # print joint ranges of variables to display
@@ -146,7 +146,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[1042]:
+# In[1098]:
 
 
 width_in_inches = 12
@@ -232,7 +232,7 @@ def print_xyz(varx,vary,varz):
                 [Z[4],Z[7],Z[3],Z[0]]]
 
                 # plot sides
-          #      ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
+                ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
             
             for xo1,xo2,yo1,yo2,zo1,zo2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner,zmin_inner,zmax_inner):
                 P = [[(xo2-xo1)/2 , 0 ,  0],
@@ -277,7 +277,7 @@ def print_xyz(varx,vary,varz):
 #print_xyz("x2","x6","x10")
 
 
-# In[1043]:
+# In[1099]:
 
 
 # print joint ranges of variables to display
@@ -296,7 +296,7 @@ for f_inner in filenames_jointinner3d:
         print_xyz(varx,vary,varz)
 
 
-# In[1044]:
+# In[1100]:
 
 
 # if print_robust = True: print robust approx
@@ -524,7 +524,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[1045]:
+# In[1101]:
 
 
 print_robust = False
@@ -535,7 +535,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1046]:
+# In[1102]:
 
 
 print_robust = False
@@ -546,7 +546,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1047]:
+# In[1103]:
 
 
 print_robust = True
@@ -557,7 +557,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1048]:
+# In[1104]:
 
 
 print_robust = True
@@ -568,7 +568,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1049]:
+# In[1105]:
 
 
 print_robust = False
@@ -578,7 +578,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1050]:
+# In[1106]:
 
 
 print_robust = False
@@ -588,7 +588,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[1051]:
+# In[1107]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -606,7 +606,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[1108]:
 
 
 print_interactive = False
@@ -636,7 +636,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[1109]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
