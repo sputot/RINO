@@ -407,6 +407,34 @@ public:
              yp[1] = v*sin(y[2]) - param_inputs[0]*y[1];
              yp[2] = param_inputs[1] - param_inputs[0];
          }
+         else if (syschoice == 24) { // [Franzle et al.]
+             yp[0] = -(-0.5*y[0] - (0.5+param_inputs[0])*y[1] + 0.5);
+             yp[1] = - (-0.5*y[1] + 1.0);
+         }
+         else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+             yp[0] = y[1];
+             yp[1] = - (0.4*y[0] + 5.0*(y[0]*y[0] - (param_inputs[0] + 0.2))*y[1]);
+         }
+         else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+             yp[0] = -(-0.4*y[0] + 5.0*y[2]*y[3] + param_inputs[0]);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y[2]*y[3]);
+             yp[3] = -(5*y[4]*y[5] - 5.0*y[2]*y[3]);
+             yp[4] = -(-5*y[4]*y[5] + 5.0*y[2]*y[3]);
+             yp[5] = -(0.5*y[6] - 5.0*y[4]*y[5]);
+             yp[6] = -(-0.5*y[6] + 5.0*y[4]*y[5]);
+         }
+         else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+             auto y2y3 = y[2]*y[3];
+             auto y4y5 = y[4]*y[5];
+             yp[0] = -(-0.4*y[0] + 5.0*y2y3 + param_inputs[0]);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y2y3);
+             yp[3] = -(5*y4y5 - 5.0*y2y3);
+             yp[4] = -(-5*y4y5 + 5.0*y2y3);
+             yp[5] = -(0.5*y[6] - 5.0*y4y5);
+             yp[6] = -(-0.5*y[6] + 5.0*y4y5);
+         }
     }
 };
 

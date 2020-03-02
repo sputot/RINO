@@ -66,7 +66,7 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 
 bool refined_mean_value;
 
-bool print_debug = false;
+bool print_debug = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
 void define_system_dim(int argc, char* argv[])
@@ -181,6 +181,22 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 23) {   // pursuer-evader example Mitchell
             sysdim = 3;
             inputsdim = 2;
+        }
+        else if (syschoice == 24) { // [Franzle et al.]
+            sysdim = 2;
+            inputsdim = 1;
+        }
+        else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+            sysdim = 2;
+            inputsdim = 1;
+        }
+        else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+            sysdim = 7;
+            inputsdim = 1;
+        }
+        else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+            sysdim = 7;
+            inputsdim = 1;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -789,6 +805,56 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(-1,1.);    // angular velocity a of the evader (control)
             inputs[1] = interval(-1,1.);    // angular velocity b of the pursuer (disturbance)
             is_uncontrolled[1] = true;  // disturbance
+        }
+        else if (syschoice == 24) { // [Franzle et al.]
+            tau = 0.1;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.8,0.8);
+            initial_values[1] = interval(-0.8,0.8);
+            inputs[0] = interval(-0.01,0.01);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.5,0.5);
+            initial_values[1] = interval(-0.5,0.5);
+            inputs[0] = interval(-0.01,0.01);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
+            inputs[0] = interval(-0.1,0.1);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
+            inputs[0] = interval(-0.1,0.1);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
         }
     }
     if (systype == 1) // DDE
