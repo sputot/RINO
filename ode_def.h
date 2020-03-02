@@ -67,6 +67,9 @@ extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controll
 
 extern bool refined_mean_value;
 
+extern bool print_debug;
+
+
 void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
 
 

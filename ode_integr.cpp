@@ -664,30 +664,32 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     double tnp1 = tn + tau;
     
     
-    cout << "t=" << tnp1 << endl;
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
-        cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
-    }
-      cout << endl;
-    if (uncontrolled > 0)
+    if (print_debug)
     {
+        cout << "t=" << tnp1 << endl;
+        
         for (int i=0 ; i<sysdim ; i++) {
-            cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
-            cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+            cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+            cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
         }
         cout << endl;
-    }
-    if (controlled > 0 || uncontrolled > 0)
-    {
-        for (int i=0 ; i<sysdim ; i++) {
-            cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-            cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+        if (uncontrolled > 0)
+        {
+            for (int i=0 ; i<sysdim ; i++) {
+                cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+                cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+            }
+            cout << endl;
         }
-        cout << endl;
+        if (controlled > 0 || uncontrolled > 0)
+        {
+            for (int i=0 ; i<sysdim ; i++) {
+                cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
+                cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+            }
+            cout << endl;
+        }
     }
-    
   
     
     for (int i=0 ; i<sysdim ; i++) {

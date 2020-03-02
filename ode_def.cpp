@@ -66,7 +66,7 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 
 bool refined_mean_value;
 
-
+extern bool print_debug = false;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
 void define_system_dim(int argc, char* argv[])
@@ -612,7 +612,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         else if (syschoice == 10) // 10-D near-hover quadrotor
         {
             tau = 0.01;
-            t_end = 1.;
+            t_end = 0.3;
             order = 3;
             initial_values[0] = interval(-1.,1.);       // px
             initial_values[1] = interval(-0.1,0.1);     // vx

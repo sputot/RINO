@@ -422,8 +422,7 @@ void print_initstats(vector<AAF> &x)
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
             for (int k=j+1 ; k < sysdim ; k++) {
-                outFile_joint_maxinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
-                inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                outFile_joint_maxinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
             }
         }
     }
@@ -437,8 +436,7 @@ void print_initstats(vector<AAF> &x)
         for (int i=0 ; i<sysdim ; i++) {
             for (int j=i+1 ; j < sysdim ; j++) {
                 for (int k=j+1 ; k < sysdim ; k++) {
-                    outFile_joint_robustinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
-                    inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                    outFile_joint_robustinner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
                 }
             }
         }
@@ -453,8 +451,7 @@ void print_initstats(vector<AAF> &x)
         for (int i=0 ; i<sysdim ; i++) {
             for (int j=i+1 ; j < sysdim ; j++) {
                 for (int k=j+1 ; k < sysdim ; k++) {
-                    outFile_joint_mininner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" <<
-                    inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                    outFile_joint_mininner3d[i][j][k] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
                 }
             }
         }
