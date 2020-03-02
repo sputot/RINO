@@ -232,7 +232,8 @@ def print_xyz(varx,vary,varz):
                 [Z[4],Z[7],Z[3],Z[0]]]
 
                 # plot sides
-                ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
+          #      ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
+        ax.add_collection3d(Poly3DCollection(verts, facecolors='blue', linewidths=1, edgecolors='b', label='maximal outer-approximation', alpha=.1))
             
             for xo1,xo2,yo1,yo2,zo1,zo2 in zip(xmin_inner,xmax_inner,ymin_inner,ymax_inner,zmin_inner,zmax_inner):
                 P = [[(xo2-xo1)/2 , 0 ,  0],
