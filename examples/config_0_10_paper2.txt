@@ -1,0 +1,17 @@
+# 10D near-hover quadrotor
+# should correspond to (3), fig. 9 left
+
+system-dimension = 10
+inputs-dimension = 6
+time-horizon = 0.5
+sampling-time = 0.01
+order = 5
+initial-values = [-1,1] [-1.5,-1.5] [0,0] [-0,0] [-1,1] [-1.8,-1.8] [-0,0] [-0,0] [-2.5,2.5] [1.2,1.2]
+# values are px, vx=-1.5, thetax=0, omegax=0, py, vy=-1.8, thetay=0, omegay=0, pz, vz=1.2
+inputs = [-0,0] [-0,0] [-0,0] ([-0.017453,0.017453],50) ([-0.017453,0.017453],50) ([0,19.62],50)
+# inputs are dx, dy, dz (disturbances), Sx, Sy, Tz
+uncontrolled = 1 2 3
+variable =
+# x1 : p_x ; x2 : v_x ; x3 : theta_x ; x4 : omega_X ; x5 : py
+# x6 : v_y ; x7 : theta_y ; x8 : omega_y ; x9 : p_z ; x10 : v_z
+# on veut joint x1x5 (pxpy) ; joint x5x9 (pypz)

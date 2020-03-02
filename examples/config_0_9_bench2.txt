@@ -1,0 +1,17 @@
+# 6D acrobatic quadcopter
+
+system-dimension = 6
+inputs-dimension = 2
+time-horizon = 1
+sampling-time = 0.01
+order = 4
+initial-values = [-1.,1.] [0,0] [-1.,1.] [1,1] [-0.01,0.01] [-0.01,0.01]
+inputs = ([9,9.5125],100) ([9,9.5125],100)
+uncontrolled =
+variable = 
+# joint pxpy x1x3.png
+# joint pyphi x3x5.png
+# joint pxphi x1x5.png
+# theta x5.png
+# px x1.png
+# py x3.png
