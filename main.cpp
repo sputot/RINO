@@ -225,7 +225,8 @@ int main(int argc, char* argv[])
     }
     
     print_finalstats(begin);
-    run_pythonscript_visualization();
+    if (print_debug)
+        run_pythonscript_visualization();
 }
 
 // printig solution from all stored results of subdivisiions
