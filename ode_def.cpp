@@ -828,7 +828,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
             tau = 0.01;
-            t_end = 1;
+            t_end = 0.4;
             order = 3;
             initial_values[0] = interval(-0.25,0.25);
             initial_values[1] = interval(-0.45,0.05);

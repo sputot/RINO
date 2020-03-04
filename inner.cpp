@@ -214,10 +214,10 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 //  range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
                 
                 if (uncontrolled > 0)
-                    outFile_joint_robustinner[i][k] << tnp1 << "\t" << inf(robust_i) << "\t" << sup(robust_i) << "\t" << inf(robust_k) << "\t" << sup(robust_k) << endl;
+                    outFile_joint_inner[i][k] << "robust" << "\t" << tnp1 << "\t" << inf(robust_i) << "\t" << sup(robust_i) << "\t" << inf(robust_k) << "\t" << sup(robust_k) << endl;
                 if (uncontrolled > 0 || controlled > 0)
-                    outFile_joint_mininner[i][k] << tnp1 << "\t" << inf(min_i) << "\t" << sup(min_i) << "\t" << inf(min_k) << "\t" << sup(min_k) << endl;
-                outFile_joint_maxinner[i][k] << tnp1 << "\t" << inf(max_i) << "\t" << sup(max_i) << "\t" << inf(max_k) << "\t" << sup(max_k) << endl;
+                    outFile_joint_inner[i][k] << "minimal" << "\t" << tnp1 << "\t" << inf(min_i) << "\t" << sup(min_i) << "\t" << inf(min_k) << "\t" << sup(min_k) << endl;
+                outFile_joint_inner[i][k] << "maximal" << "\t" << tnp1 << "\t" << inf(max_i) << "\t" << sup(max_i) << "\t" << inf(max_k) << "\t" << sup(max_k) << endl;
             }
         }
     
@@ -330,10 +330,10 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                     
                     
                     if (uncontrolled > 0)
-                        outFile_joint_robustinner3d[i][k][l] << tnp1 << "\t" << inf(robust_i) << "\t" << sup(robust_i) << "\t" << inf(robust_k) << "\t" << sup(robust_k) << "\t" << inf(robust_l) << "\t" << sup(robust_l) << endl;
+                        outFile_joint_inner3d[i][k][l] << "robust" << "\t" << tnp1 << "\t" << inf(robust_i) << "\t" << sup(robust_i) << "\t" << inf(robust_k) << "\t" << sup(robust_k) << "\t" << inf(robust_l) << "\t" << sup(robust_l) << endl;
                     if (uncontrolled > 0 || controlled > 0)
-                        outFile_joint_mininner3d[i][k][l] << tnp1 << "\t" << inf(min_i) << "\t" << sup(min_i) << "\t" << inf(min_k) << "\t" << sup(min_k) << "\t" << inf(min_l) << "\t" << sup(min_l) << endl;
-                    outFile_joint_maxinner3d[i][k][l] << tnp1 << "\t" << inf(max_i) << "\t" << sup(max_i) << "\t" << inf(max_k) << "\t" << sup(max_k) << "\t" << inf(max_l) << "\t" << sup(max_l) << endl;
+                        outFile_joint_inner3d[i][k][l] << "minimal" << "\t" << tnp1 << "\t" << inf(min_i) << "\t" << sup(min_i) << "\t" << inf(min_k) << "\t" << sup(min_k) << "\t" << inf(min_l) << "\t" << sup(min_l) << endl;
+                    outFile_joint_inner3d[i][k][l]  << "maximal" << "\t" << tnp1 << "\t" << inf(max_i) << "\t" << sup(max_i) << "\t" << inf(max_k) << "\t" << sup(max_k) << "\t" << inf(max_l) << "\t" << sup(max_l) << endl;
                 }
             }
         }
