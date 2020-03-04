@@ -204,7 +204,7 @@ def print_xyz(varx,vary,varz):
                 [Z[4],Z[7],Z[3],Z[0]]]
 
                 # plot sides
-                ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
+          #      ax.add_collection3d(Line3DCollection(verts, linewidths=1, label='outer-approximation'))
           #      ax.add_collection3d(Poly3DCollection(verts, facecolors='grey', linewidths=1, edgecolors='k', label='maximal outer-approximation', alpha=0.05))
 
     fxyz_inner = varx + vary + varz + 'inner_joint3d.out'
