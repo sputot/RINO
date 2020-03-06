@@ -425,9 +425,20 @@ public:
              yp[6] = -(-0.5*y[6] + 5.0*y[4]*y[5]);
          }
          else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
-             auto y2y3 = y[2]*y[3];
-             auto y4y5 = y[4]*y[5];
+             C y2y3 = y[2]*y[3];
+             C y4y5 = y[4]*y[5];
              yp[0] = -(-0.4*y[0] + 5.0*y2y3 + param_inputs[0]);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y2y3);
+             yp[3] = -(5*y4y5 - 5.0*y2y3);
+             yp[4] = -(-5*y4y5 + 5.0*y2y3);
+             yp[5] = -(0.5*y[6] - 5.0*y4y5);
+             yp[6] = -(-0.5*y[6] + 5.0*y4y5);
+         }
+         else if (syschoice == 28) { // [Franzle et al.] 7-d biological system without disturbance
+             C y2y3 = y[2]*y[3];
+             C y4y5 = y[4]*y[5];
+             yp[0] = -(-0.4*y[0] + 5.0*y2y3);
              yp[1] = -(0.4*y[0] - y[1]);
              yp[2] = -(y[1] - 5.0*y2y3);
              yp[3] = -(5*y4y5 - 5.0*y2y3);

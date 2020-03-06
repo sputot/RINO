@@ -118,6 +118,39 @@ void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>
     }
 }
 
+// produit d'une matrice (n,n) par une (n,p) -> res (n,p)
+void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vector<interval>> &y) {
+    for (int i=0 ; i<z.size() ; i++) {
+        for (int j=0 ; j<z[i].size(); j++) {
+            z[i][j]=0;
+            for (int k=0 ; k<x[i].size() ; k++)
+                z[i][j] += x[i][k]*y[k][j];
+        }
+    }
+}
+
+ostream& operator<<(ostream& os, const vector<vector<interval>> &M)
+{
+    for (int i=0 ; i<M.size() ; i++) {
+        for (int j=0 ; j<M[i].size(); j++)
+            os << "M["<<i<<"]["<<j<<"]="<<M[i][j]<<" ";
+        os << endl;
+    }
+    
+    return os;
+}
+
+ostream& operator<<(ostream& os, const vector<interval> &z)
+{
+    for (int i=0 ; i<z.size() ; i++)
+            os << "z["<<i<<"]="<<z[i]<<" ";
+        os << endl;
+    
+    return os;
+}
+
+
+
 // product (jacdim,jacdim) times (jacdim,jacdim)
 // but only the first sysdim lines of x and z  are relevant
 void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y) {

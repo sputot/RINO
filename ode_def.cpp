@@ -198,6 +198,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 7;
             inputsdim = 1;
         }
+        else if (syschoice == 28) { // [Franzle et al.] 7-d biological system but with sharing
+            sysdim = 7;
+            inputsdim = 0;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -498,6 +502,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             
             initial_values[0] = interval(0.9,1);
             params[0] = 1.0;
+            nb_subdiv_init = 2;
+            component_to_subdiv = 0;
         }
         else if (syschoice == 2) // Brusselator
         {
@@ -539,8 +545,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[0] = true;
   //          is_variable[4] = true;
-           // nb_subdiv_init = 2;
-          //  component_to_subdiv = 3;
+            nb_subdiv_init = 2;
+            component_to_subdiv = 3;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
@@ -827,8 +833,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;  // disturbance
         }
         else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
-            tau = 0.01;
-            t_end = 0.4;
+            tau = 0.1;
+            t_end = 1;
             order = 3;
             initial_values[0] = interval(-0.25,0.25);
             initial_values[1] = interval(-0.45,0.05);
@@ -855,6 +861,18 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(-0.1,0.1);
             nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 28) { // [Franzle et al.] 7-d biological system without disturbance
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
         }
     }
     if (systype == 1) // DDE
