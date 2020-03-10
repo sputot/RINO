@@ -76,15 +76,23 @@ public:
     }
 };
 
+
+extern vector<vector<vector<interval>>> constr_eps;  // constraints on noise symbols
+extern vector<vector<vector<interval>>> eps_loc;     // consequence on eps=[x]-x0
+
 void range_discrete_system(void);
 
 void evaluate_projections(vector<interval> &z0,  vector<vector<interval>> &Jacf);
+void evaluate_projections_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int index1, int n1, int index2, int n2);
 void evaluate_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<bool> &is_existential);
 
 // for only one component: used for joint range
+interval evaluate_innerrange_x_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<int> &exist_quantified, int i, int index1, int index2);
 interval evaluate_innerrange_x(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<bool> &is_existential, int i);
 
 void joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary);
-void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary);
+void joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
 
+void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary);
+void preconditioned_joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAfff, int varx, int vary);
 #endif
