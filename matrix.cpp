@@ -129,6 +129,17 @@ void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vec
     }
 }
 
+// produit d'une matrice (n,n) par une (n,p) -> res (n,p)
+void multMiMi(vector<vector<AAF>> &z, vector<vector<double>> &x, vector<vector<AAF>> &y) {
+    for (int i=0 ; i<z.size() ; i++) {
+        for (int j=0 ; j<z[i].size(); j++) {
+            z[i][j]=0;
+            for (int k=0 ; k<x[i].size() ; k++)
+                z[i][j] += x[i][k]*y[k][j];
+        }
+    }
+}
+
 ostream& operator<<(ostream& os, const vector<vector<interval>> &M)
 {
     for (int i=0 ; i<M.size() ; i++) {

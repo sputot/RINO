@@ -25,6 +25,7 @@ void hull(vector<AAF> &res, vector<AAF> &x, vector<AAF> &y);
 
 void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vector<interval>> &y);
+void multMiMi(vector<vector<AAF>> &z, vector<vector<double>> &x, vector<vector<AAF>> &y);
 void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 
 void multMiVi(vector<interval> &y, vector<vector<interval>> &A, vector<interval> &x) ;
