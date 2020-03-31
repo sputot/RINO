@@ -762,10 +762,23 @@ void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
         }
        
         InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
+        cout << "without quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+     //   print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+        
+        InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau);
+        cout << "with quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+       //  print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+        
+        
      //   cout << "Xouter[0]" << Xouter[0] << endl;
         intersectViVi(Xouter,TMJac.xp1[s]);
        // for (int i = 0 ; i<sysdim ; i++)
        //     Xouter[i] = TMJac.xp1[s][i].convert_int();
+        cout << "with intersection with direct solution: ";
         print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
     }
    

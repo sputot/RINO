@@ -187,6 +187,10 @@ int main(int argc, char* argv[])
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
+            for (int i=0 ; i<sysdim ; i++)
+                cout << "x[i]=" << x[i] << endl;
+            
+            
             tn = t_begin;
             print_initstats(initial_values);
             

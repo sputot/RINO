@@ -11,6 +11,7 @@
 #include "fadbad_aa.h"
 #include "matrix.h"
 #include "inner.h"
+//#include "discrete_system.h"
 #include <iostream>
 #include <ostream>
 #include <fstream>
@@ -82,9 +83,6 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         uncontrolled_pro = 0;
         controlled_impro = 0;
         controlled_pro = 0;
-   //     innerjoint_pro = 0;
-   //     innerjoint_impro = 0;
-        
         
         Xinner_robust[i] = 0;
         Xinner_minimal[i] = 0;
@@ -96,12 +94,6 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
             {
                 initialcondition_impro = initialcondition_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
                 initialcondition_pro = initialcondition_pro + Jaux[i][j]*eps[j];
-         /*       if (i == j) {
-                    innerjoint_impro = innerjoint_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
-                }
-                else {
-                    innerjoint_pro = innerjoint_pro + Jaux[i][j]*eps[j];
-                } */
             }
             else if (!is_uncontrolled[j-sysdim])
             {
@@ -115,16 +107,9 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
             }
         }
         
-        
         aux_impro = initialcondition_impro + controlled_impro;
-    //    innerjoint_impro = innerjoint_impro + controlled_impro;
-        
-        
-    Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro + uncontrolled_impro);
-    // Xinner[i] = Kaucher_add_pro_impro(ix0[i] + uncontrolled_pro, aux_impro + controlled_pro);
-        
+        Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro + uncontrolled_impro);
 
-        
         if (uncontrolled > 0)
         {
             Xinner_robust[i]  = ix0[i] + uncontrolled_pro;
@@ -139,7 +124,6 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
             Xouter_minimal[i] = ix0[i] + initialcondition_pro;
             Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro + uncontrolled_impro);
         }
-        
     }
     
     // outer-approx computation : Xouter = x0p1 + Jtau*eps;
@@ -340,5 +324,289 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     }
     
     
+    // computing joint inner-approximations WITH PRECONDITIONING
+    // for any pair (i,k) of system outputs which we wish to jointly inner-approximate
+    //    component j for j < sysdim/2 is existential in z_i and universal in z_k
+    //    same for inputs
+    // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
+    if (print_debug)
+    {
+        interval range_i, range_k, range_i_impro, range_k_impro;
+        interval robust_i, max_i, min_i, robust_i_impro, max_i_impro;
+        interval robust_k, max_k, min_k, robust_k_impro, max_k_impro;
+        
+        // precobditionning: A is center of Jacobian, C its inverse
+        vector<vector<double>> A(sysdim), C(sysdim);
+        for (int i=0 ; i<sysdim; i++) {
+            A[i] = vector<double> (sysdim);
+            C[i] = vector<double> (sysdim);
+        }
+        double determinant;
+        
+        vector<vector<interval>> CJac(sysdim, vector<interval>(jacdim));
+        vector<vector<double>> output_skewbox;
+        
+        for (int i=0 ; i<sysdim; i++) {
+            for (int k=i+1 ; k<sysdim; k++) {
+                
+                for (int p=0 ; p<sysdim; p++) {
+                    for (int q=0 ; q<sysdim; q++) {
+                        A[p][q] = 0.0;
+                        C[p][q] = 0.0;
+                    }
+                    A[p][p] = 1.0;
+                    C[p][p] = 1.0;
+                }
+                
+                A[i][i] = mid(Jaux[i][i]);
+                A[k][k] = mid(Jaux[k][k]);
+                A[i][k] = mid(Jaux[i][k]);
+                A[k][i] = mid(Jaux[k][i]);
+                
+                // C is inverse of A
+                determinant = 1.0/(A[i][i]*A[k][k]-A[i][k]*A[k][i]);
+                C[i][i] = determinant*A[k][k];
+                C[i][k] = - determinant*A[i][k];
+                C[k][i] = - determinant*A[k][i];
+                C[k][k] = determinant*A[i][i];
+                
+                // f0 = C * z0
+                range_i = C[i][i]*ix0[i] + C[i][k]*ix0[k];   // center and uncontrolled (forall) part
+                range_i_impro = 0;      // controlled (existential) part
+                range_k = C[k][k]*ix0[k] + C[k][i]*ix0[i];
+                range_k_impro = 0;
+                
+                // CJac = C*Jaux
+                multMiMi(CJac,C,Jaux);
+                
+                for (int j=0 ; j<sysdim/2 ; j++) {
+                    range_k = range_k + CJac[k][j]*eps[j];
+                    range_i_impro = range_i_impro + Kaucher_multeps(CJac[i][j],eps[j]);
+                }
+                for (int j=sysdim/2 ; j<sysdim ; j++) {
+                    range_i = range_i + CJac[i][j]*eps[j];
+                    range_k_impro = range_k_impro + Kaucher_multeps(CJac[k][j],eps[j]);
+                }
+                
+                robust_i = 0; max_i = 0; min_i = 0;
+                robust_i_impro = 0; max_i_impro = 0;
+                robust_k = 0; max_k = 0; min_k = 0;
+                robust_k_impro = 0; max_k_impro = 0;
+                for (int j=0 ; j<fullinputsdim/2 ; j++) {
+                    if (is_uncontrolled[j])
+                        robust_i += CJac[i][j+sysdim]*eps[j+sysdim];
+                    else
+                        robust_i_impro += Kaucher_multeps(CJac[i][j+sysdim],eps[j+sysdim]);
+                    min_i += CJac[i][j+sysdim]*eps[j+sysdim];
+                    max_i_impro += Kaucher_multeps(CJac[i][j+sysdim],eps[j+sysdim]);
+                    
+                    robust_k = robust_k + CJac[k][j+sysdim]*eps[j+sysdim];
+                    min_k += CJac[k][j+sysdim]*eps[j+sysdim];
+                    max_k += CJac[k][j+sysdim]*eps[j+sysdim];
+                }
+                for (int j=fullinputsdim/2 ; j<fullinputsdim ; j++) {
+                    robust_i += CJac[i][j+sysdim]*eps[j+sysdim];
+                    min_i += CJac[i][j+sysdim]*eps[j+sysdim];
+                    max_i += CJac[i][j+sysdim]*eps[j+sysdim];
+                    
+                    if (is_uncontrolled[j])
+                        robust_k += CJac[k][j+sysdim]*eps[j+sysdim];
+                    else
+                        robust_k_impro += Kaucher_multeps(CJac[k][j+sysdim],eps[j+sysdim]);
+                    min_k += CJac[k][j+sysdim]*eps[j+sysdim];
+                    max_k_impro += Kaucher_multeps(CJac[k][j+sysdim],eps[j+sysdim]);
+                }
+                
+                robust_i = Kaucher_add_pro_impro(robust_i + range_i, range_i_impro + robust_i_impro);
+                robust_k = Kaucher_add_pro_impro(robust_k + range_k,range_k_impro + robust_k_impro);
+                
+                min_i = Kaucher_add_pro_impro(min_i + range_i, range_i_impro);
+                min_k = Kaucher_add_pro_impro(min_k + range_k, range_k_impro);
+                
+                max_i = Kaucher_add_pro_impro(max_i + range_i, range_i_impro + max_i_impro);
+                max_k = Kaucher_add_pro_impro(max_k + range_k, range_k_impro + max_k_impro);
+                
+                //  range_i = Kaucher_add_pro_impro(range_i,range_i_impro);
+                //  range_k = Kaucher_add_pro_impro(range_k,range_k_impro);
+                
+                if (uncontrolled > 0) {
+                    output_skewbox = compute_skewbox(robust_i,robust_k,A,i,k);
+                    outFile_joint_inner[i][k] << "robskew" << "\t" << tnp1 << "\t";
+                    for (int p=0; p<3; p++)
+                        outFile_joint_inner[i][k] << output_skewbox[p][0] << "\t" << output_skewbox[p][1] << "\t" ;
+                    outFile_joint_inner[i][k] << output_skewbox[3][0] << "\t" << output_skewbox[3][1] << endl ;
+                }
+                if (uncontrolled > 0 || controlled > 0) {
+                    output_skewbox = compute_skewbox(min_i,min_k,A,i,k);
+                    outFile_joint_inner[i][k] << "minskew" << "\t" << tnp1 << "\t";
+                    for (int p=0; p<3; p++)
+                        outFile_joint_inner[i][k] << output_skewbox[p][0] << "\t" << output_skewbox[p][1] << "\t" ;
+                    outFile_joint_inner[i][k] << output_skewbox[3][0] << "\t" << output_skewbox[3][1] << endl ;
+                }
+                output_skewbox = compute_skewbox(max_i,max_k,A,i,k);
+                outFile_joint_inner[i][k] << "maxskew" << "\t" << tnp1 << "\t";
+                for (int p=0; p<3; p++)
+                    outFile_joint_inner[i][k] << output_skewbox[p][0] << "\t" << output_skewbox[p][1] << "\t" ;
+                outFile_joint_inner[i][k] << output_skewbox[3][0] << "\t" << output_skewbox[3][1] << endl ;
+            }
+        }
+    }
+    
+    
+    
 }
 
+
+
+// specializing JacAff given that we are between [x]^m and [x]^{m+1} in the subdivision
+void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m, int nb_discr)
+{
+    vector<interval> c_eps(jacdim);
+    
+    int index1 = 0, index2 = 1;
+    if (component_to_subdiv > -1)
+        index1 = component_to_subdiv;
+    if (component_to_subdiv2 > -1)
+        index2 = component_to_subdiv2;
+    
+    for (int j=0; j < jacdim ; j++)
+        c_eps[j] = interval(-(m+1.0)/nb_discr,(m+1.0)/nb_discr); // interval(-1,1);
+    
+    if (m == 0)
+    {
+        /*    c_eps[index1] = interval(-(m+1.0)/nb_discr,(m+1.0)/nb_discr);
+        if (jacdim > 1)
+            c_eps[index2] = interval(-(m+1.0)/nb_discr,(m+1.0)/nb_discr); */
+        for (int i=0 ; i<sysdim ; i++)
+            for (int j=0 ; j<jacdim ; j++) {
+         //              cout << "JacAff[i][j]=" << JacAff[i][j] << endl;
+                Jac_m[i][j] = JacAff[i][j].convert_int(c_eps,jacdim);
+            }
+    }
+    else
+    {
+        
+        c_eps[index1] = interval(((double)m)/nb_discr,(m+1.0)/nb_discr);
+        if (jacdim > 1)
+            c_eps[index2] = interval(-(m+1.0)/nb_discr,(m+1.0)/nb_discr);
+        for (int i=0 ; i<sysdim ; i++)
+            for (int j=0 ; j<jacdim ; j++)
+                Jac_m[i][j] = JacAff[i][j].convert_int(c_eps,jacdim);
+        
+        c_eps[index1] = -interval(((double)m)/nb_discr,(m+1.0)/nb_discr);
+        for (int i=0 ; i<sysdim ; i++)
+            for (int j=0 ; j<jacdim ; j++)
+                Jac_m[i][j] = interval_hull(Jac_m[i][j],JacAff[i][j].convert_int(c_eps,jacdim));
+        
+        if (jacdim > 1) {
+            c_eps[index1] = interval(-((double)m)/nb_discr,((double)m)/nb_discr);
+            if (jacdim > 1)
+                c_eps[index2] = interval(((double)m)/nb_discr,(m+1.0)/nb_discr);
+            for (int i=0 ; i<sysdim ; i++)
+                for (int j=0 ; j<jacdim ; j++)
+                    Jac_m[i][j] = interval_hull(Jac_m[i][j],JacAff[i][j].convert_int(c_eps,jacdim));
+            
+            if (jacdim > 1)
+                c_eps[index2] = -interval(((double)m)/nb_discr,(m+1.0)/nb_discr);
+            for (int i=0 ; i<sysdim ; i++)
+                for (int j=0 ; j<jacdim ; j++)
+                    Jac_m[i][j] = interval_hull(Jac_m[i][j],JacAff[i][j].convert_int(c_eps,jacdim));
+        }
+    }
+}
+
+
+
+
+
+// same as InnerOuter but with quadrature
+void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
+{
+    vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
+    vector<interval> ix0(sysdim);
+    vector<interval> initialcondition_impro(sysdim), initialcondition_pro(sysdim), uncontrolled_impro(sysdim), uncontrolled_pro(sysdim), controlled_impro(sysdim), controlled_pro(sysdim), aux_impro(sysdim);
+    vector<interval> loc_eps(jacdim);
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        ix0[i] = x0p1[i].convert_int();
+        for (int k=0 ; k<jacdim ; k++)
+            Jaux[i][k] = Jtau[i][k].convert_int();
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        initialcondition_impro[i] = 0;
+        initialcondition_pro[i] = 0;
+        uncontrolled_impro[i] = 0;
+        uncontrolled_pro[i] = 0;
+        controlled_impro[i] = 0;
+        controlled_pro[i] = 0;
+        
+        Xinner_robust[i] = 0;
+        Xinner_minimal[i] = 0;
+        Xouter_robust[i] = 0;
+        Xouter[i] = ix0[i];
+    }
+    
+//    int nb_discr = 1;
+    int nb_discr = 10;
+    
+    for (int j=0 ; j<jacdim; j++)
+        loc_eps[j] = eps[j]/((double)nb_discr);
+    
+    
+    for (int m=0; m<nb_discr; m++)
+    {
+        constraint_eps(Jaux,Jtau,m,nb_discr);
+        
+        // inner approx: special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system
+        for (int i=0 ; i<sysdim; i++) {
+            
+            for (int j=0 ; j<jacdim ; j++)
+            { // adding the controlled (exists) part
+                if (j<sysdim) // initial conditions //(is_initialcondition[j])
+                {
+                    initialcondition_impro[i] = initialcondition_impro[i] + Kaucher_multeps(Jaux[i][j],loc_eps[j]);
+                    initialcondition_pro[i] = initialcondition_pro[i] + Jaux[i][j]*loc_eps[j];
+                }
+                else if (!is_uncontrolled[j-sysdim])
+                {
+                    controlled_impro[i] = controlled_impro[i] + Kaucher_multeps(Jaux[i][j],loc_eps[j]);
+                    controlled_pro[i] = controlled_pro[i] + Jaux[i][j]*loc_eps[j];
+                }
+                else // uncontrolled
+                {
+                    uncontrolled_impro[i] = uncontrolled_impro[i] + Kaucher_multeps(Jaux[i][j],loc_eps[j]) ;
+                    uncontrolled_pro[i] = uncontrolled_pro[i] + Jaux[i][j]*loc_eps[j] ;
+                }
+                
+                Xouter[i] += Jaux[i][j]*loc_eps[j] ;
+            }
+           
+        }
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        aux_impro[i] = initialcondition_impro[i] + controlled_impro[i];
+        Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro[i] + uncontrolled_impro[i]);
+        
+        if (uncontrolled > 0)
+        {
+            Xinner_robust[i]  = ix0[i] + uncontrolled_pro[i];
+            Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro[i]);
+            Xouter_robust[i] = ix0[i] + initialcondition_pro[i] + controlled_pro[i];
+            Xouter_robust[i] = Kaucher_add_pro_impro_resultpro(Xouter_robust[i],uncontrolled_impro[i]);
+        }
+        if (controlled > 0 || uncontrolled > 0)
+        {
+            Xinner_minimal[i] = ix0[i] + uncontrolled_pro[i] + controlled_pro[i];
+            Xinner_minimal[i] = Kaucher_add_pro_impro(Xinner_minimal[i], initialcondition_impro[i]);
+            Xouter_minimal[i] = ix0[i] + initialcondition_pro[i];
+            Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro[i] + uncontrolled_impro[i]);
+        }
+        
+    }
+    
+    // outer-approx computation : Xouter = x0p1 + Jtau*eps;
+  //  multMiVi(Xouter,Jaux,eps);
+  //  addViVi(Xouter,ix0);
+}

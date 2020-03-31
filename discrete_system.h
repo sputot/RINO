@@ -13,6 +13,7 @@
 
 #include "filib_interval.h"
 #include "tadiff.h"
+#include "badiff.h"
 #include "fadiff.h"
 #include "fadbad_aa.h"
 #include "ode_def.h"
@@ -72,10 +73,44 @@ public:
             z[1] = 0.707*x[1] + 0.707*x[1]*x[1]  - 2.0;
             z[2] = x[2] - 1.0;
         }
+        else if (syschoice == 13) {
+            z[0] = 4.0*(1.0-x[0]+x[0]*x[2])-2.0+4.0*x[0]*(x[1]-1.0)-2.0*(x[2]-1.0);
+            z[1] = -4.0*(x[1]-1.0)+4.0*x[1]*(x[1]-1.0);
+         //   z[2] = 4.0*(1.0-x[0]+x[0]*x[2])-2.0*x[1]+4.0*x[0]*(x[1]-1.0);
+            z[2] =x[2]*x[2]*x[2] + x[2]*x[2] + x[2] + 1.0;
+        }
+        else if (syschoice == 14) {
+            z[0] = x[0]*x[0]*x[0] + x[0]*x[0] + x[0] + 1.0;
+        }
         return z;
     }
 };
 
+
+//template <class C>
+struct FDiff
+{
+    template <class C>
+    vector<C> operator()(vector<vector<C>> &o_dfdx, vector<C> x) {
+        vector<F<C>> loc_x(jacdim);  // Initialize arguments
+        vector<C> res_f(sysdim);
+        
+        for (int i=0 ; i<jacdim ; i++) {
+            loc_x[i] = x[i];
+            loc_x[i].diff(i,jacdim);            // Differentiate wrt. x
+        }
+        DiscreteFunc func;             // Instantiate functor
+        vector<F<C>> f(func(loc_x));  // Evaluate function and record DAG
+        
+        for (int i=0 ; i<sysdim ; i++)
+            for (int j=0 ; j<jacdim ; j++)
+                o_dfdx[i][j]=f[i].d(j);      // Value of df/dx
+     //   o_dfdy=f.d(1);      // Value of df/dy */
+        for (int i=0 ; i<sysdim ; i++)
+            res_f[i] = f[i].x();
+        return res_f;
+    }
+};
 
 extern vector<vector<vector<interval>>> constr_eps;  // constraints on noise symbols
 extern vector<vector<vector<interval>>> eps_loc;     // consequence on eps=[x]-x0
@@ -88,26 +123,41 @@ extern int nb_discr, nb_discr1, nb_discr2;
 
 void range_discrete_system(void);
 
+void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);
+
 void evaluate_projections(vector<interval> &z0,  vector<vector<interval>> &Jacf);
+void evaluate_projections_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
 void evaluate_projections_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
 void evaluate_projections_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
+void evaluate_projections_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
+void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
 
-interval evaluate_outerrange_x(vector<interval> &z0,  vector<vector<interval>> &Jacf, int i);
+vector<interval> evaluate_outerrange(vector<interval> &z0,  vector<vector<interval>> &Jacf);
+vector<interval> evaluate_outerrange_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
 interval evaluate_outerrange_x_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
 //interval evaluate_outerrange_x_subdiv_discretize_old(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
 interval evaluate_outerrange_x_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
+vector<interval> evaluate_outerrange_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
+vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
 
 // for only one component: used for joint range
 interval evaluate_innerrange_x_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 //interval evaluate_innerrange_x_subdiv_discretize_old(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
-interval evaluate_innerrange_x(vector<interval> &z0,  vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified, int i);
+vector<interval> evaluate_innerrange(vector<interval> &z0,  vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAfff, bool maximal, vector<int> &exist_quantified);
 
-void joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary);
+void joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf,  vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
 void joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
 void joint_ranges_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
+void joint_ranges_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
 
-void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, int varx, int vary);
+void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
 void preconditioned_joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAfff, int varx, int vary);
 void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
+void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
+
+void twodim_discretization_by_quadrant();
 #endif

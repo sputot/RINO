@@ -217,6 +217,12 @@ void addJacfzJacfz(vector<vector<AAF>> &x, vector<vector<AAF>> &y) {
     }
 }
 
+void scalarproduct(vector<interval> &z, vector<interval> &x, vector<interval> &y) {
+    for (int i=0 ; i<x.size() ; i++) {
+        z[i]=x[i]*y[i];
+    }
+}
+
 
 void addViVi(vector<interval> &x, vector<interval> &y) {
     for (int i=0 ; i<x.size() ; i++) {
@@ -277,3 +283,21 @@ void setId(vector<vector<AAF>> &J) {
     }
 }
 
+ // resulting quadrilatere A * inner is an inner approximation of the range of f
+vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary) {
+    vector<vector<double>> output_skewedbox(4);
+    for (int i=0; i<4; i++) {
+        output_skewedbox[i] = vector<double>(2);
+    }
+    
+    output_skewedbox[0][0] = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    output_skewedbox[0][1] = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    output_skewedbox[1][0] = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    output_skewedbox[1][1] = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    output_skewedbox[2][0] = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    output_skewedbox[2][1] = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    output_skewedbox[3][0] = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    output_skewedbox[3][1] = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    
+    return output_skewedbox;
+}

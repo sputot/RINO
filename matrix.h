@@ -39,6 +39,8 @@ void scaleJacfz(vector<vector<AAF>> &x, double d);
 void addMiMi(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 void addJacfzJacfz(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 
+void scalarproduct(vector<interval> &z, vector<interval> &x, vector<interval> &y);
+
 void addViVi(vector<interval> &x, vector<interval> &y);
 void addViVi(vector<AAF> &x, vector<double> &y);
 void addViVi(vector<AAF> &x, vector<interval> &y);
@@ -50,6 +52,8 @@ void setVi(vector<interval> &x,vector<AAF> &y);
 void setVi(vector<interval> &x,vector<AAF> &y, vector<AAF> &constraints);
 
 void setId(vector<vector<AAF>> &J);
+
+vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary);
 
 #endif
 

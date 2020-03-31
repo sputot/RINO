@@ -48,7 +48,8 @@ vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
 int nb_subdiv_init = 1; // number of subdivisiions
-int component_to_subdiv = 0;
+int component_to_subdiv = -1;
+int component_to_subdiv2 = -1;
 
 double recovering = 0.0; // percentage of recovering between subdivisions
 vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
@@ -355,12 +356,23 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             token = strtok(NULL,space);
             token = strtok(NULL,space);
             int i = 0;
+            nb_subdiv_init = 1;
+            component_to_subdiv = -1;
+            component_to_subdiv2 = -1;
             // only one component can be subdivided for now (we keep the last if several...)
             while( token != NULL ) {
                 if (sscanf(token,"([%lf,%lf],%d)",&a,&b,&c) == 3) {
+                    if (component_to_subdiv > -1) // we already have one component to subdivide
+                    {
+                        component_to_subdiv2 = i;
+                        cout << "component "<< i << " should also be subdivided " << endl;
+                    }
+                    else
+                    {
                     nb_subdiv_init = c;
                     component_to_subdiv = i;
                     cout << "component "<< i << " should be dubdivided " << c << "times" << endl;
+                    }
                 }
                 else
                     sscanf(token,"[%lf,%lf]",&a,&b);
@@ -496,14 +508,14 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         t_begin = 0;
         if (syschoice == 1)  // running example
         {
-            tau = 0.1;
+            tau = 0.01;
             t_end = 2.;
             order = 3;
             
             initial_values[0] = interval(0.9,1);
             params[0] = 1.0;
-            nb_subdiv_init = 2;
-            component_to_subdiv = 0;
+         //   nb_subdiv_init = 2;
+         //   component_to_subdiv = 0;
         }
         else if (syschoice == 2) // Brusselator
         {
@@ -545,8 +557,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[0] = true;
   //          is_variable[4] = true;
-            nb_subdiv_init = 2;
+            nb_subdiv_init = 1;
             component_to_subdiv = 3;
+            component_to_subdiv2 = 4;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
@@ -1079,6 +1092,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         temp = initial_values[i].convert_int();
         center_initial_values[i] = mid(temp);
         eps[i] = temp-mid(temp);
+        cout << "initial_values[i] = " << initial_values[i] << endl;
     }
     for (int i=0 ; i<fullinputsdim ; i++)
     {

@@ -389,11 +389,11 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<sysdim; k++) {
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
-      //          cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
+       //         cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k] << endl;
             }
             for (int k=0 ; k<inputsdim ; k++) {
                 Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_x[sysdim+k].x[j][i].d(0);
-     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
+     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] << endl;
             }
         }
         
@@ -766,11 +766,21 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
         InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        cout << "without quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+        
+        InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        cout << "with quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+       
       //  InnerOuter(Xinner,Xouter,TMcenter.xp1,TMJac.Jp1,eps);
      //   for (int i = 0 ; i<sysdim ; i++)
      //   cout << "before intersect: Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
         intersectViVi(Xouter,TMJac.xp1);
-    
+        
+        cout << "with intersection with direct solution: ";
         print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
         
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
