@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[76]:
+# In[ ]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_discrete.ipynb
@@ -55,38 +55,26 @@ def print_discrete_xy(varx,vary):
     fxy_inner = varx + vary + 'joint_inner.out'
     fxy_skewed_inner = varx + vary + 'skewed_inner.out'
     fxy_skewed_outer = varx + vary + 'skewed_outer.out'
-    fx_outer = varx + 'outer_direct.out'
-    fy_outer = vary + 'outer_direct.out'
     fx_outer2 = varx + 'outer_mean_value.out'
     fy_outer2 = vary + 'outer_mean_value.out'
     fx_inner = varx + 'inner.out'
     fy_inner = vary + 'inner.out'
-    if (path.isfile(fx_outer) and path.isfile(fy_outer)):
+    if (path.isfile(fx_outer2) and path.isfile(fy_outer2)):
         fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
         
-        with open(fx_outer, 'r') as x_outer, open(fx_outer2, 'r') as x_outer2, open(fy_outer, 'r') as y_outer, open(fy_outer2, 'r') as y_outer2:
-            linesx_outer = x_outer.readlines()
-            xmin_outer = [float(line.split()[0]) for line in linesx_outer]
-            xmax_outer = [float(line.split()[1]) for line in linesx_outer]
+        with open(fx_outer2, 'r') as x_outer2, open(fy_outer2, 'r') as y_outer2:
             linesx_outer2 = x_outer2.readlines()
             xmin_outer2 = [float(line.split()[0]) for line in linesx_outer2]
             xmax_outer2 = [float(line.split()[1]) for line in linesx_outer2]
-            linesy_outer = y_outer.readlines()
-            ymin_outer = [float(line.split()[0]) for line in linesy_outer]
-            ymax_outer = [float(line.split()[1]) for line in linesy_outer]
             linesy_outer2 = y_outer2.readlines()
             ymin_outer2 = [float(line.split()[0]) for line in linesy_outer2]
             ymax_outer2 = [float(line.split()[1]) for line in linesy_outer2]
 
             for xo1,xo2,yo1,yo2 in zip(xmin_outer2,xmax_outer2,ymin_outer2,ymax_outer2):
-              #  car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1,  color='green', ec='black', linewidth=2, alpha=0.2)
-           #     ax.add_patch(car_fig)
                 car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1, label='over-approximation', color='green', ec='black', linewidth=2, alpha=0.05)
                 ax.add_patch(car_fig)
         
           
-        
-         
         if (path.isfile(fxy_skewed_outer)):
             with open(fxy_skewed_outer, 'r') as xy_skewed_outer:
                 linesxy_skewed_outer = xy_skewed_outer.readlines()
@@ -123,8 +111,10 @@ def print_discrete_xy(varx,vary):
             linesy_inner = y_inner.readlines()
             ymin_inner = [float(line.split()[0]) for line in linesy_inner]
             ymax_inner = [float(line.split()[1]) for line in linesy_inner]
-            plt.plot([xmin_inner, xmax_inner], [0,0], color='red', linestyle='--', linewidth=3)
-            plt.plot([0,0], [ymin_inner, ymax_inner], color='red', linestyle='--', linewidth=3, label='projected under-approx')
+            ycenter = [(ymax+ymin)/2.0 for ymin,ymax in zip(ymin_inner,ymax_inner)]
+            xcenter = [(xmax+xmin)/2.0 for xmin,xmax in zip(xmin_inner,xmax_inner)]
+            plt.plot([xmin_inner, xmax_inner], [ycenter,ycenter], color='red', linestyle='--', linewidth=3)
+            plt.plot([xcenter,xcenter], [ymin_inner, ymax_inner], color='red', linestyle='--', linewidth=3, label='projected under-approx')
 
         if (path.isfile(fxy_skewed_inner)):
             with open(fxy_skewed_inner, 'r') as xy_skewed_inner:
@@ -185,13 +175,13 @@ def print_discrete_xy(varx,vary):
 
 
 
-# In[77]:
+# In[ ]:
 
 
 print_discrete_xy("x1","x2")
 
 
-# In[78]:
+# In[ ]:
 
 
 prop1 = dict(arrowstyle="-|>,head_width=0.4,head_length=0.8",facecolor='red',
