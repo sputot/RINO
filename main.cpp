@@ -89,7 +89,10 @@ int main(int argc, char* argv[])
     /*******************************************************************************************/
    
     if (systype == 2) {
-        range_discrete_system();
+        if (syschoice == 15)
+            discrete_dynamical();
+        else
+            function_range();
         return 0;
     }
     

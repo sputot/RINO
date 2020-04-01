@@ -82,6 +82,11 @@ public:
         else if (syschoice == 14) {
             z[0] = x[0]*x[0]*x[0] + x[0]*x[0] + x[0] + 1.0;
         }
+        else if (syschoice == 15) {  // test model parallelotope bundles HSCC 2016 p 303
+            double Delta = 0.01;
+            z[0] = x[0] + (0.5*x[0]*x[0] - 0.5*x[1]*x[1])*Delta;
+            z[1] = x[1] + 2.0*x[0]*x[1]*Delta;
+        }
         return z;
     }
 };
@@ -121,43 +126,54 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 
 extern int nb_discr, nb_discr1, nb_discr2;
 
-void range_discrete_system(void);
+vector<interval> init_discrete_system(void);
+void discrete_dynamical(void);
+void function_range(void);
 
 void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);
 
-void evaluate_projections(vector<interval> &z0,  vector<vector<interval>> &Jacf);
-void evaluate_projections_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
-void evaluate_projections_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
-void evaluate_projections_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
-void evaluate_projections_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
-void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
+void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<vector<interval>> &Jacf);
+void evaluate_projections_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
+void evaluate_projections_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff);
+void evaluate_projections_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff);
+void evaluate_projections_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff);
+void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
 
-vector<interval> evaluate_outerrange(vector<interval> &z0,  vector<vector<interval>> &Jacf);
-vector<interval> evaluate_outerrange_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
-interval evaluate_outerrange_x_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
+vector<interval> evaluate_outerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf);
+vector<interval> evaluate_outerrange_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf);
+interval evaluate_outerrange_x_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int i);
 //interval evaluate_outerrange_x_subdiv_discretize_old(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
-interval evaluate_outerrange_x_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int i);
-vector<interval> evaluate_outerrange_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff);
-vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
+interval evaluate_outerrange_x_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int i);
+vector<interval> evaluate_outerrange_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff);
+vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAff);
 
 // for only one component: used for joint range
-interval evaluate_innerrange_x_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
+interval evaluate_innerrange_x_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 //interval evaluate_innerrange_x_subdiv_discretize_old(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
-interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
-vector<interval> evaluate_innerrange(vector<interval> &z0,  vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
-vector<interval> evaluate_innerrange_order2(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
-vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified);
-vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAfff, bool maximal, vector<int> &exist_quantified);
+interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
+vector<interval> evaluate_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAfff, bool maximal, vector<int> &exist_quantified);
 
-void joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf,  vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
-void joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
-void joint_ranges_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
-void joint_ranges_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
+void joint_ranges(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf,  vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
+void joint_ranges_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
+void joint_ranges_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
+void joint_ranges_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
 
-void preconditioned_joint_ranges(vector<interval> &z0,  vector<vector<interval>> &Jacf, vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
-void preconditioned_joint_ranges_subdiv(vector<interval> &z0,  vector<vector<AAF>> &JacAfff, int varx, int vary);
-void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
-void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0,  vector<vector<AAF>> &JacAff, int varx, int vary);
+void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
+void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAfff, int varx, int vary);
+void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
+void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
 
-void twodim_discretization_by_quadrant();
+void twodim_discretization_by_quadrant(vector<interval> &radx);
+
+// estimation of exact image by sampling
+void estimate_range(DiscreteFunc &f, vector<interval> &xinit);
+
+
+// for discrete-time dynamical systems
+void print_projections(vector<interval> &z_inner, vector<interval> &z_outer);
+void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int varx, int vary);
+
 #endif
