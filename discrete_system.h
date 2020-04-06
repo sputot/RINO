@@ -82,10 +82,39 @@ public:
         else if (syschoice == 14) {
             z[0] = x[0]*x[0]*x[0] + x[0]*x[0] + x[0] + 1.0;
         }
-        else if (syschoice == 15) {  // test model parallelotope bundles HSCC 2016 p 303
-            double Delta = 0.01;
+        else if (syschoice == 15) {  // test model - parallelotope bundles HSCC 2016 p 303
+            double Delta = 0.01; // 0.01;
             z[0] = x[0] + (0.5*x[0]*x[0] - 0.5*x[1]*x[1])*Delta;
             z[1] = x[1] + 2.0*x[0]*x[1]*Delta;
+        }
+        else if (syschoice == 16) {  // SIR epidemic model  - parallelotope bundles HSCC 2016 p 303
+            double beta = 0.34;
+            double Delta = 0.5;
+            double gamma = 0.05;
+            z[0] = x[0] * (1.0 - beta*x[1]*Delta);
+            z[1] = x[1] * (1.0 + (beta*x[0]-gamma)*Delta);
+            z[2] = x[2] + gamma*x[1]*Delta;
+        }
+        else if (syschoice == 17) {  // Honeybees model  - parallelotope bundles HSCC 2016 p 303-304
+            double beta1 = 0.001;
+            double beta2 = 0.001;
+            double gamma = 0.3;
+            double delta = 0.5;
+            double alpha = 0.7;
+            double Delta = 0.01;
+            z[0] = x[0] * (1.0 - (beta1*x[1] + beta2*x[2]) * Delta);
+            z[1] = x[1] * (1.0 + (beta1*x[0] - gamma + delta*beta1*x[3] + alpha*beta1*x[4]) * Delta);
+            z[2] = x[2] * (1.0 + (beta2*x[0] - gamma + delta*beta2*x[4] + alpha*beta2*x[3]) * Delta);
+            z[3] = x[3] * (1.0 - (delta*beta1*x[1] + alpha*beta2*x[2]) * Delta) + gamma*x[1]*Delta;
+            z[4] = x[4] * (1.0 - (delta*beta2*x[2] + alpha*beta1*x[1]) * Delta) + gamma*x[2]*Delta;
+        }
+        else if (syschoice == 18) {  // SIR epidemic model  - Parameter Synthesis for Polynomial Biological Models HSCC 2014 p 239
+            double beta = 0.34;       // identical to 16 except parameters - gamma is now uncertain (x[3])
+            double h = 1.0;
+            //            double gamma : x[3] = interval(0.05,0.0675);
+            z[0] = x[0] * (1.0 - x[3]*x[1]*h);
+            z[1] = x[1] * (1.0 + (beta*x[0]-x[3])*h);
+            z[2] = x[2] + x[3]*x[1]*h;
         }
         return z;
     }
@@ -126,8 +155,9 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 
 extern int nb_discr, nb_discr1, nb_discr2;
 
-vector<interval> init_discrete_system(void);
+vector<interval> init_discrete_system(int &nb_steps);
 void discrete_dynamical(void);
+void discrete_dynamical_preconditioned(void);
 void function_range(void);
 
 void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);
@@ -152,6 +182,7 @@ interval evaluate_innerrange_x_subdiv(vector<interval> &z0, vector<interval> &ra
 //interval evaluate_innerrange_x_subdiv_discretize_old(vector<interval> &z0,  vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 vector<interval> evaluate_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_precond_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<double>> C, int varx, int vary, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAfff, bool maximal, vector<int> &exist_quantified);
@@ -160,6 +191,9 @@ void joint_ranges(vector<interval> &z0, vector<interval> &radx, vector<vector<in
 void joint_ranges_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
 void joint_ranges_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
 void joint_ranges_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
+
+void print_pi(vector<int> &exist_quantified);
+vector<vector<double>> print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, ofstream &outFile);
 
 void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
 void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAfff, int varx, int vary);
@@ -170,6 +204,7 @@ void twodim_discretization_by_quadrant(vector<interval> &radx);
 
 // estimation of exact image by sampling
 void estimate_range(DiscreteFunc &f, vector<interval> &xinit);
+void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit);
 
 
 // for discrete-time dynamical systems
