@@ -178,10 +178,10 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 extern int nb_discr, nb_discr1, nb_discr2;
 
 vector<interval> init_discrete_system(int &nb_steps);
-void discrete_dynamical(int &nb_steps);
+void discrete_dynamical(int &nb_steps, int order);
 void discrete_dynamical_method2(int &nb_steps);
 void discrete_dynamical_method2_preconditioned(int &nb_steps);
-void discrete_dynamical_preconditioned(int &nb_steps);
+void discrete_dynamical_preconditioned(int &nb_steps, int order);
 void discrete_dynamical_preconditioned_3d(int &nb_steps);
 void function_range(void);
 
@@ -210,6 +210,7 @@ vector<interval> evaluate_innerrange(vector<interval> &z0, vector<interval> &rad
 vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_precond_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<double>> C, int varx, int vary, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
+vector<interval> evaluate_innerrange_order2_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<vector<AAF>>> &HessAfff, bool maximal, vector<int> &exist_quantified);
 
@@ -219,7 +220,7 @@ void joint_ranges_subdiv_discretize(vector<interval> &z0, vector<interval> &radx
 void joint_ranges_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, int varx, int vary);
 
 void print_pi(vector<int> &exist_quantified);
-vector<vector<double>> print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, ofstream &outFile);
+vector<vector<double>> print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, int step, ofstream &outFile);
 
 void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<interval>> &Jacf0, vector<vector<vector<interval>>> &Hessf, int varx, int vary);
 void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAfff, int varx, int vary);
@@ -235,6 +236,6 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit);
 
 // for discrete-time dynamical systems
 void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step);
-void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int varx, int vary);
+void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int varx, int vary, int step);
 
 #endif
