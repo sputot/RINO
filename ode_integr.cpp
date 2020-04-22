@@ -389,11 +389,11 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<sysdim; k++) {
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
-      //          cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
+       //         cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k] << endl;
             }
             for (int k=0 ; k<inputsdim ; k++) {
                 Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_x[sysdim+k].x[j][i].d(0);
-     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
+     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] << endl;
             }
         }
         
@@ -664,49 +664,54 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     double tnp1 = tn + tau;
     
     
-    cout << "t=" << tnp1 << endl;
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
-        cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
-    }
-      cout << endl;
-    if (uncontrolled > 0)
+    if (print_debug)
     {
+        cout << "t=" << tnp1 << endl;
+        
         for (int i=0 ; i<sysdim ; i++) {
-            cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
-            cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+            cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+            cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
         }
         cout << endl;
-    }
-    if (controlled > 0 || uncontrolled > 0)
-    {
-        for (int i=0 ; i<sysdim ; i++) {
-            cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-            cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+        if (uncontrolled > 0)
+        {
+            for (int i=0 ; i<sysdim ; i++) {
+                cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+                cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+            }
+            cout << endl;
         }
-        cout << endl;
+        if (controlled > 0 || uncontrolled > 0)
+        {
+            for (int i=0 ; i<sysdim ; i++) {
+                cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
+                cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+            }
+            cout << endl;
+        }
     }
-    
   
     
     for (int i=0 ; i<sysdim ; i++) {
-        if (nb_subdiv_init ==1)
+        if (print_debug)
         {
-            outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
-            outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
+            if (nb_subdiv_init ==1)
+            {
+                outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
+                outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
+            }
+            if (uncontrolled > 0) {
+                outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
+                outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
+            }
+            if (controlled > 0 || uncontrolled > 0) {
+                outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
+                outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
+            }
+            
+            outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
+            //    outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
         }
-        if (uncontrolled > 0) {
-            outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
-            outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-        }
-        if (controlled > 0 || uncontrolled > 0) {
-            outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
-            outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
-        }
-        
-        outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-    //    outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
         
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
@@ -719,14 +724,17 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     }
     current_iteration++;
     
-    minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
-    for (int i=1 ; i<sysdim ; i++) {
-        aux = (sup(Xinner[i])-inf(Xinner[i]))/(sup(Xouter[i])-inf(Xouter[i]));
-        if (minwidth_ratio > aux)
-            minwidth_ratio = aux;
+    if (print_debug)
+    {
+        minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
+        for (int i=1 ; i<sysdim ; i++) {
+            aux = (sup(Xinner[i])-inf(Xinner[i]))/(sup(Xouter[i])-inf(Xouter[i]));
+            if (minwidth_ratio > aux)
+                minwidth_ratio = aux;
+        }
+        if (tnp1 != 0)
+            outFile_width_ratio << tnp1 << "\t" << minwidth_ratio << endl;
     }
-    if (tnp1 != 0)
-    outFile_width_ratio << tnp1 << "\t" << minwidth_ratio << endl;
 }
 
 
@@ -758,11 +766,21 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
         InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        cout << "without quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+        
+        InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        cout << "with quadrature: ";
+        cout << "Xouter=" << Xouter;
+        cout << "Xinner=" << Xinner;
+       
       //  InnerOuter(Xinner,Xouter,TMcenter.xp1,TMJac.Jp1,eps);
      //   for (int i = 0 ; i<sysdim ; i++)
      //   cout << "before intersect: Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
         intersectViVi(Xouter,TMJac.xp1);
-    
+        
+        cout << "with intersection with direct solution: ";
         print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
         
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);

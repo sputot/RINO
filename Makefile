@@ -11,9 +11,9 @@ CXXFLAGS = -ggdb -Wall -frounding-math -DMAXORDER=$(MAX_ORDER) -I. -I$(FILIBHOME
 
 LDFLAGS  +=  -L/usr/local/lib -L$(CURRENT_DIR)/aaflib-0.1 -L$(FILIBHOME)/libprim/.libs/
 
-SOURCES_utils = utils.cpp matrix.cpp inner.cpp ode_def.cpp ode_integr.cpp dde_integr.cpp
+SOURCES_utils = utils.cpp matrix.cpp inner.cpp ode_def.cpp ode_integr.cpp dde_integr.cpp discrete_system.cpp
 
-SOURCES.h = filib_interval.h fadbad_aa.h utils.h matrix.h inner.h ode_def.h ode_integr.h dde_integr.h 
+SOURCES.h = filib_interval.h fadbad_aa.h utils.h matrix.h inner.h ode_def.h ode_integr.h dde_integr.h  discrete_system.h
 
 SOURCES = $(SOURCES_utils) main.cpp
 

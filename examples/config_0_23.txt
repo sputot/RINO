@@ -1,0 +1,11 @@
+# pursuer-evader example Mitchell
+
+system-dimension = 3
+inputs-dimension = 2
+time-horizon = 1.
+sampling-time = 0.1
+order = 3
+initial-values = [-5,5] [-5,5] [-1,1]
+inputs = ([-1.0,1.0],1) ([-1.0,1.0],1)
+uncontrolled = 2
+variable =

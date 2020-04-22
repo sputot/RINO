@@ -49,7 +49,7 @@ extern vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
 extern int nb_subdiv_init; // number of subdivisiions
-extern int component_to_subdiv;
+extern int component_to_subdiv, component_to_subdiv2;
 
 extern double recovering; // percentage of recovering between subdivisions
 extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
@@ -66,6 +66,9 @@ extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controll
 //extern vector<bool> is_variable; // for each parameter, constant or variable
 
 extern bool refined_mean_value;
+
+extern bool print_debug;
+
 
 void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
 
@@ -173,6 +176,21 @@ public:
               yp[3] = -(-(g+Cv*y[2]/m) + (param_inputs[0]+param_inputs[1])/m*cos(y[4]));     // vy
               yp[4] = -y[5];     // phi
               yp[5] = -(-Cphi/Iyy*y[5] + l/Iyy*(param_inputs[1]-param_inputs[0]));     // omega
+          }
+          else if (syschoice == 99)  // acrobatic quadcopter with m et Iyy as disturbances
+          {
+              double Cv = 0.25;     // transitional drag
+              double Cphi = 0.02255; // rotational drag
+              double g = 9.81;
+              // double m = 1.25;      // mass : param_inputs[2]
+              double l = 0.5;       // length of quadrotor"s center to an edge
+              // double Iyy = 0.03;    // moment of inertia : param_inputs[3]
+              yp[0] = -y[1];     // px
+              yp[1] = -(-Cv/param_inputs[2]*y[1] - (param_inputs[0]+param_inputs[1])/param_inputs[2]*sin(y[4]));     // vx
+              yp[2] = -y[3];     // py
+              yp[3] = -(-(g+Cv*y[2]/param_inputs[2]) + (param_inputs[0]+param_inputs[1])/param_inputs[2]*cos(y[4]));     // vy
+              yp[4] = -y[5];     // phi
+              yp[5] = -(-Cphi/param_inputs[3]*y[5] + l/param_inputs[3]*(param_inputs[1]-param_inputs[0]));     // omega
           }
           else if (syschoice == 10)  // 10-D near-hover quadrotor
           {
@@ -380,6 +398,53 @@ public:
          else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
              yp[0] = 2 + 2*(param_inputs[0]+param_inputs[0]*param_inputs[0])*(1-y[1]) + y[1];
              yp[1] = 1; // time
+         }
+         else if (syschoice == 23) {   // pursuer-evader example Mitchell
+             double v = 5.0;  // linear velocity
+             // param_inputs[0] : angular velocity a of the evader (control)
+             // param_inputs[1] : angular velocity b of the pursuer (disturbance)
+             yp[0] = -v + v*cos(y[2]) + param_inputs[0]*y[1];
+             yp[1] = v*sin(y[2]) - param_inputs[0]*y[1];
+             yp[2] = param_inputs[1] - param_inputs[0];
+         }
+         else if (syschoice == 24) { // [Franzle et al.]
+             yp[0] = -(-0.5*y[0] - (0.5+param_inputs[0])*y[1] + 0.5);
+             yp[1] = - (-0.5*y[1] + 1.0);
+         }
+         else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+             yp[0] = y[1];
+             yp[1] = - (0.4*y[0] + 5.0*(y[0]*y[0] - (param_inputs[0] + 0.2))*y[1]);
+         }
+         else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+             yp[0] = -(-0.4*y[0] + 5.0*y[2]*y[3] + param_inputs[0]);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y[2]*y[3]);
+             yp[3] = -(5*y[4]*y[5] - 5.0*y[2]*y[3]);
+             yp[4] = -(-5*y[4]*y[5] + 5.0*y[2]*y[3]);
+             yp[5] = -(0.5*y[6] - 5.0*y[4]*y[5]);
+             yp[6] = -(-0.5*y[6] + 5.0*y[4]*y[5]);
+         }
+         else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+             C y2y3 = y[2]*y[3];
+             C y4y5 = y[4]*y[5];
+             yp[0] = -(-0.4*y[0] + 5.0*y2y3 + param_inputs[0]);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y2y3);
+             yp[3] = -(5*y4y5 - 5.0*y2y3);
+             yp[4] = -(-5*y4y5 + 5.0*y2y3);
+             yp[5] = -(0.5*y[6] - 5.0*y4y5);
+             yp[6] = -(-0.5*y[6] + 5.0*y4y5);
+         }
+         else if (syschoice == 28) { // [Franzle et al.] 7-d biological system without disturbance
+             C y2y3 = y[2]*y[3];
+             C y4y5 = y[4]*y[5];
+             yp[0] = -(-0.4*y[0] + 5.0*y2y3);
+             yp[1] = -(0.4*y[0] - y[1]);
+             yp[2] = -(y[1] - 5.0*y2y3);
+             yp[3] = -(5*y4y5 - 5.0*y2y3);
+             yp[4] = -(-5*y4y5 + 5.0*y2y3);
+             yp[5] = -(0.5*y[6] - 5.0*y4y5);
+             yp[6] = -(-0.5*y[6] + 5.0*y4y5);
          }
     }
 };

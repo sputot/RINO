@@ -22,6 +22,7 @@
 #include "inner.h"
 #include "ode_integr.h"
 #include "dde_integr.h"
+#include "discrete_system.h"
 //#include "tinyxml2.h"
 #include <iostream>
 #include <ostream>
@@ -66,8 +67,9 @@ int main(int argc, char* argv[])
    
     /********* DEFINING SYSTEM *******************/
     // default is running example of CAV 2018 paper
-    systype = 1; // EDO = 0, DDE = 1
+    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2
     syschoice = 1;
+    
     if (argc >= 3)
     {
         systype = atoi(argv[1]);
@@ -86,6 +88,15 @@ int main(int argc, char* argv[])
     
     /*******************************************************************************************/
    
+    if (systype == 2) {
+        if (syschoice == 15)
+            discrete_dynamical();
+        else
+            function_range();
+        return 0;
+    }
+    
+    
    
     
     clock_t begin = clock();
@@ -179,6 +190,10 @@ int main(int argc, char* argv[])
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
+            for (int i=0 ; i<sysdim ; i++)
+                cout << "x[i]=" << x[i] << endl;
+            
+            
             tn = t_begin;
             print_initstats(initial_values);
             
@@ -217,7 +232,8 @@ int main(int argc, char* argv[])
     }
     
     print_finalstats(begin);
-    run_pythonscript_visualization();
+    if (print_debug)
+        run_pythonscript_visualization();
 }
 
 // printig solution from all stored results of subdivisiions
@@ -408,9 +424,25 @@ void print_initstats(vector<AAF> &x)
     
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
-            outFile_joint_inner[i][j] << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            outFile_joint_inner[i][j] << "maximal" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            if (uncontrolled > 0)
+                outFile_joint_inner[i][j] << "robust" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
+            if (uncontrolled > 0 || controlled > 0)
+                outFile_joint_inner[i][j] << "minimal"  << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
         }
     }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+                outFile_joint_inner3d[i][j][k] << "maximal"  << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                if (uncontrolled > 0)
+                    outFile_joint_inner3d[i][j][k] << "robust" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                if (uncontrolled > 0 || controlled > 0)
+                    outFile_joint_inner3d[i][j][k] << "minimal" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+            }
+        }
+    }
+    
     
     // a changer un jour pour t_begin (notamment pour DDE)?
     t_print[0] = 0;
@@ -457,10 +489,19 @@ void print_finalstats(clock_t begin)
     }
     
     for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < i-sysdim ; j++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
             outFile_joint_inner[i][j].close();
         }
     }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+            outFile_joint_inner3d[i][j][k].close();
+            }
+        }
+    }
+    
+    
     outFile_width_ratio.close();
     outFile_meanerror_outer.close();
     outFile_meanerror_inner.close();

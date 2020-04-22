@@ -48,7 +48,8 @@ vector<interval> eps;
 
 // for subdivisions of the initial domain to refine precision
 int nb_subdiv_init = 1; // number of subdivisiions
-int component_to_subdiv = 0;
+int component_to_subdiv = -1;
+int component_to_subdiv2 = -1;
 
 double recovering = 0.0; // percentage of recovering between subdivisions
 vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xouter_minimal_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xinner_minimal_print, Xexact_print; // store results of subdivision
@@ -66,7 +67,7 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 
 bool refined_mean_value;
 
-
+bool print_debug = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
 void define_system_dim(int argc, char* argv[])
@@ -124,6 +125,11 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 6;
             inputsdim = 2;
         }
+        else if (syschoice == 99)  // Acrobatic quadcopter  with m et Iyy as disturbances
+        {
+            sysdim = 6;
+            inputsdim = 4;
+        }
         else if (syschoice == 10)  // 10-D near-hover quadrotor
         {
             sysdim = 10;
@@ -172,6 +178,30 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
             sysdim = 2;
             inputsdim = 1;
+        }
+        else if (syschoice == 23) {   // pursuer-evader example Mitchell
+            sysdim = 3;
+            inputsdim = 2;
+        }
+        else if (syschoice == 24) { // [Franzle et al.]
+            sysdim = 2;
+            inputsdim = 1;
+        }
+        else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+            sysdim = 2;
+            inputsdim = 1;
+        }
+        else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+            sysdim = 7;
+            inputsdim = 1;
+        }
+        else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+            sysdim = 7;
+            inputsdim = 1;
+        }
+        else if (syschoice == 28) { // [Franzle et al.] 7-d biological system but with sharing
+            sysdim = 7;
+            inputsdim = 0;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -326,12 +356,23 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             token = strtok(NULL,space);
             token = strtok(NULL,space);
             int i = 0;
+            nb_subdiv_init = 1;
+            component_to_subdiv = -1;
+            component_to_subdiv2 = -1;
             // only one component can be subdivided for now (we keep the last if several...)
             while( token != NULL ) {
                 if (sscanf(token,"([%lf,%lf],%d)",&a,&b,&c) == 3) {
+                    if (component_to_subdiv > -1) // we already have one component to subdivide
+                    {
+                        component_to_subdiv2 = i;
+                        cout << "component "<< i << " should also be subdivided " << endl;
+                    }
+                    else
+                    {
                     nb_subdiv_init = c;
                     component_to_subdiv = i;
                     cout << "component "<< i << " should be dubdivided " << c << "times" << endl;
+                    }
                 }
                 else
                     sscanf(token,"[%lf,%lf]",&a,&b);
@@ -467,12 +508,14 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         t_begin = 0;
         if (syschoice == 1)  // running example
         {
-            tau = 0.1;
+            tau = 0.01;
             t_end = 2.;
             order = 3;
             
             initial_values[0] = interval(0.9,1);
             params[0] = 1.0;
+         //   nb_subdiv_init = 2;
+         //   component_to_subdiv = 0;
         }
         else if (syschoice == 2) // Brusselator
         {
@@ -514,8 +557,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[0] = true;
   //          is_variable[4] = true;
-           // nb_subdiv_init = 2;
-          //  component_to_subdiv = 3;
+            nb_subdiv_init = 1;
+            component_to_subdiv = 3;
+            component_to_subdiv2 = 4;
         }
         else if (syschoice == 5) // self-driving car; sysdim = 2, jacdim = 2
         {
@@ -568,7 +612,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             order = 3;
             initial_values[0] = interval(0.4,0.5);
         }
-        else if (syschoice == 9)   // acrobatic quadrotor
+        else if (syschoice == 9) // acrobatic quadrotor
         {
             tau = 0.01;
             t_end = 0.5;
@@ -579,8 +623,26 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[3] = interval(-0.1,0.1);        // vy
             initial_values[4] = interval(-0.1,0.1);     // phi
             initial_values[4] = interval(-0.1,0.1);     // omega
-            inputs[0] = interval(0,18.39375);           // T1
-            inputs[1] = interval(0,18.39375);           // T2
+            inputs[0] = interval(9,9.5125); // interval(0,18.39375);           // T1
+            inputs[1] = interval(9,9.5125); // interval(0,18.39375);           // T2
+        }
+        else if (syschoice == 99)  // acrobatic quadrotor  with m et Iyy as disturbances
+        {
+            tau = 0.01;
+            t_end = 0.5;
+            order = 4;
+            initial_values[0] = interval(-1.,1.);       // px
+            initial_values[1] = interval(-0.1,0.1);        // vx
+            initial_values[2] = interval(-1.,1.);       // py
+            initial_values[3] = interval(-0.1,0.1);        // vy
+            initial_values[4] = interval(-0.1,0.1);     // phi
+            initial_values[4] = interval(-0.1,0.1);     // omega
+            inputs[0] = interval(9,9.5125); // interval(0,18.39375);           // T1
+            inputs[1] = interval(9,9.5125); // interval(0,18.39375);           // T2
+            inputs[2] = interval(1.25,1.25);     // m
+            is_uncontrolled[2] = true;
+            inputs[3] = interval(0.03,0.03);     // Iyy
+            is_uncontrolled[3] = true; 
         }
         else if (syschoice == 10) // 10-D near-hover quadrotor
         {
@@ -751,6 +813,79 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             nb_inputs[0] = 2; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             //  nb_inputs[2] = 1; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
             // solution at t=2 is 6 + u1 - u2 (u being the piecewise constant value of param_inputs[1] on each time interval)
+        }
+        else if (syschoice == 23) {   // pursuer-evader example Mitchell
+            tau = 0.1;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-5,5);
+            initial_values[1] = interval(-5,5);
+            initial_values[2] = interval(-1,1);
+            inputs[0] = interval(-1,1.);    // angular velocity a of the evader (control)
+            inputs[1] = interval(-1,1.);    // angular velocity b of the pursuer (disturbance)
+            is_uncontrolled[1] = true;  // disturbance
+        }
+        else if (syschoice == 24) { // [Franzle et al.]
+            tau = 0.1;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.8,0.8);
+            initial_values[1] = interval(-0.8,0.8);
+            inputs[0] = interval(-0.01,0.01);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.5,0.5);
+            initial_values[1] = interval(-0.5,0.5);
+            inputs[0] = interval(-0.01,0.01);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
+            tau = 0.1;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
+            inputs[0] = interval(-0.1,0.1);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
+            inputs[0] = interval(-0.1,0.1);
+            nb_inputs[0] = 10; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
+            is_uncontrolled[0] = true;  // disturbance
+        }
+        else if (syschoice == 28) { // [Franzle et al.] 7-d biological system without disturbance
+            tau = 0.01;
+            t_end = 1;
+            order = 3;
+            initial_values[0] = interval(-0.25,0.25);
+            initial_values[1] = interval(-0.45,0.05);
+            initial_values[2] = interval(-0.25,0.25);
+            initial_values[3] = interval(-0.25,0.25);
+            initial_values[4] = interval(-0.25,0.25);
+            initial_values[5] = interval(-0.25,0.25);
+            initial_values[6] = interval(-0.25,0.25);
         }
     }
     if (systype == 1) // DDE
@@ -957,6 +1092,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         temp = initial_values[i].convert_int();
         center_initial_values[i] = mid(temp);
         eps[i] = temp-mid(temp);
+        cout << "initial_values[i] = " << initial_values[i] << endl;
     }
     for (int i=0 ; i<fullinputsdim ; i++)
     {

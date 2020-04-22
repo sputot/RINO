@@ -1,0 +1,9 @@
+system-dimension = 2
+inputs-dimension = 1
+time-horizon = 1
+sampling-time = 0.1
+order = 3
+initial-values = [-0.8,0.8] [-0.8,0.8]
+inputs = ([-0.01,0.01],10)
+uncontrolled = 1
+variable =

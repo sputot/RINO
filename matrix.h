@@ -24,15 +24,22 @@ void hull(vector<interval> &res, vector<interval> &x, vector<interval> &y);
 void hull(vector<AAF> &res, vector<AAF> &x, vector<AAF> &y);
 
 void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vector<interval>> &y);
+void multMiMi(vector<vector<AAF>> &z, vector<vector<double>> &x, vector<vector<AAF>> &y);
 void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 
 void multMiVi(vector<interval> &y, vector<vector<interval>> &A, vector<interval> &x) ;
+
+ostream& operator<<(ostream& os, const vector<vector<interval>> &M);
+ostream& operator<<(ostream& os, const vector<interval> &z);
 
 void scaleM(vector<vector<AAF>> &x, double d);
 void scaleJacfz(vector<vector<AAF>> &x, double d);
 
 void addMiMi(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
 void addJacfzJacfz(vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+
+void scalarproduct(vector<interval> &z, vector<interval> &x, vector<interval> &y);
 
 void addViVi(vector<interval> &x, vector<interval> &y);
 void addViVi(vector<AAF> &x, vector<double> &y);
@@ -45,6 +52,8 @@ void setVi(vector<interval> &x,vector<AAF> &y);
 void setVi(vector<interval> &x,vector<AAF> &y, vector<AAF> &constraints);
 
 void setId(vector<vector<AAF>> &J);
+
+vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary);
 
 #endif
 
