@@ -108,7 +108,7 @@ void multMiVi(vector<interval> &y, vector<vector<interval>> &A, vector<interval>
 }*/
 
 // produit d'une matrice (n,n) par une (n,p) -> res (n,p)
-void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y) {
+void multMiMi(vector<vector<AAF>> &z, const vector<vector<AAF>> x, const vector<vector<AAF>> y) {
     for (int i=0 ; i<z.size() ; i++) {
         for (int j=0 ; j<z[i].size(); j++) {
             z[i][j]=0;
@@ -119,7 +119,7 @@ void multMiMi(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>
 }
 
 // produit d'une matrice (n,n) par une (n,p) -> res (n,p)
-void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vector<interval>> &y) {
+void multMiMi(vector<vector<interval>> &z, const vector<vector<double>> x, const vector<vector<interval>> y) {
     for (int i=0 ; i<z.size() ; i++) {
         for (int j=0 ; j<z[i].size(); j++) {
             z[i][j]=0;
@@ -130,7 +130,7 @@ void multMiMi(vector<vector<interval>> &z, vector<vector<double>> &x, vector<vec
 }
 
 // produit d'une matrice (n,n) par une (n,p) -> res (n,p)
-void multMiMi(vector<vector<AAF>> &z, vector<vector<double>> &x, vector<vector<AAF>> &y) {
+void multMiMi(vector<vector<AAF>> &z, const  vector<vector<double>> x, const vector<vector<AAF>> y) {
     for (int i=0 ; i<z.size() ; i++) {
         for (int j=0 ; j<z[i].size(); j++) {
             z[i][j]=0;
@@ -139,6 +139,18 @@ void multMiMi(vector<vector<AAF>> &z, vector<vector<double>> &x, vector<vector<A
         }
     }
 }
+
+// produit d'une matrice (n,n) par une (n,p) -> res (n,p)
+void multMiMi(vector<vector<double>> &z, const vector<vector<double>> x, const vector<vector<double>> y) {
+    for (int i=0 ; i<z.size() ; i++) {
+        for (int j=0 ; j<z[i].size(); j++) {
+            z[i][j]=0;
+            for (int k=0 ; k<x[i].size() ; k++)
+                z[i][j] += x[i][k]*y[k][j];
+        }
+    }
+}
+
 
 ostream& operator<<(ostream& os, const vector<vector<interval>> &M)
 {

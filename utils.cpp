@@ -139,3 +139,50 @@ void open_outputfiles()
     outFile_relmeanerror_diff.open("output/relmeanerror_diff.out");
 }
 
+// print after the end of the analysis
+void print_finalstats(clock_t begin)
+{
+    clock_t end = clock();
+    // double end_time = getTime ( );
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC; //getTotalTime (start_time , end_time );
+    cout << "elpased time (sec) =" << elapsed_secs << endl;
+    
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        
+        if (uncontrolled > 0) {
+            outFile_inner_robust[i].close();
+            outFile_outer_robust[i].close();
+        }
+        if (uncontrolled > 0 || controlled > 0) {
+            outFile_inner_minimal[i].close();
+            outFile_outer_minimal[i].close();
+        }
+        outFile_outer[i].close();
+        outFile_exact[i].close();
+        outFile_inner[i].close();
+        outFile_center[i].close();
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            outFile_joint_inner[i][j].close();
+        }
+    }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+                outFile_joint_inner3d[i][j][k].close();
+            }
+        }
+    }
+    
+    
+    outFile_width_ratio.close();
+    outFile_meanerror_outer.close();
+    outFile_meanerror_inner.close();
+    outFile_meanerror_diff.close();
+    outFile_relmeanerror_outer.close();
+    outFile_relmeanerror_inner.close();
+    outFile_relmeanerror_diff.close();
+}

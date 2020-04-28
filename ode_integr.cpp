@@ -366,8 +366,8 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     if (is_variable[j]) // variable param with value always in the same range
         res[j] = odeVAR_x[sysdim+inputsdim-1].x[j][0].x();
     } */
-   // for (int j=0 ; j<sysdim; j++)
-   //     cout << "res[j]=" << res[j].convert_int() << endl;
+ //   for (int j=0 ; j<sysdim; j++)
+  //      cout << "res[j]=" << res[j].convert_int() << endl;
 }
 
 
@@ -770,14 +770,16 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;
         
-        InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+    /*    InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
         cout << "with quadrature: ";
         cout << "Xouter=" << Xouter;
-        cout << "Xinner=" << Xinner;
+        cout << "Xinner=" << Xinner; */
        
       //  InnerOuter(Xinner,Xouter,TMcenter.xp1,TMJac.Jp1,eps);
      //   for (int i = 0 ; i<sysdim ; i++)
      //   cout << "before intersect: Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+        
+        
         intersectViVi(Xouter,TMJac.xp1);
         
         cout << "with intersection with direct solution: ";

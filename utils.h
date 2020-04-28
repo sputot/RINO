@@ -36,4 +36,6 @@ extern ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer
 extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
 
+void print_finalstats(clock_t begin);
+
 #endif

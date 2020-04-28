@@ -40,7 +40,7 @@ using namespace std;
 
 //using namespace fadbad;
 
-void print_finalstats(clock_t begin);
+
 void run_pythonscript_visualization();
 
 void read_system(const char * system_filename, char *sys_name);
@@ -48,7 +48,7 @@ void read_system(const char * system_filename, char *sys_name);
 int systype; // 0 is ODE, 1 is DDE
 int syschoice; // choice of system to analyze
 
-void print_initstats(vector<AAF> &x);
+void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
 
 void print_ErrorMeasures(int current_iteration, double d0);
 void print_finalsolution(int max_it, double d0);
@@ -79,7 +79,8 @@ int main(int argc, char* argv[])
     {
         cout << "You can choose your system: " << endl;
         cout << "First argument is equation type : 0 for ODE, 1 for DDE" << endl;
-        cout << "First argument is system numbe :" << endl;
+        cout << "Second argument is system number :" << endl;
+        cout << "For discrete systems, 3rd (optional) argument is number of steps, 4th (optional) argument is order of approx (1 or 2)" << endl;
        // cout << "For ODEs: 1 for 1D running example, 2 for Brusselator, 3 for ballistic," << endl;
        // cout << "4 for linearized ballitsic, 5 for self driving car with jacdim = 2, 6 for self driving car with jacdim = 4,"<<endl;
       //  cout << "For DDEs: 1 for 1D running example, 6 for self driving car with jacdim = 2, 7 for self driving car with sysdim = 4,"<<endl;
@@ -89,10 +90,46 @@ int main(int argc, char* argv[])
     /*******************************************************************************************/
    
     if (systype == 2) {
+        int nb_steps = 1;
+        int order = 1;
+        if (argc >= 4)
+          nb_steps = atoi(argv[3]);
+        if (argc >= 5)
+            order = atoi(argv[4]);
+        
         if (syschoice == 15)
-            discrete_dynamical();
+            discrete_dynamical_preconditioned(nb_steps,order);
+        else if (syschoice == 16)
+            discrete_dynamical_method2(nb_steps);
+   //     else if (syschoice == 18)
+   //         discrete_dynamical_preconditioned(nb_steps,order);
+        else if (syschoice == 17 ||  syschoice == 21 ) {
+           discrete_dynamical_method2(nb_steps);
+         // discrete_dynamical(nb_steps,order);
+        }
+        else if (syschoice == 20 ||  syschoice == 18)
+         discrete_dynamical_method2_preconditioned(nb_steps);
+        else if (syschoice == 15 || syschoice == 18 || syschoice == 19  ||  syschoice == 16 || syschoice == 20 )
+            discrete_dynamical_preconditioned(nb_steps,order);
         else
             function_range();
+        
+ //       discrete_dynamical_preconditioned(nb_steps);
+      //  discrete_dynamical_method2(nb_steps);
+        
+     /*   if (syschoice == 15 || syschoice == 18 || syschoice == 19  ||  syschoice == 16)
+            discrete_dynamical_preconditioned(nb_steps);
+        else if (syschoice == 17)
+            discrete_dynamical_method2(nb_steps);
+    //    else if (syschoice == 16)
+     //       discrete_dynamical_preconditioned_3d(nb_steps);
+        
+            // discrete_dynamical();
+        else
+            function_range(); */
+        
+        
+        
         return 0;
     }
     
@@ -190,12 +227,20 @@ int main(int argc, char* argv[])
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
-            for (int i=0 ; i<sysdim ; i++)
-                cout << "x[i]=" << x[i] << endl;
+         //   for (int i=0 ; i<sysdim ; i++)
+         //       cout << "x[i]=" << x[i] << endl;
             
             
             tn = t_begin;
-            print_initstats(initial_values);
+            print_initstats(initial_values,param_inputs);
+            
+            vector<AAF> yp(sysdim);
+            yp[0] = -(5.0*cos(x[2].convert_int()) + param_inputs[0].convert_int());        // px' = v.cos(theta) + b1
+            yp[1] = -(5.0*sin(x[2].convert_int()) + param_inputs[1].convert_int());        // py' = v.sin(theta) + b2
+            yp[2] = -(param_inputs[3] + param_inputs[2]);    // theta' = a + b3
+            for (int i=0 ; i<sysdim ; i++)
+                cout << "yp[i]=" <<yp[i].convert_int() << " ";
+            cout << endl;
             
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
@@ -392,7 +437,7 @@ void run_pythonscript_visualization()
 
 
 
-void print_initstats(vector<AAF> &x)
+void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
 {
     interval range_x;
     
@@ -448,66 +493,23 @@ void print_initstats(vector<AAF> &x)
     t_print[0] = 0;
     
     
-    cout << "printing at t=0 : x=" << endl;
+    cout << "At t=0 :" << endl;
     for (int i=0 ; i<sysdim ; i++)
-        cout << "x[" << i <<"]=" << x[i] << "\t";
+        cout << "x[" << i <<"]=" << x[i].convert_int() << "\t";
     cout << endl;
+    for (int i=0 ; i<fullinputsdim ; i++)
+        cout << "param_inputs[" << i <<"]=" << param_inputs[i].convert_int() << "\t";
+    cout << endl;
+    /*
     cout << "x0=" << endl;
     for (int i=0 ; i<sysdim ; i++)
         cout << "x0[" << i <<"]=" << mid(x[i].convert_int()) << "\t";
     cout << endl;
-    
+    */
     
 }
 
 
 
 
-// print after the end of the analysis
-void print_finalstats(clock_t begin)
-{
-    clock_t end = clock();
-    // double end_time = getTime ( );
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC; //getTotalTime (start_time , end_time );
-    cout << "elpased time (sec) =" << elapsed_secs << endl;
-    
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        
-        if (uncontrolled > 0) {
-            outFile_inner_robust[i].close();
-            outFile_outer_robust[i].close();
-        }
-        if (uncontrolled > 0 || controlled > 0) {
-            outFile_inner_minimal[i].close();
-            outFile_outer_minimal[i].close();
-        }
-        outFile_outer[i].close();
-        outFile_exact[i].close();
-        outFile_inner[i].close();
-        outFile_center[i].close();
-    }
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            outFile_joint_inner[i][j].close();
-        }
-    }
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            for (int k=j+1 ; k < sysdim ; k++) {
-            outFile_joint_inner3d[i][j][k].close();
-            }
-        }
-    }
-    
-    
-    outFile_width_ratio.close();
-    outFile_meanerror_outer.close();
-    outFile_meanerror_inner.close();
-    outFile_meanerror_diff.close();
-    outFile_relmeanerror_outer.close();
-    outFile_relmeanerror_inner.close();
-    outFile_relmeanerror_diff.close();
-}
 
