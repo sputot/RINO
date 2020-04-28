@@ -1,0 +1,11 @@
+# 6D acrobatic quadcopter
+
+system-dimension = 6
+inputs-dimension = 4
+time-horizon = 0.5
+sampling-time = 0.01
+order = 4
+initial-values = [-1.,1.] [-0.1,0.1] [-1.,1.] [-0.1,0.1] [-0.1,0.1] [-0.1,0.1]
+inputs = ([0,18.39375],1) ([0,18.39375],1) ([1.25,1.25],1) ([0.03,0.03],1)
+uncontrolled = 3 4
+variable =

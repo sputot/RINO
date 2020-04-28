@@ -1,0 +1,57 @@
+******* Running RINO regression on ODE example no 1 **************
+Execution time for RINO: 134 milliseconds
+No change when running RINO on 0 1
+******* Running RINO regression on ODE example no 2 **************
+Execution time for RINO: 2345 milliseconds
+No change when running RINO on 0 2
+******* Running RINO regression on ODE example no 3 **************
+Execution time for RINO: 582 milliseconds
+No change when running RINO on 0 3
+******* Running RINO regression on ODE example no 4 **************
+Execution time for RINO: 364 milliseconds
+No change when running RINO on 0 4
+******* Running RINO regression on ODE example no 5 **************
+Execution time for RINO: 289 milliseconds
+No change when running RINO on 0 5
+******* Running RINO regression on ODE example no 6 **************
+Execution time for RINO: 1845 milliseconds
+No change when running RINO on 0 6
+******* Running RINO regression on ODE example no 7 **************
+Execution time for RINO: 2045 milliseconds
+No change when running RINO on 0 7
+******* Running RINO regression on ODE example no 18 **************
+Execution time for RINO: 125181 milliseconds
+No change when running RINO on 0 18
+******* Running RINO regression on DDE example no 1 **************
+Execution time for RINO: 168 milliseconds
+No change when running RINO on 1 1
+******* Running RINO regression on DDE example no 2 **************
+Execution time for RINO: 593 milliseconds
+No change when running RINO on 1 2
+******* Running RINO regression on DDE example no 3 **************
+Execution time for RINO: 276 milliseconds
+No change when running RINO on 1 3
+******* Running RINO regression on DDE example no 4 **************
+Execution time for RINO: 143 milliseconds
+No change when running RINO on 1 4
+******* Running RINO regression on DDE example no 5 **************
+Execution time for RINO: 167 milliseconds
+No change when running RINO on 1 5
+******* Running RINO regression on DDE example no 6 **************
+Execution time for RINO: 703 milliseconds
+No change when running RINO on 1 6
+******* Running RINO regression on DDE example no 7 **************
+Execution time for RINO: 735 milliseconds
+No change when running RINO on 1 7
+******* Running RINO regression on DDE example no 8 **************
+Execution time for RINO: 529 milliseconds
+No change when running RINO on 1 8
+******* Running RINO regression on DDE example no 9 **************
+Execution time for RINO: 144 milliseconds
+No change when running RINO on 1 9
+******* Running RINO regression on DDE example no 10 **************
+Execution time for RINO: 2533 milliseconds
+No change when running RINO on 1 10
+******* Running RINO regression on DDE example no 11 **************
+Execution time for RINO: 8540 milliseconds
+No change when running RINO on 1 11

@@ -1,0 +1,25 @@
+******* Running RINO regression on ODE example no 1 **************
+Execution time for RINO: 132 milliseconds
+2	nan	nan
+5.02	0.985313	0.988983
+/Users/sylvie/RINO/output/x1center.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1center.out differ
+2	nan	nan
+5.02	0.986582	0.987715
+/Users/sylvie/RINO/output/x1inner.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1inner.out differ
+2	nan	nan
+5.02	nan	nan
+/Users/sylvie/RINO/output/x1inner_minimal.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1inner_minimal.out differ
+2	0	0
+5.02	nan	nan
+/Users/sylvie/RINO/output/x1inner_robust.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1inner_robust.out differ
+2	nan	nan
+5.02	0.970156	1.00414
+/Users/sylvie/RINO/output/x1outer.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1outer.out differ
+2	nan	nan
+5.02	0.984189	0.990107
+/Users/sylvie/RINO/output/x1outer_minimal.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1outer_minimal.out differ
+2	0	0
+5.02	0.975019	0.999277
+/Users/sylvie/RINO/output/x1outer_robust.out and /Users/sylvie/RINO_NONREGRESSION/RINO/output/x1outer_robust.out differ
+Warning: results changed when running RINO on 0 1
+******* Running RINO regression on ODE example no 2 **************

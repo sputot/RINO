@@ -1,0 +1,32 @@
+controlled=1 uncontrolled=0
+printing at t=0 : x=
+x[0]=-------------
+Length = 1
+v0     = 0.05
+e1 -> 0.05
+-------------
+	x[1]=-------------
+Length = 1
+v0     = 0.05
+e2 -> 0.05
+-------------
+	
+x0=
+x0[0]=0.05	x0[1]=0.05	
+t=1
+Xouter_maximal[0]=[-0.00536, 0.111]	Xinner_maximal[0]=[0.00265, 0.102]	Xouter_maximal[1]=[-0, 0.1]	Xinner_maximal[1]=[0, 0.1]	
+Xouter_minimal[0]=[-0.00272, 0.108]	Xinner_minimal[0]=[0.00823, 0.0969]	Xouter_minimal[1]=[ EMPTY ]	Xinner_minimal[1]=[ EMPTY ]	
+t=2
+Xouter_maximal[0]=[-0.0114, 0.122]	Xinner_maximal[0]=[0.00557, 0.105]	Xouter_maximal[1]=[-0, 0.1]	Xinner_maximal[1]=[0, 0.1]	
+Xouter_minimal[0]=[-0.00586, 0.116]	Xinner_minimal[0]=[0.0179, 0.0926]	Xouter_minimal[1]=[ EMPTY ]	Xinner_minimal[1]=[ EMPTY ]	
+NO HOLE when joining the inner-approx tubeselpased time (sec) =0.003999
+......
+Result files are in the output directory
+Visualize them with by : cd GUI; python3 Visu_output.py ; cd ..
+The python script will save files as png files (in same directory output)
+-0-1-
+all
+cd GUI; python3 Visu_output.py --interactive=0 --printvar=all; cd ..
+Visu_output.py
+--interactive=0
+--printvar=all
