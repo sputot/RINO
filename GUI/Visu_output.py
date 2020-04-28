@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[1292]:
+# In[11]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -16,7 +16,7 @@ import os
 
 import matplotlib.pylab as pylab
 params = {'legend.fontsize': 'x-large',
-          'figure.figsize': (15, 5),
+          'figure.figsize': (10, 5),
          'axes.labelsize': 'x-large',
          'axes.titlesize':'x-large',
          'xtick.labelsize':'x-large',
@@ -51,14 +51,15 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[1293]:
+# In[12]:
 
 
 width_in_inches = 12
 height_in_inches = 9
 dots_per_inch = 100
 #fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
-from matplotlib.patches import Rectangle
+from matplotlib.patches import Rectangle, Polygon
+from matplotlib.collections import PatchCollection
 import os.path
 from os import path
 
@@ -92,12 +93,23 @@ def print_xy(varx,vary):
                 xi2 = float(line.split()[3])
                 yi1 = float(line.split()[4])
                 yi2 = float(line.split()[5])
+                if re.match((line.split()[0]),'maxskew') or re.match((line.split()[0]),'minskew')  or re.match((line.split()[0]),'robskew'):
+                    xi3 = float(line.split()[6])
+                    yi3 = float(line.split()[7])
+                    xi4 = float(line.split()[8])
+                    yi4 = float(line.split()[9])
                 if re.match((line.split()[0]),'maximal'):
                     car_fig = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='blue',alpha=0.5,zorder=2)
                 if re.match((line.split()[0]),'robust'):
                     car_fig = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='orange',alpha=0.5,zorder=3)
                 if re.match((line.split()[0]),'minimal'):
                     car_fig = Rectangle([xi1,yi1],xi2-xi1,yi2-yi1, color='red',alpha=0.5,zorder=4)
+                if re.match((line.split()[0]),'maxskew'):    
+                    car_fig = Polygon([(xi1,xi2), (yi1,yi2), (xi3,yi3), (xi4,yi4)], color='blue',alpha=0.5,zorder=2)
+                if re.match((line.split()[0]),'robskew'):    
+                    car_fig = Polygon([(xi1,xi2), (yi1,yi2), (xi3,yi3), (xi4,yi4)], color='orange',alpha=0.5,zorder=2)
+                if re.match((line.split()[0]),'minskew'):    
+                    car_fig = Polygon([(xi1,xi2), (yi1,yi2), (xi3,yi3), (xi4,yi4)], color='red',alpha=0.5,zorder=2)
                 ax.add_patch(car_fig)
 
         ax.autoscale()
@@ -114,7 +126,7 @@ def print_xy(varx,vary):
 #print_xy_new("x1","x2")
 
 
-# In[1294]:
+# In[13]:
 
 
 # print joint ranges of variables to display
@@ -129,7 +141,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[1295]:
+# In[14]:
 
 
 width_in_inches = 12
@@ -141,7 +153,7 @@ from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
 
 
 
-def print_xyz(varx,vary,varz):
+def print_xyz(varx,vary,varz,print_robust,print_minimal):
    # fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     ax = Axes3D(fig)
@@ -249,7 +261,7 @@ def print_xyz(varx,vary,varz):
                     ax.add_collection3d(Poly3DCollection(verts, facecolors='blue', linewidths=1, edgecolors='b', label='maximal inner-approximation', alpha=.5))
                 if re.match((line.split()[0]),'robust'):  
                     ax.add_collection3d(Poly3DCollection(verts, facecolors='orange', linewidths=1, edgecolors='orange', label='robust inner-approximation', alpha=.5))
-                if re.match((line.split()[0]),'robust'):  
+                if re.match((line.split()[0]),'minimal'):  
                     ax.add_collection3d(Poly3DCollection(verts, facecolors='red', linewidths=1, edgecolors='r', label='minimal inner-approximation', alpha=.5))        
             
     ax.autoscale()
@@ -265,7 +277,7 @@ def print_xyz(varx,vary,varz):
 #print_xyz("x2","x6","x10")
 
 
-# In[1296]:
+# In[15]:
 
 
 # print joint ranges of variables to display
@@ -281,10 +293,10 @@ for f_inner in filenames_jointinner3d:
     vary_nb = '-' + vary.split( "x", 1 )[1] + '-'
     varz_nb = '-' + varz.split( "x", 1 )[1] + '-'
     if (re.match(varx_nb,variables_to_display) and re.match(vary_nb,variables_to_display) and re.match(varz_nb,variables_to_display)) or re.match("all",variables_to_display):
-        print_xyz(varx,vary,varz)
+        print_xyz(varx,vary,varz,print_robust,print_minimal)
 
 
-# In[1297]:
+# In[ ]:
 
 
 # if print_robust = True: print robust approx
@@ -373,8 +385,6 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                     if (lines_exact):
                         plt.plot(t_exact , xmax_exact, color='black', linestyle='dashed', label='exact reachable set')
                         plt.plot(t_exact ,xmin_exact, color='black', linestyle='dashed')
-                #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
-                #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                     plt.fill_between(t_inner,xmin_inner,xmax_inner, label='maximal inner approx')
                     #plt.show()
 
@@ -430,8 +440,6 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                         plt.plot(t_outer, xmax_outer, color='blue', label='minimal outer approx')
                         plt.plot(t_outer ,xmin_outer, color='blue')
                        # plt.legend(pltlines[:2], label='minimal outer approx')
-                    #   plt.fill_between(t_outer,xmin_outer,xmax_outer, label='maximal outer approx')
-                    #   plt.plot(t_inner ,xmin_inner, t_inner, xmax_inner,  color='red')
                         plt.fill_between(t_inner,xmin_inner,xmax_inner, label='minimal inner approx')
                         #plt.show()
 
@@ -512,7 +520,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[1298]:
+# In[ ]:
 
 
 print_robust = False
