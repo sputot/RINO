@@ -186,7 +186,7 @@ vector<interval> init_discrete_system(int &nb_steps)
     else if (syschoice == 16) {  // SIR epidemic model  - parallelotope bundles HSCC 2016 p 303
         res[0] = interval(0.79,0.80);
         res[1] = interval(0.19,0.20);
-        res[2] = interval(0.,0.0);
+        res[2] = interval(0.,0.1);
     //    nb_steps = 20; // 60;
     }
     else if (syschoice == 17) {  // Honeybees model  - parallelotope bundles HSCC 2016 p 303-304
@@ -228,6 +228,7 @@ vector<interval> init_discrete_system(int &nb_steps)
 
 
 // iterate function range by computing joint range as input of next iterate
+// a priori no longer used => rather use discrete_dynamical_preconditioned
 // order 1 (Mean-value) or order 2 (2nd order Taylor model)
 void discrete_dynamical(int &nb_steps, int order) {
     
@@ -790,7 +791,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
     vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer;
     
     DiscreteFunc f;
-    FDiff FFunc;
+   // FDiff FFunc;
     
     open_outputfiles();
     
@@ -880,17 +881,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
                 Jacf_o[i][j] = z_o[i].d(j).convert_int(); //JacAff_o[i][j].convert_int();
         
         
-        // x0 = A x0
-        interval tempi = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary];
-        x0_i[vary] = A_i[vary][vary]*x0_i[vary] + A_i[vary][varx]*x0_i[varx];
-        x0_i[varx] = tempi;
-        
-        tempi = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary];
-        x0_o[vary] = A_o[vary][vary]*x0_o[vary] + A_o[vary][varx]*x0_o[varx];
-        x0_o[varx] = tempi;
-        
-        z0_o = f(x0_o);
-        z0_i = f(x0_i);
+       
         
         if (order == 2)
         {
@@ -914,7 +905,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
                     dfdx0_o[i][j]=z0ff_o[i].d(j);
             
             
-            zf0_i = FFunc(dfdx0_i,x0_i);
+           // zf0_i = FFunc(dfdx0_i,x0_i);
             
             for (int i=0; i < jacdim ; i++) {
                 x0ff_i[i] = x0_i[i];
@@ -970,6 +961,17 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
             }
         }
         
+        // x0 = A x0
+        interval tempi = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary];
+        x0_i[vary] = A_i[vary][vary]*x0_i[vary] + A_i[vary][varx]*x0_i[varx];
+        x0_i[varx] = tempi;
+        
+        tempi = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary];
+        x0_o[vary] = A_o[vary][vary]*x0_o[vary] + A_o[vary][varx]*x0_o[varx];
+        x0_o[varx] = tempi;
+        
+        z0_o = f(x0_o);
+        z0_i = f(x0_i);
         
         /*********************************** Evaluation ***********************************/
         
@@ -1094,7 +1096,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
             
             if (order == 2) {
                 // Cdfdx0 = C * dfdx0
-                cout << "dfdx0_o=" << dfdx0_o;
+           //     cout << "dfdx0_o=" << dfdx0_o;
                 multMiMi(Cdfdx0_o,C_o,dfdx0_o);
           //      cout << "Cdfdx0_o=" << Cdfdx0_o;
           //      cout << "dfdx0_i=" << dfdx0_i;
@@ -1163,34 +1165,51 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
 }
 
 
-// old version - to remove
-// same as discrete_dynamical but with skew box for joint range
-void discrete_dynamical_preconditioned(int &nb_steps) {
+// same as discrete_dynamical (algorithm 1) but with 3D skew box for joint range (same as discrete_dynamical_preconditioned but in 3D in place of 2D)
+void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
     
     vector<interval> res(jacdim);
     
-    //    int nb_steps;
+    // int nb_steps;
     
     vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
     
-    
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
-    //vector<AAF> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
+    //  vector<AAF> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
     vector<vector<AAF>> JacAff_o(sysdim,vector<AAF>(jacdim)), JacAff_i(sysdim,vector<AAF>(jacdim));
     vector<vector<interval>> Jacf_o(sysdim,vector<interval>(jacdim)), Jacf_i(sysdim,vector<interval>(jacdim));
     vector<interval> x0_o(jacdim), radx_o(jacdim), x0_i(jacdim), radx_i(jacdim);    // center and radius x-x0;
     
+    // preconditionning: A is center of Jacobian, C its inverse
+    vector<vector<double>> A_o(sysdim,vector<double> (sysdim)), C_o(sysdim,vector<double> (sysdim));
+    vector<vector<double>> A_i(sysdim,vector<double> (sysdim)), C_i(sysdim,vector<double> (sysdim));
     
+    vector<interval> f0_o(sysdim), f0_i(sysdim);
+    vector<vector<interval>> CJacf_o(sysdim, vector<interval>(jacdim));
+    vector<vector<interval>> CJacf_i(sysdim, vector<interval>(jacdim));
+    vector<interval> z0_o, z0_i;
+    
+    /*********************************** ORDER 2 Taylor model  ***********************************/
+    vector<vector<interval>> dfdx0_i(sysdim,vector<interval>(jacdim)), dfdx0_o(sysdim,vector<interval>(jacdim));
+    vector<vector<interval>> Cdfdx0_i(sysdim,vector<interval>(jacdim)), Cdfdx0_o(sysdim,vector<interval>(jacdim));
+    vector<interval> zf0_o;
+    vector<interval> zf0_i;
+    vector<vector<vector<interval>>> Hessf_o(sysdim,vector<vector<interval>>(jacdim,vector<interval>(jacdim)));
+    vector<vector<vector<interval>>> Hessf_i(sysdim,vector<vector<interval>>(jacdim,vector<interval>(jacdim)));
+    vector<vector<vector<interval>>> CHessf_o(sysdim,vector<vector<interval>>(jacdim,vector<interval>(jacdim)));
+    vector<vector<vector<interval>>> CHessf_i(sysdim,vector<vector<interval>>(jacdim,vector<interval>(jacdim)));
+    vector <F<F<AAF>>> xff_o(jacdim), xff_i(jacdim), zff_o(sysdim), zff_i(sysdim);
+    vector <F<interval>> x0ff_o(jacdim), x0ff_i(jacdim), z0ff_o(sysdim), z0ff_i(sysdim);
+    /* end ORDER 2 */
     
     vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer;
     
     DiscreteFunc f;
-    FDiff FFunc;
     
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-    // estimate_reachset(f, nb_steps, xinit);
+    estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -1198,7 +1217,7 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
     vector<int> aux;
     // for each input, index of the output in which it is existentially quantified
     vector<int> exist_quantified(jacdim);
-    int varx = 0, vary = 1; // joint range we want to print/compute
+    int varx = 0, vary = 1, varz = 2; // joint range we want to print/compute
     vector<vector<double>> output_skewedbox;
     
     ofstream outFile_skewedinner;
@@ -1219,19 +1238,19 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
     z_inner = xinit;
     z_outer = xinit;
     
-    // preconditioning: A is center of Jacobian, C its inverse
-    vector<vector<double>> A_o(sysdim,vector<double> (sysdim)), C_o(sysdim,vector<double> (sysdim));
-    vector<vector<double>> A_i(sysdim,vector<double> (sysdim)), C_i(sysdim,vector<double> (sysdim));
     
-    vector<interval> f0_o(sysdim), f0_i(sysdim);
-    vector<vector<interval>> CJacf_o(sysdim, vector<interval>(jacdim));
-    vector<vector<interval>> CJacf_i(sysdim, vector<interval>(jacdim));
-    vector<interval> z0_o, z0_i;
     
     for (int i=0 ; i<sysdim; i++) {
         A_i[i][i] = 1.0;
         A_o[i][i] = 1.0;
     }
+    
+   
+    // initial state
+    print_projections(z_inner,z_inner,z_outer,0);
+    //   print_innerbox(z_inner, exist_quantified, varx, vary, 0);
+    output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
+    output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
     
     for (int i=0; i < jacdim ; i++) {
         x_i[i] = z_inner[i];
@@ -1248,9 +1267,11 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
             x_i[i].diff(i,jacdim);
         
         // x_i = A . x_i
-        F<AAF> temp = A_i[varx][varx]*x_i[varx] + A_i[varx][vary]*x_i[vary];
-        x_i[vary] = A_i[vary][vary]*x_i[vary] + A_i[vary][varx]*x_i[varx];
-        x_i[varx] = temp;
+        F<AAF> temp1 = A_i[varx][varx]*x_i[varx] + A_i[varx][vary]*x_i[vary] + A_i[varx][varz]*x_i[varz];
+        F<AAF> temp2 = A_i[vary][varx]*x_i[varx] + A_i[vary][vary]*x_i[vary] + A_i[vary][varz]*x_i[varz];
+        x_i[varz] = A_i[varz][varx]*x_i[varx] + A_i[varz][vary]*x_i[vary] + A_i[varz][varz]*x_i[varz];
+        x_i[varx] = temp1;
+        x_i[vary] = temp2;
         
         z_i = f(x_i);
         
@@ -1258,39 +1279,139 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
             for (int j=0; j < jacdim ; j++)
                 Jacf_i[i][j] = z_i[i].d(j).convert_int();// JacAff_i[i][j].convert_int();
         
+        
         for (int i=0; i < jacdim ; i++)
             x_o[i].diff(i,jacdim);
         
-        temp = A_o[varx][varx]*x_o[varx] + A_o[varx][vary]*x_o[vary];
-        x_o[vary] = A_o[vary][vary]*x_o[vary] + A_o[vary][varx]*x_o[varx];
-        x_o[varx] = temp;
+        temp1 = A_o[varx][varx]*x_o[varx] + A_o[varx][vary]*x_o[vary] + A_o[varx][varz]*x_o[varz];
+        temp2 = A_o[vary][varx]*x_o[varx] + A_o[vary][vary]*x_o[vary] + A_o[vary][varz]*x_o[varz];
+        x_o[varz] = A_o[varz][varx]*x_o[varx] + A_o[varz][vary]*x_o[vary] + A_o[varz][varz]*x_o[varz];
+        x_o[varx] = temp1;
+        x_o[vary] = temp2;
         
         z_o = f(x_o);
         
         for (int i=0; i < sysdim ; i++)
             for (int j=0; j < jacdim ; j++)
-                Jacf_o[i][j] = z_o[i].d(j).convert_int(); //JacAff_o[i][j].convert_int();
+                Jacf_o[i][j] = z_o[i].d(j).convert_int();// JacAff_i[i][j].convert_int();
         
+        
+ 
+        
+        if (order == 2)
+        {
+            /*********************************** ORDER 2 Taylor model  ***********************************/
+            
+            for (int i=0; i < jacdim ; i++) {
+                x0ff_o[i] = x0_o[i];
+                x0ff_o[i].diff(i,jacdim);
+            }
+            
+            F<interval> tempf1 = A_o[varx][varx]*x0ff_o[varx] + A_o[varx][vary]*x0ff_o[vary] + A_o[varx][varz]*x0ff_o[varz];
+            F<interval> tempf2 = A_o[vary][varx]*x0ff_o[varx] + A_o[vary][vary]*x0ff_o[vary] + A_o[vary][varz]*x0ff_o[varz];
+            x0ff_o[varz] = A_o[varz][varx]*x0ff_o[varx] + A_o[varz][vary]*x0ff_o[vary] + A_o[varz][varz]*x0ff_o[varz];
+            x0ff_o[varx] = tempf1;
+            x0ff_o[vary] = tempf2;
+            
+            z0ff_o = f(x0ff_o);
+            
+            for (int i=0 ; i<sysdim ; i++)
+                for (int j=0 ; j<jacdim ; j++)
+                    dfdx0_o[i][j]=z0ff_o[i].d(j);
+            
+            
+            for (int i=0; i < jacdim ; i++) {
+                x0ff_i[i] = x0_i[i];
+                x0ff_i[i].diff(i,jacdim);
+            }
+            
+            tempf1 = A_i[varx][varx]*x0ff_i[varx] + A_i[varx][vary]*x0ff_i[vary] + A_i[varx][varz]*x0ff_i[varz];
+            tempf2 = A_i[vary][varx]*x0ff_i[varx] + A_i[vary][vary]*x0ff_i[vary] + A_i[vary][varz]*x0ff_i[varz];
+            x0ff_i[varz] = A_i[varz][varx]*x0ff_i[varx] + A_i[varz][vary]*x0ff_i[vary] + A_i[varz][varz]*x0ff_i[varz];
+            x0ff_i[varx] = tempf1;
+            x0ff_i[vary] = tempf2;
+            
+            z0ff_i = f(x0ff_i);
+            
+            for (int i=0 ; i<sysdim ; i++)
+                for (int j=0 ; j<jacdim ; j++)
+                    dfdx0_i[i][j]=z0ff_i[i].d(j);
+            
+            
+            
+            for (int i=0; i < jacdim ; i++) {
+                xff_o[i] = z_outer[i];
+                xff_o[i].diff(i,jacdim);          // first order
+                xff_o[i].x().diff(i,jacdim);      // second order
+            }
+            
+            F<F<AAF>> tempaff1 = A_o[varx][varx]*xff_o[varx] + A_o[varx][vary]*xff_o[vary] + A_o[varx][varz]*xff_o[varz];
+            F<F<AAF>> tempaff2 = A_o[vary][varx]*xff_o[varx] + A_o[vary][vary]*xff_o[vary] + A_o[vary][varz]*xff_o[varz];
+            xff_o[varz] = A_o[varz][varx]*xff_o[varx] + A_o[varz][vary]*xff_o[vary] + A_o[varz][varz]*xff_o[varz];
+            xff_o[varx] = tempaff1;
+            xff_o[vary] = tempaff2;
+            
+            zff_o = f(xff_o);
+            
+            for (int i=0; i < jacdim ; i++) {
+                xff_i[i] = z_inner[i];
+                xff_i[i].diff(i,jacdim);          // first order
+                xff_i[i].x().diff(i,jacdim);      // second order
+            }
+            
+            tempaff1 = A_i[varx][varx]*xff_i[varx] + A_i[varx][vary]*xff_i[vary] + A_i[varx][varz]*xff_i[varz];
+            tempaff2 = A_i[vary][varx]*xff_i[varx] + A_i[vary][vary]*xff_i[vary] + A_i[vary][varz]*xff_i[varz];
+            xff_i[varz] = A_i[varz][varx]*xff_i[varx] + A_i[varz][vary]*xff_i[vary] + A_i[varz][varz]*xff_i[varz];
+            xff_i[varx] = tempaff1;
+            xff_i[vary] = tempaff2;
+            
+            zff_i = f(xff_i);
+            
+            for (int i=0; i < sysdim ; i++) {
+                for (int j=0; j < jacdim ; j++) {
+                    for (int k=0; k < jacdim ; k++) {
+                        Hessf_o[i][j][k] =zff_o[i].d(j).d(k).convert_int();
+                        Hessf_i[i][j][k] =zff_i[i].d(j).d(k).convert_int();
+                    }
+                }
+            }
+        }
         
         // x0 = A x0
-        interval tempi = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary];
-        x0_i[vary] = A_i[vary][vary]*x0_i[vary] + A_i[vary][varx]*x0_i[varx];
-        x0_i[varx] = tempi;
+        interval tempi1 = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary] + A_i[varx][varz]*x0_i[varz];
+        interval tempi2 = A_i[vary][varx]*x0_i[varx] + A_i[vary][vary]*x0_i[vary] + A_i[vary][varz]*x0_i[varz];
+        x0_i[varz] = A_i[varz][varx]*x0_i[varx] + A_i[varz][vary]*x0_i[vary] + A_i[varz][varz]*x0_i[varz];
+        x0_i[varx] = tempi1;
+        x0_i[vary] = tempi2;
         
-        tempi = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary];
-        x0_o[vary] = A_o[vary][vary]*x0_o[vary] + A_o[vary][varx]*x0_o[varx];
-        x0_o[varx] = tempi;
+        tempi1 = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary] + A_o[varx][varz]*x0_o[varz];
+        tempi2 = A_o[vary][varx]*x0_o[varx] + A_o[vary][vary]*x0_o[vary] + A_o[vary][varz]*x0_o[varz];
+        x0_o[varz] = A_o[varz][varx]*x0_o[varx] + A_o[varz][vary]*x0_o[vary] + A_o[varz][varz]*x0_o[varz];
+        x0_o[varx] = tempi1;
+        x0_o[vary] = tempi2;
         
         z0_o = f(x0_o);
         z0_i = f(x0_i);
         
-        
         /*********************************** Evaluation ***********************************/
-        
-        z_outer = evaluate_outerrange(z0_o, radx_o, Jacf_o);
-        z_inner_proj = evaluate_innerrange(z0_i, radx_i, Jacf_i, true, aux);
-        if (jacdim > sysdim)
-            z_inner_proj_rob = evaluate_innerrange_robust(z0_i, radx_i, Jacf_i, true, aux);
+        // projections
+        if (order == 1)
+        {
+            z_outer = evaluate_outerrange(z0_o, radx_o, Jacf_o);
+            z_inner_proj = evaluate_innerrange(z0_i, radx_i, Jacf_i, true, aux);
+            
+            if (jacdim > sysdim)
+                z_inner_proj_rob = evaluate_innerrange_robust(z0_i, radx_i, Jacf_i, true, aux);
+        }
+        else if (order == 2)
+        {
+            z_outer = evaluate_outerrange_order2(z0_o, radx_o, dfdx0_o, Hessf_o);
+            z_inner_proj = evaluate_innerrange_order2(z0_i, radx_i, dfdx0_i, Hessf_i, true, aux);
+            if (jacdim > sysdim)
+                z_inner_proj_rob = evaluate_innerrange_order2_robust(z0_i, radx_i, dfdx0_i,  Hessf_i, true, aux);
+        }
+        else
+            assert(false);
         
         print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
         
@@ -1313,19 +1434,7 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
             }
             else if (syschoice == 17) {
                 for (int j=0; j < jacdim ; j++)
-                    exist_quantified[j] = j; // (j+2)%(jacdim);
-                //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
-            }
-            else if (syschoice == 18) {
-                for (int j=0; j < sysdim ; j++)
-                    exist_quantified[j] = j; // (j+2)%(jacdim);
-                exist_quantified[3] = 1;
-                //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
-            }
-            else if (syschoice == 20) {
-                for (int j=0; j < sysdim ; j++)
-                    exist_quantified[j] = j; // (j+2)%(jacdim);
-                exist_quantified[2] = 1;
+                    exist_quantified[j] = j;
                 //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
             }
             
@@ -1337,55 +1446,123 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
                 C_i[i][i] = 1.0;
             }
             // 2D preconditioner - just on components varx and vary
-            A_o[varx][varx] = mid(Jacf_o[varx][varx]);
-            A_o[vary][vary] = mid(Jacf_o[vary][vary]);
-            A_o[varx][vary] = mid(Jacf_o[varx][vary]);
-            A_o[vary][varx] = mid(Jacf_o[vary][varx]);
-            A_i[varx][varx] = mid(Jacf_i[varx][varx]);
-            A_i[vary][vary] = mid(Jacf_i[vary][vary]);
-            A_i[varx][vary] = mid(Jacf_i[varx][vary]);
-            A_i[vary][varx] = mid(Jacf_i[vary][varx]);
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j < 3; j++) {
+                    if (order == 1) {
+                        A_o[i][j] = mid(Jacf_o[i][j]);
+                        A_i[i][j] = mid(Jacf_i[i][j]);
+                    }
+                    else {
+                        A_o[i][j] = mid(dfdx0_o[i][j]);
+                        A_i[i][j] = mid(dfdx0_i[i][j]);
+                    }
+                }
+            }
+            /*    A_o[varx][varx] = mid(Jacf_o[varx][varx]);
+             A_o[vary][vary] = mid(Jacf_o[vary][vary]);
+             A_o[varz][varz] = mid(Jacf_o[varz][varz]);
+             A_o[varx][vary] = mid(Jacf_o[varx][vary]);
+             A_o[varx][varz] = mid(Jacf_o[varx][varz]);
+             A_o[vary][varx] = mid(Jacf_o[vary][varx]);
+             A_o[vary][varz] = mid(Jacf_o[vary][varz]);
+             A_o[varz][varx] = mid(Jacf_o[varz][varx]);
+             A_o[varz][vary] = mid(Jacf_o[varz][vary]);
+             A_i[varx][varx] = mid(Jacf_i[varx][varx]);
+             A_i[vary][vary] = mid(Jacf_i[vary][vary]);
+             A_i[varz][varz] = mid(Jacf_i[varz][varz]);
+             A_i[varx][vary] = mid(Jacf_i[varx][vary]);
+             A_i[varx][varz] = mid(Jacf_i[varx][varz]);
+             A_i[vary][varx] = mid(Jacf_i[vary][varx]);
+             A_i[vary][varz] = mid(Jacf_i[vary][varz]);
+             A_i[varz][varx] = mid(Jacf_i[varz][varx]);
+             A_i[varz][vary] = mid(Jacf_i[varz][vary]); */
             
             // C is inverse of A
-            double determinant = 1.0/(A_o[varx][varx]*A_o[vary][vary]-A_o[varx][vary]*A_o[vary][varx]);
-            C_o[varx][varx] = determinant*A_o[vary][vary];
-            C_o[varx][vary] = - determinant*A_o[varx][vary];
-            C_o[vary][varx] = - determinant*A_o[vary][varx];
-            C_o[vary][vary] = determinant*A_o[varx][varx];
-            determinant = 1.0/(A_i[varx][varx]*A_i[vary][vary]-A_i[varx][vary]*A_i[vary][varx]);
-            C_i[varx][varx] = determinant*A_i[vary][vary];
-            C_i[varx][vary] = - determinant*A_i[varx][vary];
-            C_i[vary][varx] = - determinant*A_i[vary][varx];
-            C_i[vary][vary] = determinant*A_i[varx][varx];
+            // supposing for now that varx, vary, varz = 0, 1, 2
+            double determinant = 0;
+            for (int i = 0; i < 3; i++)
+                determinant = determinant + (A_o[0][i] * (A_o[1][(i+1)%3] * A_o[2][(i+2)%3] - A_o[1][(i+2)%3] * A_o[2][(i+1)%3]));
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j < 3; j++)
+                    C_o[i][j] = ((A_o[(j+1)%3][(i+1)%3] * A_o[(j+2)%3][(i+2)%3]) - (A_o[(j+1)%3][(i+2)%3] * A_o[(j+2)%3][(i+1)%3]))/ determinant;
+            }
+            
+            determinant = 0;
+            for (int i = 0; i < 3; i++)
+                determinant = determinant + (A_i[0][i] * (A_i[1][(i+1)%3] * A_i[2][(i+2)%3] - A_i[1][(i+2)%3] * A_i[2][(i+1)%3]));
+            for (int i = 0; i < 3; i++){
+                for (int j = 0; j < 3; j++)
+                    C_i[i][j] = ((A_i[(j+1)%3][(i+1)%3] * A_i[(j+2)%3][(i+2)%3]) - (A_i[(j+1)%3][(i+2)%3] * A_i[(j+2)%3][(i+1)%3]))/ determinant;
+            }
+            
             
             // f0 = C * z0
             for (int i=0 ; i<sysdim; i++)
                 f0_o[i] = z0_o[i];
-            f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary];
-            f0_o[vary] = C_o[vary][vary]*z0_o[vary] + C_o[vary][varx]*z0_o[varx];
+            f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary] + C_o[varx][varz]*z0_o[varz];
+            f0_o[vary] = C_o[vary][varx]*z0_o[varx] + C_o[vary][vary]*z0_o[vary] + C_o[vary][varz]*z0_o[varz];
+            f0_o[varz] = C_o[varz][varx]*z0_o[varx] + C_o[varz][vary]*z0_o[vary] + C_o[varz][varz]*z0_o[varz];
             
             for (int i=0 ; i<sysdim; i++)
                 f0_i[i] = z0_i[i];
-            f0_i[varx] = C_i[varx][varx]*z0_i[varx] + C_i[varx][vary]*z0_i[vary];
-            f0_i[vary] = C_i[vary][vary]*z0_i[vary] + C_i[vary][varx]*z0_i[varx];
+            f0_i[varx] = C_i[varx][varx]*z0_i[varx] + C_i[varx][vary]*z0_i[vary] + C_i[varx][varz]*z0_i[varz];
+            f0_i[vary] = C_i[vary][varx]*z0_i[varx] + C_i[vary][vary]*z0_i[vary] + C_i[vary][varz]*z0_i[varz];
+            f0_i[varz] = C_i[varz][varx]*z0_i[varx] + C_i[varz][vary]*z0_i[vary] + C_i[varz][varz]*z0_i[varz];
             
             // CJacf = C * Jacf
             multMiMi(CJacf_o,C_o,Jacf_o);
             multMiMi(CJacf_i,C_i,Jacf_i);
             
+            if (order == 2) {
+                // Cdfdx0 = C * dfdx0
+                //     cout << "dfdx0_o=" << dfdx0_o;
+                multMiMi(Cdfdx0_o,C_o,dfdx0_o);
+                //      cout << "Cdfdx0_o=" << Cdfdx0_o;
+                //      cout << "dfdx0_i=" << dfdx0_i;
+                multMiMi(Cdfdx0_i,C_i,dfdx0_i);
+                //      cout << "Cdfdx0_i=" << Cdfdx0_i;
+                
+                for (int j=0 ; j<jacdim; j++) {
+                    for (int k=0 ; k<jacdim; k++) {
+                        for (int i=0 ; i<sysdim; i++) {
+                            CHessf_o[i][j][k] = Hessf_o[i][j][k];
+                            CHessf_i[i][j][k] = Hessf_i[i][j][k];
+                        }
+                        CHessf_o[varx][j][k] = C_o[varx][varx]*Hessf_o[varx][j][k] + C_o[varx][vary]*Hessf_o[vary][j][k] + C_o[varx][varz]*Hessf_o[varz][j][k];
+                        CHessf_i[varx][j][k] = C_i[varx][varx]*Hessf_i[varx][j][k] + C_i[varx][vary]*Hessf_i[vary][j][k] + C_i[varx][varz]*Hessf_i[varz][j][k];
+                        CHessf_o[vary][j][k] = C_o[vary][varx]*Hessf_o[varx][j][k] + C_o[vary][vary]*Hessf_o[vary][j][k] + C_o[vary][varz]*Hessf_o[varz][j][k];
+                        CHessf_i[vary][j][k] = C_i[vary][varx]*Hessf_i[varx][j][k] + C_i[vary][vary]*Hessf_i[vary][j][k] + C_i[vary][varz]*Hessf_i[varz][j][k];
+                        CHessf_o[varz][j][k] = C_o[varz][varx]*Hessf_o[varx][j][k] + C_o[varz][vary]*Hessf_o[vary][j][k] + C_o[varz][varz]*Hessf_o[varz][j][k];
+                        CHessf_i[varz][j][k] = C_i[varz][varx]*Hessf_i[varx][j][k] + C_i[varz][vary]*Hessf_i[vary][j][k] + C_i[varz][varz]*Hessf_i[varz][j][k];
+                    }
+                }
+                
+            }
+            
+            
+            
             // outer range
-            vector<interval> temp_outer = evaluate_outerrange(f0_o,radx_o,CJacf_o);
+            vector<interval> temp_outer;
+            if (order == 1)
+                temp_outer = evaluate_outerrange(f0_o,radx_o,CJacf_o);
+            else  if (order == 2)
+                temp_outer = evaluate_outerrange_order2(f0_o, radx_o, Cdfdx0_o, CHessf_o);
+            
             cout << "outer skewed box (mean value): ";
             output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step, outFile_skewedouter);
             
-            vector<interval> temp_inner = evaluate_innerrange(f0_i,radx_i,CJacf_i,false,exist_quantified);
+            vector<interval> temp_inner;
+            if (order == 1)
+                temp_inner = evaluate_innerrange(f0_i,radx_i,CJacf_i,false,exist_quantified);
+            else if (order == 2)
+                temp_inner = evaluate_innerrange_order2(f0_i, radx_i, Cdfdx0_i, CHessf_i,false,exist_quantified);
             cout << "inner skewed box (mean value): ";
             print_pi(exist_quantified);
             output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_i,  varx,  vary, step, outFile_skewedinner);
             
             z_inner = temp_inner;
             z_outer = temp_outer;
-            
+           
         }
         else
             z_inner = z_inner_proj;
@@ -1398,7 +1575,6 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
             x0_o[i] =  mid(z_outer[i]); // f0_i[i]; //
             radx_o[i] = z_outer[i] - x0_o[i];
         }
-        
     }
     
     
@@ -1411,6 +1587,8 @@ void discrete_dynamical_preconditioned(int &nb_steps) {
 }
 
 
+
+// old version (order 1 only) - to remove
 void discrete_dynamical_preconditioned_3d(int &nb_steps) {
     
     vector<interval> res(jacdim);
@@ -2237,9 +2415,9 @@ vector<interval> evaluate_outerrange_order2(vector<interval> &z0, vector<interva
     
     // z0 + Jacf(x0) . x
     multMiVi(z_outer,Jacf,radx);
-    cout << "z_outer" << z_outer;
+  //  cout << "z_outer" << z_outer;
     addViVi(z_outer,z0);
-    cout << "z_outer" << z_outer;
+   // cout << "z_outer" << z_outer;
     
     // < x , Hessf([x]) . x >
     for (int i=0 ; i< sysdim ; i++)
@@ -2257,7 +2435,7 @@ vector<interval> evaluate_outerrange_order2(vector<interval> &z0, vector<interva
         }
     }
      addViVi(z_outer,z_temp);
-    cout << "z_outer" << z_outer;
+  //  cout << "z_outer" << z_outer;
     return z_outer;
 }
 

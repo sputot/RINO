@@ -101,6 +101,9 @@ int main(int argc, char* argv[])
        //     discrete_dynamical(nb_steps,order);
          if (syschoice == 15)
             discrete_dynamical_preconditioned(nb_steps,order);
+         else if (syschoice == 16)
+             discrete_dynamical_preconditioned_3d(nb_steps,order);
+         // discrete_dynamical_preconditioned(nb_steps,order);
         else if (syschoice == 16)
             discrete_dynamical_method2(nb_steps);
         else if (syschoice == 18)

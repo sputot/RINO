@@ -182,7 +182,7 @@ void discrete_dynamical(int &nb_steps, int order);
 void discrete_dynamical_method2(int &nb_steps);
 void discrete_dynamical_method2_preconditioned(int &nb_steps);
 void discrete_dynamical_preconditioned(int &nb_steps, int order);
-void discrete_dynamical_preconditioned_3d(int &nb_steps);
+void discrete_dynamical_preconditioned_3d(int &nb_steps, int order);
 void function_range(void);
 
 void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);

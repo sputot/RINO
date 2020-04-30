@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[ ]:
+# In[40]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_discrete.ipynb
@@ -157,7 +157,7 @@ def print_discrete_xy(varx,vary):
 
 
 
-# In[ ]:
+# In[41]:
 
 
 from mpl_toolkits.mplot3d import Axes3D
@@ -287,13 +287,13 @@ def print3d_discrete_xy(varx,vary):
 print3d_discrete_xy("x1","x2")
 
 
-# In[ ]:
+# In[42]:
 
 
 print_discrete_xy("x1","x2")
 
 
-# In[ ]:
+# In[43]:
 
 
 # for reading arguments on command line (use as a script possibly called from the program)
@@ -331,7 +331,7 @@ for f_outer,f_inner in zip(filenames_outer, filenames_inner):
         xmin_inner = [float(line.split()[1]) for line in lines_inner]
         xmax_inner = [float(line.split()[2]) for line in lines_inner]
         plt.grid(True,which="both", linestyle='--')
-        if len(t_inner) > 50:
+        if len(t_inner) > 61:
             plt.plot(t_outer , xmax_outer,  color='black')
             plt.plot(t_outer ,xmin_outer,  color='black')
         else:
@@ -339,7 +339,7 @@ for f_outer,f_inner in zip(filenames_outer, filenames_inner):
             plt.plot(t_outer ,xmin_outer, '.-', color='black')
             
         plt.fill_between(t_inner,xmin_inner,xmax_inner, label=variable)
-        if len(t_inner) > 50:
+        if len(t_inner) > 61:
             plt.plot(t_inner , xmax_inner,  color='black')
             plt.plot(t_inner ,xmin_inner,  color='black')
         else:
@@ -353,7 +353,7 @@ plt.show()
 plt.close()
 
 
-# In[ ]:
+# In[44]:
 
 
 filenames_outer = sorted(glob.glob('x*outer.out'))
@@ -419,7 +419,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                 xmax_inner = [float(line.split()[2]) for line in lines_inner] 
                 if (subplots):
                     ax.grid(True,which="both", linestyle='--')
-                    if len(t_inner) > 50:
+                    if len(t_inner) > 61:
                         ax.plot(t_outer ,xmax_outer, color='black', label='maximal outer approx')
                         ax.plot(t_outer ,xmin_outer, color='black')
                         ax.plot(t_inner , xmax_inner, color='black')
@@ -434,7 +434,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                     ax.title.set_text(variable)
                 else:
                     plt.grid(True,which="both", linestyle='--')
-                    if len(t_inner) > 50:
+                    if len(t_inner) > 61:
                         plt.plot(t_outer , xmax_outer, color='black',  label='maximal outer approx')
                         plt.plot(t_outer ,xmin_outer, color='black')
                         plt.plot(t_inner , xmax_inner, color='black')
@@ -455,7 +455,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                     xmin_inner = [float(line.split()[1]) for line in lines_inner] 
                     xmax_inner = [float(line.split()[2]) for line in lines_inner]
                     if (subplots):
-                        if len(t_inner) > 50:
+                        if len(t_inner) > 61:
                             ax.plot(t_inner ,xmax_inner, color='black')
                             ax.plot(t_inner ,xmin_inner, color='black')
                         else:
@@ -463,7 +463,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
                             ax.plot(t_inner ,xmin_inner, '.-', color='black')
                         ax.fill_between(t_inner,xmin_inner,xmax_inner, label='robust inner approx')
                     else:
-                        if len(t_inner) > 50:
+                        if len(t_inner) > 61:
                             plt.plot(t_inner , xmax_inner, color='black')
                             plt.plot(t_inner ,xmin_inner, color='black')
                         else:
@@ -495,7 +495,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[ ]:
+# In[45]:
 
 
 print_robust = True
@@ -506,4 +506,51 @@ print_interactive = True
 variables_to_display ="all"
 
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
+
+
+# In[47]:
+
+
+# plotting the width ratio: min over xi of the ratios ? A verifie
+fig = plt.figure()
+
+for f_outer,f_inner in zip(filenames_outer, filenames_inner):
+    variable = f_outer.rsplit( "outer", 1 )[ 0 ]  # get variable name out of file names
+    variable_nb = '-' + variable.split( "x", 1 )[1] + '-'
+    with open(f_outer, 'r') as x_outer, open(f_inner, 'r') as x_inner:
+        lines_outer = x_outer.readlines()
+        t_outer = [float(line.split()[0]) for line in lines_outer]
+        xmin_outer = [float(line.split()[1]) for line in lines_outer]
+        xmax_outer = [float(line.split()[2]) for line in lines_outer]
+        lines_inner = x_inner.readlines()
+        t_inner = [float(line.split()[0]) for line in lines_inner]
+        xmin_inner = [float(line.split()[1]) for line in lines_inner]
+        xmax_inner = [float(line.split()[2]) for line in lines_inner]
+        error = [(x2i-x1i)/(x2o-x1o) for x1i,x2i,x1o,x2o in zip(xmin_inner,xmax_inner,xmin_outer,xmax_outer)]
+        plt.grid(True,which="both", linestyle='--')
+        if len(t_inner) > 61:
+            plt.plot(t_outer , error, label=variable)
+        else:
+            plt.plot(t_outer , error, '.-', label=variable)
+        plt.xlabel('step',fontsize="x-large")
+        plt.legend()
+plt.savefig('width_ratio.png')
+plt.show()
+plt.close()
+ 
+                               
+                               
+                               
+
+#with open("width_ratio.out", 'r') as width_ratio:
+#    lines = width_ratio.readlines()
+#    t = [float(line.split()[0]) for line in lines]
+#    ratio = [float(line.split()[1]) for line in lines]
+#plt.plot(t , ratio, label='width(inner-approx)/width(over-approx)')
+#plt.legend() # add the legend specified by the above labels
+#plt.title("Min over all xi components of width ratios (a verifier)")
+#plt.savefig("width_ratio.png") # save to file
+#if (print_interactive):
+#    plt.show() # print
+#plt.close()
 
