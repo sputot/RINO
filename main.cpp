@@ -97,12 +97,14 @@ int main(int argc, char* argv[])
         if (argc >= 5)
             order = atoi(argv[4]);
         
-        if (syschoice == 15)
+       // if (syschoice == 15)
+       //     discrete_dynamical(nb_steps,order);
+         if (syschoice == 15)
             discrete_dynamical_preconditioned(nb_steps,order);
         else if (syschoice == 16)
             discrete_dynamical_method2(nb_steps);
-   //     else if (syschoice == 18)
-   //         discrete_dynamical_preconditioned(nb_steps,order);
+        else if (syschoice == 18)
+            discrete_dynamical_preconditioned(nb_steps,order);
         else if (syschoice == 17 ||  syschoice == 21 ) {
            discrete_dynamical_method2(nb_steps);
          // discrete_dynamical(nb_steps,order);
