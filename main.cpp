@@ -107,7 +107,9 @@ int main(int argc, char* argv[])
         else if (syschoice == 16)
             discrete_dynamical_method2(nb_steps);
         else if (syschoice == 18)
-            discrete_dynamical_preconditioned(nb_steps,order);
+//            function_range();
+            // discrete_dynamical_preconditioned_3d(nb_steps,order);
+            discrete_dynamical_method2_preconditioned(nb_steps);
         else if (syschoice == 17 ||  syschoice == 21 ) {
            discrete_dynamical_method2(nb_steps);
          // discrete_dynamical(nb_steps,order);
@@ -239,13 +241,13 @@ int main(int argc, char* argv[])
             tn = t_begin;
             print_initstats(initial_values,param_inputs);
             
-            vector<AAF> yp(sysdim);
-            yp[0] = -(5.0*cos(x[2].convert_int()) + param_inputs[0].convert_int());        // px' = v.cos(theta) + b1
-            yp[1] = -(5.0*sin(x[2].convert_int()) + param_inputs[1].convert_int());        // py' = v.sin(theta) + b2
-            yp[2] = -(param_inputs[3] + param_inputs[2]);    // theta' = a + b3
-            for (int i=0 ; i<sysdim ; i++)
-                cout << "yp[i]=" <<yp[i].convert_int() << " ";
-            cout << endl;
+        //    vector<AAF> yp(sysdim);
+        //    yp[0] = -(5.0*cos(x[2].convert_int()) + param_inputs[0].convert_int());        // px' = v.cos(theta) + b1
+        //    yp[1] = -(5.0*sin(x[2].convert_int()) + param_inputs[1].convert_int());        // py' = v.sin(theta) + b2
+        //    yp[2] = -(param_inputs[3] + param_inputs[2]);    // theta' = a + b3
+        //    for (int i=0 ; i<sysdim ; i++)
+        //        cout << "yp[i]=" <<yp[i].convert_int() << " ";
+        //    cout << endl;
             
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
