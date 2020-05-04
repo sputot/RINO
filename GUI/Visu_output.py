@@ -1,7 +1,7 @@
 
 # coding: utf-8
 
-# In[11]:
+# In[41]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,7 +51,7 @@ filenames_inner_robust = sorted(glob.glob('x*inner_robust.out'))
 filenames_outer_robust = sorted(glob.glob('x*outer_robust.out'))
 
 
-# In[12]:
+# In[42]:
 
 
 width_in_inches = 12
@@ -126,7 +126,7 @@ def print_xy(varx,vary):
 #print_xy_new("x1","x2")
 
 
-# In[13]:
+# In[43]:
 
 
 # print joint ranges of variables to display
@@ -141,7 +141,7 @@ for f_inner in filenames_jointinner:
         print_xy(varx,vary)
 
 
-# In[14]:
+# In[44]:
 
 
 width_in_inches = 12
@@ -150,7 +150,6 @@ dots_per_inch = 100
 #fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
 from mpl_toolkits.mplot3d import Axes3D
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection, Line3DCollection
-
 
 
 def print_xyz(varx,vary,varz,print_robust,print_minimal):
@@ -247,7 +246,7 @@ def print_xyz(varx,vary,varz,print_robust,print_minimal):
                 for i in range(8): Z[i,:] += np.dot(points[i,:],P)
 
                 # plot vertices
-                ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
+                #ax.scatter3D(Z[:, 0], Z[:, 1], Z[:, 2])
 
                 # list of sides' polygons of figure
                 verts = [[Z[0],Z[1],Z[2],Z[3]], 
@@ -277,11 +276,14 @@ def print_xyz(varx,vary,varz,print_robust,print_minimal):
 #print_xyz("x2","x6","x10")
 
 
-# In[15]:
+# In[45]:
 
 
 # print joint ranges of variables to display
 filenames_jointinner3d = sorted(glob.glob('*inner_joint3d.out'))
+print_robust = True
+print_minimal = True
+
 for f_inner in filenames_jointinner3d:
     variable = f_inner.rsplit( "inner_joint3d.out", 1 )[ 0 ]  # get variable name out of file names
    # print(variable)
@@ -296,7 +298,7 @@ for f_inner in filenames_jointinner3d:
         print_xyz(varx,vary,varz,print_robust,print_minimal)
 
 
-# In[ ]:
+# In[46]:
 
 
 # if print_robust = True: print robust approx
@@ -520,7 +522,7 @@ def my_function(print_robust,print_minimal,only_one_graph,subplots,print_interac
         plt.close()
 
 
-# In[ ]:
+# In[47]:
 
 
 print_robust = False
@@ -531,7 +533,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[48]:
 
 
 print_robust = False
@@ -542,7 +544,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[49]:
 
 
 print_robust = True
@@ -553,7 +555,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[50]:
 
 
 print_robust = True
@@ -564,7 +566,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[51]:
 
 
 print_robust = False
@@ -574,7 +576,7 @@ subplots = False
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[52]:
 
 
 print_robust = False
@@ -584,7 +586,7 @@ subplots = True
 my_function(print_robust,print_minimal,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[53]:
 
 
 # plotting the width ratio: min over xi of the ratios ? A verifie
@@ -602,7 +604,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[54]:
 
 
 print_interactive = False
@@ -632,7 +634,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[ ]:
+# In[55]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
