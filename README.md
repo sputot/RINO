@@ -1,5 +1,4 @@
-# RINO ![RINO](https://github.com/cosynus-lix/RINO/blob/master/RINO2.jpg)
-## Robust INner and Outer Approximated Reachability
+![RINO](https://github.com/cosynus-lix/RINO/blob/master/RINO2.jpg)
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs.
 
