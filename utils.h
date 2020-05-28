@@ -38,4 +38,11 @@ extern vector<bool> variables_to_display;
 
 void print_finalstats(clock_t begin);
 
+void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
+
+void run_pythonscript_visualization();
+
+void print_ErrorMeasures(int current_iteration, double d0);
+void print_finalsolution(int max_it, double d0);
+
 #endif
