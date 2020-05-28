@@ -450,7 +450,7 @@ void discrete_dynamical_method2(int &nb_steps) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-   //  estimate_reachset(f, nb_steps, xinit);
+     estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -556,7 +556,7 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-  //  estimate_reachset(f, nb_steps, xinit);
+    estimate_reachset(f, nb_steps, xinit);
     
     // for each input, index of the output in which it is existentially quantified
     vector<int> exist_quantified(jacdim);
@@ -674,7 +674,7 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
                     exist_quantified[j] = j;
                 // if varx = 1, vary = 2
                // exist_quantified[2] = 0;
-                exist_quantified[3] = 1;
+                exist_quantified[3] = 1;  // has to be 3 ? Here I don't think so because we can evaluate at each step independently ? I don't understand !!!
                 //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
             }
             else if (syschoice == 20) {
@@ -796,7 +796,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-   // estimate_reachset(f, nb_steps, xinit);
+    estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -1022,7 +1022,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
             else if (syschoice == 18) {
                 for (int j=0; j < sysdim ; j++)
                     exist_quantified[j] = j; // (j+2)%(jacdim);
-                exist_quantified[3] = 1;
+                exist_quantified[3] = 3; // because constant parameter
                 //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
             }
             else if (syschoice == 20) {
@@ -1294,7 +1294,7 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
         for (int i=0; i < sysdim ; i++)
             for (int j=0; j < jacdim ; j++)
                 Jacf_o[i][j] = z_o[i].d(j).convert_int();// JacAff_i[i][j].convert_int();
-        
+        cout << "Jacf_o=" << Jacf_o;
         
  
         
@@ -1437,7 +1437,18 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
                     exist_quantified[j] = j;
                 //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
             }
-            
+            else if (syschoice == 18) {
+                for (int j=0; j < sysdim ; j++)
+                    exist_quantified[j] = j; // (j+2)%(jacdim);
+                exist_quantified[3] = 3;  // because constant parameter
+                //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
+            }
+            else if (syschoice == 20) {
+                for (int j=0; j < sysdim ; j++)
+                    exist_quantified[j] = j; // (j+2)%(jacdim);
+                exist_quantified[2] = 1;
+                //       cout << "inner box mean-value "; print_innerbox(z_inner, exist_quantified, 1, 2);
+            }
             
             for (int i=0 ; i<sysdim; i++) {
                 A_o[i][i] = 1.0;
@@ -4646,7 +4657,7 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
     int nb_points = discr+1;
     
     // limit the number of sampled points
-    for (int i=1; i < min(jacdim,3) ; i++)
+    for (int i=1; i < min(jacdim,4) ; i++)
         nb_points = nb_points * (discr+1);
     
     // estimation of the range of f
@@ -4680,13 +4691,19 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
                         input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
                         // to limit the number of sampled points
                         if (jacdim > 3) {
-                           if (xinit[3].inf() != xinit[3].sup())
-                               printf("warning, case not fully implemented");
-                            input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
-                            if (jacdim > 4) {
-                                if (xinit[4].inf() != xinit[4].sup())
-                                    printf("warning, case not fully implemented");
-                                input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
+                            for (int i4=0; i4 <= discr ; i4++)
+                            {
+                                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
+                                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
+                                input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
+                                input[cur_point][3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/discr;
+                                
+                                // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
+                                if (jacdim > 4) {
+                                    if (xinit[4].inf() != xinit[4].sup())
+                                        printf("warning, case not fully implemented");
+                                    input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
+                                }
                             }
                             
                         }
