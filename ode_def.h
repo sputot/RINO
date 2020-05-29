@@ -452,6 +452,10 @@ public:
              yp[2] = param_inputs[0];
              yp[3] = param_inputs[1] + interval(-0.0001,0.0001);
          }
+        else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            yp[0] = y[1]-y[0]*y[0]*y[0];
+            yp[1] = param_inputs[0];
+        }
     }
 };
 

@@ -253,13 +253,13 @@ public:
     void TM_evalJac();
     void TM_eval();
     
-    void TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1);
+    vector<interval> TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1);
     void init_nextstep(double _tau);
     
     
     void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
     
-
+    void set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<interval> &control_input, int k);
     
 };
 

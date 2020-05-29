@@ -207,6 +207,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 4;
             inputsdim = 2;
         }
+        else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 2;
+            inputsdim = 1;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -901,6 +905,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[3] = interval(1.5,1.51);
             inputs[0] = interval(0.0,0.0);
             inputs[1] = interval(0.0,0.0);
+        }
+        else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;
+            t_end = 0.2*30;
+            order = 3;
+            initial_values[0] = interval(0.5,0.9);
+            initial_values[1] = interval(0.5,0.9);
+            inputs[0] = interval(0.0,0.0);
+            nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
         }
     }
     if (systype == 1) // DDE

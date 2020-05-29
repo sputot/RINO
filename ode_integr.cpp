@@ -739,7 +739,7 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
 
 
 
-void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1)
+vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1)
 {
     assert (tn <= tnp1);
     assert (tnp1 <= tn+tau);
@@ -787,9 +787,28 @@ void HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double 
         
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
     }
+    return Xouter;
 }
 
 
-
-
+// setting the k-th control_values in fullinputs and param_inputs
+// used when we need to set control values dynamically and not statically before execution as done until now
+void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<interval> &control_input, int k)
+{
+    // the part which is statically done in init_system
+    for (int i=0; i<inputsdim; i++) {
+        fullinputs[index_param_inv[i]+k] = control_input[i];
+        center_fullinputs[index_param_inv[i]+k] = mid(control_input[i]);
+        eps[sysdim+index_param_inv[i]+k] = control_input[i] - mid(control_input[i]);
+    }
+    
+    // the part which is statically done in set_initialconditions
+    for (int i=0; i<inputsdim; i++) {
+        param_inputs[index_param_inv[i]+k] = fullinputs[index_param_inv[i]+k];
+        if (innerapprox == 1)
+            param_inputs_center[index_param_inv[i]+k] = center_fullinputs[index_param_inv[i]+k];
+        else
+            param_inputs_center[index_param_inv[i]+k] = fullinputs[index_param_inv[i]+k];
+    }
+}
 
