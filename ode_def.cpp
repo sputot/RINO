@@ -211,6 +211,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             inputsdim = 1;
         }
+        else if (syschoice == 31) { // Quadcopter Mikhail Bessa
+            sysdim = 11;
+            inputsdim = 3;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
