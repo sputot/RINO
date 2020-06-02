@@ -917,6 +917,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[0] = interval(0.5,0.9);
             initial_values[1] = interval(0.5,0.9);
             inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
             nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
         }
     }
