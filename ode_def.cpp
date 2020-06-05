@@ -928,6 +928,28 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
         }
+	        else if (syschoice == 31) // Quadcopter MB
+        {   // do not forget to initialize the setpoints in the ode_def.h file...
+            tau = 0.03;
+            t_end = tau*67;
+            order = 3;
+            
+            for (int j=0 ; j<sysdim; j++)
+                initial_values[j] = 0;
+            
+            initial_values[7] = interval(-0.00872,0.00872); // p 
+            initial_values[8] = interval(-0.00872,0.00872); // q 
+            initial_values[0] = interval(-0.2,0.2); // z 
+	    inputs[0] = interval(0.0,0.0); // cmd_phi
+	    inputs[1] = interval(0.0,0.0); // cmd_theta
+	    inputs[2] = interval(0.0,0.0); // cmd_psi
+            is_uncontrolled[0] = true;
+            is_uncontrolled[1] = true;
+            is_uncontrolled[2] = true;	    
+            nb_inputs[0] = 67; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[1] = 67; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[2] = 67; // control is constant for each step of the control loop: will take 67 different values overall
+        }
         else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
