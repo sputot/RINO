@@ -667,27 +667,35 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     if (print_debug)
     {
         cout << "t=" << tnp1 << endl;
-        
-        for (int i=0 ; i<sysdim ; i++) {
-            cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
-            cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
+    
+        if (innerapprox == 0)
+        {
+            for (int i=0 ; i<sysdim ; i++)
+                cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
         }
-        cout << endl;
-        if (uncontrolled > 0)
+        else
         {
             for (int i=0 ; i<sysdim ; i++) {
-                cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
-                cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+                cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+                cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
             }
             cout << endl;
-        }
-        if (controlled > 0 || uncontrolled > 0)
-        {
-            for (int i=0 ; i<sysdim ; i++) {
-                cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-                cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+            if (uncontrolled > 0)
+            {
+                for (int i=0 ; i<sysdim ; i++) {
+                    cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+                    cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+                }
+                cout << endl;
             }
-            cout << endl;
+            if (controlled > 0 || uncontrolled > 0)
+            {
+                for (int i=0 ; i<sysdim ; i++) {
+                    cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
+                    cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
+                }
+                cout << endl;
+            }
         }
     }
   
@@ -695,36 +703,48 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     for (int i=0 ; i<sysdim ; i++) {
         if (print_debug)
         {
-            if (nb_subdiv_init ==1)
+            if (innerapprox == 0) {
+                if (nb_subdiv_init ==1)
+                    outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
+            }
+            else
             {
-                outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
-                outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
+                if (nb_subdiv_init ==1)
+                {
+                    outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
+                    outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
+                }
+                if (uncontrolled > 0) {
+                    outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
+                    outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
+                }
+                if (controlled > 0 || uncontrolled > 0) {
+                    outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
+                    outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
+                }
             }
-            if (uncontrolled > 0) {
-                outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
-                outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-            }
-            if (controlled > 0 || uncontrolled > 0) {
-                outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
-                outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
-            }
-            
             outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
             //    outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
+            
         }
         
         // saving result
+        
+            
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
-        Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];
-        Xouter_minimal_print[current_subdiv][current_iteration][i] = Xouter_minimal[i];
-        Xinner_print[current_subdiv][current_iteration][i] = Xinner[i];
-        Xinner_robust_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
-        Xinner_minimal_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
+        if (innerapprox == 1)
+        {
+            Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];
+            Xouter_minimal_print[current_subdiv][current_iteration][i] = Xouter_minimal[i];
+            Xinner_print[current_subdiv][current_iteration][i] = Xinner[i];
+            Xinner_robust_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
+            Xinner_minimal_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
+        }
         t_print[current_iteration] = tnp1;
     }
     current_iteration++;
     
-    if (print_debug)
+    if ((print_debug) && (innerapprox == 1))
     {
         minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
         for (int i=1 ; i<sysdim ; i++) {
@@ -793,13 +813,15 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
 
 // setting the k-th control_values in fullinputs and param_inputs
 // used when we need to set control values dynamically and not statically before execution as done until now
-void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<interval> &control_input, int k)
+void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, int k)
 {
     // the part which is statically done in init_system
+    interval temp;
     for (int i=0; i<inputsdim; i++) {
         fullinputs[index_param_inv[i]+k] = control_input[i];
-        center_fullinputs[index_param_inv[i]+k] = mid(control_input[i]);
-        eps[sysdim+index_param_inv[i]+k] = control_input[i] - mid(control_input[i]);
+        temp = control_input[i].convert_int();
+        center_fullinputs[index_param_inv[i]+k] = mid(temp);
+        eps[sysdim+index_param_inv[i]+k] = temp - mid(temp);
     }
     
     // the part which is statically done in set_initialconditions

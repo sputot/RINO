@@ -456,23 +456,27 @@ public:
             yp[0] = y[1]-y[0]*y[0]*y[0];
             yp[1] = param_inputs[0];
         }
-	else if (syschoice == 31) { // Quadcopter Mikhail Bessa
-	  // y[0]=z ; y[1]=u ; y[2]=v ; y[3]=w ; y[4]=phi ; y[5]=theta ;
-	  // y[6]=psi ; y[7]=p ; y[8]=q ; y[9]=r ; y[10]=zI ;
-	  // param_inputs[0]=cmd_phi ; param_inputs[1]=cmd_theta ;
-	  // param_inputs[2]=cmd_psi ;  
-	  yp[0] = (-sin(y[5]))*y[1] + cos(y[5])*sin(y[4])*y[2] + cos(y[5])*cos(y[4])*y[3]; // yp[0] = z
-	  yp[1] = y[9]*y[2] - y[8]*y[3] + sin(y[5])*9.81; // yp[1] = u
-	  yp[2] = -y[9]*y[1] + y[7]*y[3] - cos(y[5])*sin(y[4])*9.81; // yp[2] = v
-	  yp[3] = y[8]*y[1] - y[7]*y[2] - 9.81*cos(y[5])*cos(y[4])+(7.62648576804e-10)*param_inputs[1]*param_inputs[1] + (7.62648576804e-10)*param_inputs[0]*param_inputs[0] + (3.05059430721e-9)*param_inputs[2]*param_inputs[2] + 7.62648576804*y[0]*y[0] + 7.62648576804*y[3]*y[0] - 4.57589146082*y[0]*y[10] + 1.90662144201*y[3]*y[3] - 2.28794573041*y[3]*y[10] + 0.686383719125*y[10]*y[10] - 29.0850309334*y[0] - 14.5425154667*y[3] + 8.72550928*y[10] + 27.7303023346; // yp[3] = w
-	  yp[4] = y[7] + sin(y[5])/cos(y[5])*(cos(y[4])*y[9] + sin(y[4])*y[8]); // yp[4] = phi
-	  yp[5] = cos(y[4])*y[8] - sin(y[4])*y[9]; // yp[5] = theta
-	  yp[6] = cos(y[4]) / cos(y[5]) * y[9] + sin(y[4]) / cos(y[5]) * y[8]; // yp[6] = psi
-	  yp[7] = -0.760697* y[8] * y[9] + (-8.38277868313e-3)*y[0]*param_inputs[0]  - (4.19138934156e-3)*y[3]*param_inputs[0] + (2.51483360494e-3)*y[10]*param_inputs[0] + 0.0159846477606*param_inputs[0] - (1.67655573663e-7)*param_inputs[1]*param_inputs[2]; // yp[7] = p
-	  yp[8] = 0.761902* y[7] * y[9] + (-8.34055576802e-3)*y[0]*param_inputs[1] - (4.17027788401e-3)*y[3]*param_inputs[1] + (2.50216673041e-3)*y[10]*param_inputs[1] + 0.0159041352657*param_inputs[1] - (1.66811115361e-7)*param_inputs[0]*param_inputs[2]; // yp[8] = q 
-	  yp[9] = -0.002867* y[7] * y[8] + (-1.73667282186e-3)*y[0]*param_inputs[2] - (8.68336410928e-4)*y[3]*param_inputs[2] + (5.21001846557e-4)*y[10]*param_inputs[2] + (3.31156343047e-3)*param_inputs[2] - (8.68336410931e-9)*param_inputs[1]*param_inputs[0]; // yp[9] = r
-	  yp[10] = 2*(1-y[0])-y[3]; // yp[10] = zI
-	  }
+        else if (syschoice == 31) { // Quadcopter Mikhail Bessa
+            // y[0]=z ; y[1]=u ; y[2]=v ; y[3]=w ; y[4]=phi ; y[5]=theta ;
+            // y[6]=psi ; y[7]=p ; y[8]=q ; y[9]=r ; y[10]=zI ;
+            // param_inputs[0]=cmd_phi ; param_inputs[1]=cmd_theta ;
+            // param_inputs[2]=cmd_psi ;
+            yp[0] = (-sin(y[5]))*y[1] + cos(y[5])*sin(y[4])*y[2] + cos(y[5])*cos(y[4])*y[3]; // yp[0] = z
+            yp[1] = y[9]*y[2] - y[8]*y[3] + sin(y[5])*9.81; // yp[1] = u
+            yp[2] = -y[9]*y[1] + y[7]*y[3] - cos(y[5])*sin(y[4])*9.81; // yp[2] = v
+            yp[3] = y[8]*y[1] - y[7]*y[2] - 9.81*cos(y[5])*cos(y[4])+(7.62648576804e-10)*param_inputs[1]*param_inputs[1] + (7.62648576804e-10)*param_inputs[0]*param_inputs[0] + (3.05059430721e-9)*param_inputs[2]*param_inputs[2] + 7.62648576804*y[0]*y[0] + 7.62648576804*y[3]*y[0] - 4.57589146082*y[0]*y[10] + 1.90662144201*y[3]*y[3] - 2.28794573041*y[3]*y[10] + 0.686383719125*y[10]*y[10] - 29.0850309334*y[0] - 14.5425154667*y[3] + 8.72550928*y[10] + 27.7303023346; // yp[3] = w
+            yp[4] = y[7] + sin(y[5])/cos(y[5])*(cos(y[4])*y[9] + sin(y[4])*y[8]); // yp[4] = phi
+            yp[5] = cos(y[4])*y[8] - sin(y[4])*y[9]; // yp[5] = theta
+            yp[6] = cos(y[4]) / cos(y[5]) * y[9] + sin(y[4]) / cos(y[5]) * y[8]; // yp[6] = psi
+            yp[7] = -0.760697* y[8] * y[9] + (-8.38277868313e-3)*y[0]*param_inputs[0]  - (4.19138934156e-3)*y[3]*param_inputs[0] + (2.51483360494e-3)*y[10]*param_inputs[0] + 0.0159846477606*param_inputs[0] - (1.67655573663e-7)*param_inputs[1]*param_inputs[2]; // yp[7] = p
+            yp[8] = 0.761902* y[7] * y[9] + (-8.34055576802e-3)*y[0]*param_inputs[1] - (4.17027788401e-3)*y[3]*param_inputs[1] + (2.50216673041e-3)*y[10]*param_inputs[1] + 0.0159041352657*param_inputs[1] - (1.66811115361e-7)*param_inputs[0]*param_inputs[2]; // yp[8] = q
+            yp[9] = -0.002867* y[7] * y[8] + (-1.73667282186e-3)*y[0]*param_inputs[2] - (8.68336410928e-4)*y[3]*param_inputs[2] + (5.21001846557e-4)*y[10]*param_inputs[2] + (3.31156343047e-3)*param_inputs[2] - (8.68336410931e-9)*param_inputs[1]*param_inputs[0]; // yp[9] = r
+            yp[10] = 2*(1-y[0])-y[3]; // yp[10] = zI
+        }
+          else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = y[1];
+              yp[1] = param_inputs[0]*y[1]*y[1] - y[0];
+          }
     }
 };
 
