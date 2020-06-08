@@ -481,6 +481,26 @@ public:
               yp[0] = -y[0]*(0.1 + (y[0]+y[1])*(y[0]+y[1]));
               yp[1] = (param_inputs[0]+y[0])*(0.1 + (y[0] + y[1])*(y[0]+y[1]));
           }
+          else if (syschoice == 34) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = y[1] + 0.5*y[2]*y[2];
+              yp[1] = y[2];
+              yp[2] = param_inputs[0];
+          }
+          else if (syschoice == 35) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = -y[0] + y[1] - y[2];
+              yp[1] = -y[0]*(y[2]+1) - y[1];
+              yp[2] = -y[0] + param_inputs[0];
+          }
+          else if (syschoice == 36) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = -y[0]*y[0]*y[0] + y[1];
+              yp[1] = y[1]*y[1]*y[1] + y[2];
+              yp[2] = param_inputs[0];
+          }
+          else if (syschoice == 37) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = y[2]*y[2]*y[2] - y[1];
+              yp[1] = y[2];
+              yp[2] = param_inputs[0];
+          }
     }
 };
 

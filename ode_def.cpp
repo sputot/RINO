@@ -223,6 +223,22 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             inputsdim = 1;
         }
+        else if (syschoice == 34) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            inputsdim = 1;
+        }
+        else if (syschoice == 35) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            inputsdim = 1;
+        }
+        else if (syschoice == 36) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            inputsdim = 1;
+        }
+        else if (syschoice == 37) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            inputsdim = 1;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -969,6 +985,50 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(0.0,0.0);
             is_uncontrolled[0] = true;
             nb_inputs[0] = 100; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 34) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.35,0.45);
+            initial_values[1] = interval(0.25,0.35);
+            initial_values[2] = interval(0.35,0.45);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 35) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.3,0.4);
+            initial_values[1] = interval(0.3,0.4);
+            initial_values[2] = interval(-0.4,-0.3);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 36) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.35,0.4);
+            initial_values[1] = interval(-0.35,-0.3);
+            initial_values[2] = interval(0.35,0.4);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 37) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.05;
+            t_end = 0.5*20;
+            order = 3;
+            initial_values[0] = interval(0.35,0.45);
+            initial_values[1] = interval(0.45,0.55);
+            initial_values[2] = interval(0.25,0.35);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 20; // control is constant for each step of the control loop: will take 30 different values overall
         }
     }
     if (systype == 1) // DDE
