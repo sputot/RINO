@@ -818,6 +818,7 @@ void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &pa
     // the part which is statically done in init_system
     interval temp;
     for (int i=0; i<inputsdim; i++) {
+        cout << index_param_inv[i]+k << endl;
         fullinputs[index_param_inv[i]+k] = control_input[i];
         temp = control_input[i].convert_int();
         center_fullinputs[index_param_inv[i]+k] = mid(temp);

@@ -215,6 +215,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 11;
             inputsdim = 3;
         }
+        else if (syschoice == 311) { // Quadcopter Mikhail Bessa avec 3 composantes en plus
+            sysdim = 14;
+            inputsdim = 3;
+        }
         else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 2;
             inputsdim = 1;
@@ -238,6 +242,18 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 37) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 3;
             inputsdim = 1;
+        }
+        else if (syschoice == 38) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 4;
+            inputsdim = 1;
+        }
+        else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 4;
+            inputsdim = 1;
+        }
+        else if (syschoice == 40) { // EX_10 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 4;
+            inputsdim = 2;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -519,6 +535,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
     // inputs
+    cout << "inputsdim=" << inputsdim << "sysdim=" << sysdim << endl;
+    
     inputs = vector<AAF>(inputsdim);      // bounds
     nb_inputs = vector<int>(inputsdim);   // number of instances for each input
     for (int i=0; i<inputsdim; i++)
@@ -944,27 +962,50 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
         }
-	        else if (syschoice == 31) // Quadcopter MB
+        else if (syschoice == 31) // Quadcopter MB
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-            tau = 0.03;
-            t_end = tau*67;
+            tau = 0.0005;
+            t_end = 20*tau*10;
             order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
             
-            initial_values[7] = interval(-0.00872,0.00872); // p 
-            initial_values[8] = interval(-0.00872,0.00872); // q 
-            initial_values[0] = interval(-0.2,0.2); // z 
-	    inputs[0] = interval(0.0,0.0); // cmd_phi
-	    inputs[1] = interval(0.0,0.0); // cmd_theta
-	    inputs[2] = interval(0.0,0.0); // cmd_psi
+            initial_values[7] = interval(-0.00872,0.00872); // p
+            initial_values[8] = interval(-0.00872,0.00872); // q
+            initial_values[0] = interval(-0.2,0.2); // z
+            inputs[0] = interval(0.0,0.0); // cmd_phi
+            inputs[1] = interval(0.0,0.0); // cmd_theta
+            inputs[2] = interval(0.0,0.0); // cmd_psi
             is_uncontrolled[0] = true;
             is_uncontrolled[1] = true;
-            is_uncontrolled[2] = true;	    
-            nb_inputs[0] = 67; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[1] = 67; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[2] = 67; // control is constant for each step of the control loop: will take 67 different values overall
+            is_uncontrolled[2] = true;
+            nb_inputs[0] = 10; // control is constant for each step of the control loop
+            nb_inputs[1] = 10; // control is constant for each step of the control loop
+            nb_inputs[2] = 10; // control is constant for each step of the control loop
+        }
+        else if (syschoice == 311) // Quadcopter MB avec 3 composantes en plus
+        {   // do not forget to initialize the setpoints in the ode_def.h file...
+            tau = 0.0005;
+            t_end = 20*tau*10;
+            order = 3;
+            
+            for (int j=0 ; j<sysdim; j++)
+                initial_values[j] = 0;
+            
+            initial_values[7] = interval(-0.008,0.008); // p
+            initial_values[8] = interval(0.0,0.0); // q
+            initial_values[0] = interval(-0.01,0.01); // z
+            inputs[0] = interval(0.0,0.0); // cmd_phi
+            inputs[1] = interval(0.0,0.0); // cmd_theta
+            inputs[2] = interval(0.0,0.0); // cmd_psi
+            is_uncontrolled[0] = true;
+            is_uncontrolled[1] = true;
+            is_uncontrolled[2] = true;
+            nb_inputs[0] = 10; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[1] = 10; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[2] = 10; // control is constant for each step of the control loop: will take 67 different values overall
+           // cout << "syschoice 311" << endl;
         }
         else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
@@ -1008,7 +1049,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
         }
-        else if (syschoice == 36) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+        else if (syschoice == 36) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
             order = 3;
@@ -1019,7 +1060,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
         }
-        else if (syschoice == 37) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+        else if (syschoice == 37) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.05;
             t_end = 0.5*20;
             order = 3;
@@ -1029,6 +1070,45 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(0.0,0.0);
             is_uncontrolled[0] = true;
             nb_inputs[0] = 20; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 38) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;
+            t_end = 0.2*25;
+            order = 3;
+            initial_values[0] = interval(0.5,0.6);
+            initial_values[1] = interval(0.5,0.6);
+            initial_values[2] = interval(0.5,0.6);
+            initial_values[3] = interval(0.5,0.6);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 25; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.1;
+            t_end = 20;
+            order = 3;
+            initial_values[0] = interval(0.6,0.7);
+            initial_values[1] = interval(-0.7,-0.6);
+            initial_values[2] = interval(-0.4,-0.3);
+            initial_values[3] = interval(0.5,0.6);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 20; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 40) { // EX_10 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.01;
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(9.5,9.55);
+            initial_values[1] = interval(-4.5,-4.45);
+            initial_values[2] = interval(2.1,2.11);
+            initial_values[3] = interval(1.5,1.51);
+            inputs[0] = interval(0.0,0.0);
+            inputs[1] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            is_uncontrolled[1] = true;
+            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
+            nb_inputs[1] = 50; // control is constant for each step of the control loop: will take 30 different values overall
         }
     }
     if (systype == 1) // DDE
@@ -1235,7 +1315,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         temp = initial_values[i].convert_int();
         center_initial_values[i] = mid(temp);
         eps[i] = temp-mid(temp);
-        cout << "initial_values[i] = " << initial_values[i] << endl;
+     //   cout << "initial_values[i] = " << initial_values[i] << endl;
     }
     for (int i=0 ; i<fullinputsdim ; i++)
     {
