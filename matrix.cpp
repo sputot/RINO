@@ -194,6 +194,30 @@ void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vect
 }
 
 
+// product (jacdim,jacdim) times (jacdim,jacdim)
+// but only the first sysdim lines of x and z  are relevant
+// incliudes the case when u can be a linear function of z (aux2 contains partial u / partial z0)
+void multJacfzuJaczz0Jacuz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &aux2, vector<vector<AAF>> &y,double offset) {
+    // sysdim is on purpose (only the first sysdim lines of x and z  are relevant)
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=0 ; j<sysdim; j++) {
+            z[i][j]=0;
+            for (int k=0 ; k<sysdim ; k++)
+                z[i][j] += x[i][k]*y[k][j];
+        }
+        for (int j=sysdim ; j<jacdim; j++) {
+            z[i][j]=0;
+            for (int k=0 ; k<sysdim ; k++)
+                z[i][j] += x[i][k]*y[k][j];
+            z[i][j] += x[i][j];
+        }
+        for (int j=0 ; j<sysdim ; j++)
+            for (int k=0 ; k<inputsdim ; k++)
+                z[i][j] += x[i][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])]*aux2[k][j];
+    }
+}
+
+
 void scaleM(vector<vector<AAF>> &x, double d) {
     for (int i=0 ; i<x.size() ; i++) {
         for (int j=0 ; j<x[i].size(); j++) {

@@ -46,6 +46,8 @@ vector<int> index_param_inv;
 
 vector<interval> eps;
 
+vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,...xn): we give the jacobian
+
 // for subdivisions of the initial domain to refine precision
 int nb_subdiv_init = 1; // number of subdivisiions
 int component_to_subdiv = -1;
@@ -212,11 +214,11 @@ void define_system_dim(int argc, char* argv[])
             inputsdim = 1;
         }
         else if (syschoice == 31) { // Quadcopter Mikhail Bessa
-            sysdim = 11;
+            sysdim = 14;
             inputsdim = 3;
         }
         else if (syschoice == 311) { // Quadcopter Mikhail Bessa avec 3 composantes en plus
-            sysdim = 14;
+            sysdim = 11;
             inputsdim = 3;
         }
         else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
@@ -254,6 +256,10 @@ void define_system_dim(int argc, char* argv[])
         else if (syschoice == 40) { // EX_10 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 4;
             inputsdim = 2;
+        }
+        else if (syschoice == 41) { // essai
+            sysdim = 2;
+            inputsdim = 1;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -529,9 +535,6 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
 void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
 {
-    interval temp;
-    int nb_points;
-    
     define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
     // inputs
@@ -546,6 +549,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     is_uncontrolled = vector<bool>(inputsdim);
     for (int i=0 ; i<inputsdim; i++)
         is_uncontrolled[i] = false;  // controlled input or parameter
+    
+    
     
     // initial values
     initial_values = vector<AAF>(sysdim);
@@ -953,8 +958,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[1] = interval(0.0,0.0);
         }
         else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;
-            t_end = 0.2*30;
+            tau = 0.05;
+            t_end = 0.05*30;
             order = 3;
             initial_values[0] = interval(0.5,0.9);
             initial_values[1] = interval(0.5,0.9);
@@ -962,13 +967,13 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
         }
-        else if (syschoice == 31) // Quadcopter MB
+        else if (syschoice == 31) // Quadcopter MB vec 3 composantes en plus
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.0005;
             t_end = 20*tau*10;
             order = 3;
             
-            for (int j=0 ; j<sysdim; j++)
+           for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
             
             initial_values[7] = interval(-0.00872,0.00872); // p
@@ -984,7 +989,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             nb_inputs[1] = 10; // control is constant for each step of the control loop
             nb_inputs[2] = 10; // control is constant for each step of the control loop
         }
-        else if (syschoice == 311) // Quadcopter MB avec 3 composantes en plus
+        else if (syschoice == 311) // Quadcopter MB a
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.0005;
             t_end = 20*tau*10;
@@ -1109,6 +1114,16 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[1] = true;
             nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 30 different values overall
             nb_inputs[1] = 50; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 41) { // essai sys couple
+            tau = 0.1;
+            t_end = 0.1*5;
+            order = 3;
+            initial_values[0] = interval(0.,1.);
+            initial_values[1] = interval(1.,2.);
+            inputs[0] = interval(0.0,0.0);
+            is_uncontrolled[0] = true;
+            nb_inputs[0] = 5; // control is constant for each step of the control loop: will take 30 different values overall
         }
     }
     if (systype == 1) // DDE
@@ -1261,8 +1276,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     for (int i=0; i< sysdim; i++)
         variables_to_display[i] = true;
     
-    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
-        read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);
+    
+        
+}
+
+
+void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv)
+{
+    interval temp;
+    int nb_points;
     
     // ******************* for piecewise constant inputs
     fullinputsdim = 0;
@@ -1307,6 +1329,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     center_initial_values = vector<AAF>(sysdim);
     center_fullinputs = vector<AAF>(fullinputsdim);
     
+    Jac_param_inputs = vector<vector<interval>>(inputsdim,vector<interval>(sysdim));
+    
     jacdim = sysdim+fullinputsdim;
     
     eps = vector<interval>(jacdim);
@@ -1315,26 +1339,28 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         temp = initial_values[i].convert_int();
         center_initial_values[i] = mid(temp);
         eps[i] = temp-mid(temp);
-     //   cout << "initial_values[i] = " << initial_values[i] << endl;
+        //   cout << "initial_values[i] = " << initial_values[i] << endl;
     }
-    for (int i=0 ; i<fullinputsdim ; i++)
+    for (int i=0 ; i<inputsdim ; i++)
     {
         if (is_uncontrolled[i])
             uncontrolled ++;
         if (!is_uncontrolled[i])
             controlled++;
-        
+    }
+    for (int i=0 ; i<fullinputsdim ; i++)
+    {
         temp = fullinputs[i].convert_int();
         center_fullinputs[i] = mid(temp);
         eps[i+sysdim] = temp-mid(temp);
     }
     
-  //  cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
+    //  cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
     
     open_outputfiles(); // needs sysdim to be first defined but also controlled and uncontrolled...
     
     // for saving results
-  //  cout << "(t_end-t_begin)*nb_subdiv/d0+1=" << ((t_end-t_begin)/d0+1)*(nb_subdiv+1) << endl;
+    //  cout << "(t_end-t_begin)*nb_subdiv/d0+1=" << ((t_end-t_begin)/d0+1)*(nb_subdiv+1) << endl;
     Xouter_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xouter_robust_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xouter_minimal_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
@@ -1344,8 +1370,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
     Xinner_minimal_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     Xexact_print = vector<vector<vector<interval>>>(nb_subdiv_init+1,vector<vector<interval>>(nb_points, vector<interval>(sysdim)));
     t_print = vector<double>(nb_points);
-        
 }
+
+
 
 void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide)
 {

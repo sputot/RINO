@@ -260,6 +260,7 @@ public:
     void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
     
     void set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, int k);
+    void set_controlinput_regression(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, const vector<interval> &control_input_uncertainty, vector<vector<interval>> Jac_control_input, int k);
     
 };
 

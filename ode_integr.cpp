@@ -379,9 +379,20 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     double taui = h;
     double offset = (tn-t_begin)/t_end;
     vector<vector<AAF>> aux(sysdim, vector<AAF>(jacdim));
+    vector<vector<AAF>> aux2(inputsdim, vector<AAF>(sysdim));
     vector<vector<AAF>> Jaci(sysdim, vector<AAF>(jacdim));
     
     J_res = J;
+    
+    // partial u(z) / partial z0
+    for (int i=0 ; i<inputsdim ; i++) {
+        for (int j=0 ; j<sysdim; j++) {
+            aux2[i][j]=0;
+            for (int k=0 ; k<sysdim ; k++)
+                aux2[i][j] += AAF(Jac_param_inputs[i][k])*J[k][j];
+  //          cout << "aux2["<< i <<"]["<< j << "]=" << aux2[i][j].convert_int() << endl;
+        }
+    }
     
     // pour les premiers termes, Jac^i(x)*J*tau^i
     for (int i=1; i<order ; i++)
@@ -389,15 +400,23 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<sysdim; k++) {
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
-       //         cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k] << endl;
+          //      cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
             }
             for (int k=0 ; k<inputsdim ; k++) {
                 Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] = odeVAR_x[sysdim+k].x[j][i].d(0);
-     //           cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])] << endl;
+            //    cout << "order=" << i << " Jaci["<< j <<"]["<< sysdim+index_param_inv[k]+floor(offset*nb_inputs[k]) << "]=" << Jaci[j][sysdim+index_param_inv[k]+floor(offset*nb_inputs[k])].convert_int() << endl;
             }
         }
         
-        multJacfzJaczz0(aux,Jaci,J); // Jac^i(x)*J
+    //    for (int k=0 ; k<sysdim+inputsdim; k++)
+    //        for (int j=0 ; j<inputsdim ; j++)
+     //           cout << "order=" << i << " deriv param inputs"<<  odeVAR_x[k].param_inputs[j][i].d(0).convert_int() << " deriv param inputs"<<  odeVAR_x[k].param_inputs[j][i].d(1).convert_int() << endl;
+        
+       //  multJacfzJaczz0(aux,Jaci,J); // Jac^i(x)*J
+        multJacfzuJaczz0Jacuz0(aux,Jaci,aux2,J,offset); // Jac^i(x)*J  - includes the case where u can be a control functio,
+    /*    for (int j=0 ; j<sysdim; j++)
+            for (int k=0 ; k<jacdim; k++)
+                cout << "aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl; */
         scaleJacfz(aux,taui);
         addJacfzJacfz(J_res,aux);
         taui *= h;
@@ -420,9 +439,9 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     //    print_interv("J_rough",J_rough);
     scaleJacfz(aux,taui);
     addJacfzJacfz(J_res,aux);
-     /*   for (int j=0 ; j<sysdim; j++)
+       /* for (int j=0 ; j<sysdim; j++)
             for (int k=0 ; k<jacdim; k++)
-                cout << "J_res[j][k]=" << J_res[j][k].convert_int() << endl; */
+                cout << "J_res["<<j<<"]["<<k<<"]=" << J_res[j][k].convert_int() << endl; */
 }
 
 
@@ -835,3 +854,29 @@ void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &pa
     }
 }
 
+// setting the k-th control_values in fullinputs and param_inputs
+// used when we need to set control values dynamically and not statically before execution as done until now
+void HybridStep_ode::set_controlinput_regression(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, const vector<interval> &control_input_uncertainty, vector<vector<interval>> Jac_control_input, int k)
+{
+    // the part which is statically done in init_system
+    interval temp;
+    for (int i=0; i<inputsdim; i++) {
+        cout << index_param_inv[i]+k << endl;
+        fullinputs[index_param_inv[i]+k] = control_input_uncertainty[i];
+        temp = control_input_uncertainty[i];
+        center_fullinputs[index_param_inv[i]+k] = mid(temp);
+        eps[sysdim+index_param_inv[i]+k] = temp - mid(temp);
+    }
+    
+    // the part which is statically done in set_initialconditions
+    for (int i=0; i<inputsdim; i++) {
+        param_inputs[index_param_inv[i]+k] = control_input[i] + control_input_uncertainty[i];
+        for (int j=0 ; j<sysdim; j++)
+           // Jac_param_inputs[index_param_inv[i]+k][j] = Jac_control_input[i][j];
+            Jac_param_inputs[i][j] = Jac_control_input[i][j];
+        if (innerapprox == 1)
+            param_inputs_center[index_param_inv[i]+k] = mid(control_input[i].convert_int()) + center_fullinputs[index_param_inv[i]+k];
+        else
+            param_inputs_center[index_param_inv[i]+k] = control_input[i] + control_input_uncertainty[i];
+    }
+}

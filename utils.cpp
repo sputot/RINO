@@ -82,9 +82,51 @@ void open_outputfiles()
     }
     
  
+    char file_name[1028];
     
-    stringstream file_name;
+    for (int i=0 ; i<sysdim ; i++) {
+        sprintf(file_name,"output/x%douter.out",i+1);
+        outFile_outer[i].open(file_name);
+        sprintf(file_name,"output/x%dexact.out",i+1);
+        outFile_exact[i].open(file_name);
+        if (uncontrolled > 0) {
+            sprintf(file_name,"output/x%douter_robust.out",i+1);
+            outFile_outer_robust[i].open(file_name);
+            sprintf(file_name,"output/x%dinner_robust.out",i+1);
+            outFile_inner_robust[i].open(file_name);
+        }
+        if (uncontrolled > 0 || controlled > 0) {
+            sprintf(file_name,"output/x%douter_minimal.out",i+1);
+            outFile_outer_minimal[i].open(file_name);
+            sprintf(file_name,"output/x%dinner_minimal.out",i+1);
+            outFile_inner_minimal[i].open(file_name);
+        }
+        sprintf(file_name,"output/x%dcenter.out",i+1);
+        outFile_center[i].open(file_name);
+        sprintf(file_name,"output/x%dinner.out",i+1);
+        outFile_inner[i].open(file_name);
+    }
     
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            sprintf(file_name,"output/x%dx%dinner_joint.out",i+1,j+1);
+            outFile_joint_inner[i][j].open(file_name);
+        }
+    }
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+                sprintf(file_name,"output/x%dx%dx*dinner_joint3d.out",i+1,j+1,k+1);
+                outFile_joint_inner3d[i][j][k].open(file_name);
+            }
+        }
+    }
+  
+ 
+    
+
+  
+ /*
     for (int i=0 ; i<sysdim ; i++) {
         file_name.str("");
         file_name << "output/x" << i+1 << "outer.out";
@@ -132,6 +174,7 @@ void open_outputfiles()
             }
         }
     }
+    */
     
     
     outFile_width_ratio.open("output/width_ratio.out");
@@ -197,6 +240,7 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
 {
     interval range_x;
     
+    
     // print initial conditions of the ODE
     for (int i=0 ; i<sysdim ; i++) {
         range_x = x[i].convert_int();
@@ -256,6 +300,8 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
     for (int i=0 ; i<fullinputsdim ; i++)
         cout << "param_inputs[" << i <<"]=" << param_inputs[i].convert_int() << "\t";
     cout << endl;
+     
+     
     /*
      cout << "x0=" << endl;
      for (int i=0 ; i<sysdim ; i++)

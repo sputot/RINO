@@ -145,6 +145,11 @@ int main(int argc, char* argv[])
 
     init_system(argc, argv, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
+    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
+        read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);
+    
+    init_utils_inputs(t_begin,t_end,tau,d0,nb_subdiv);
+    
     vector<AAF> initial_values_save(sysdim);
     vector<AAF> fullinputs_save(fullinputsdim);
     for (int i=0 ; i<sysdim; i++)

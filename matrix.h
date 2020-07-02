@@ -28,6 +28,7 @@ void multMiMi(vector<vector<interval>> &z, const vector<vector<double>> x, const
 void multMiMi(vector<vector<AAF>> &z, const vector<vector<double>> x, const vector<vector<AAF>> y);
 void multMiMi(vector<vector<double>> &z, const vector<vector<double>> x, const vector<vector<double>> y);
 void multJacfzJaczz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &y);
+void multJacfzuJaczz0Jacuz0(vector<vector<AAF>> &z, vector<vector<AAF>> &x, vector<vector<AAF>> &aux2, vector<vector<AAF>> &y,double offset);
 
 void multMiVi(vector<interval> &y, vector<vector<interval>> &A, vector<interval> &x) ;
 
