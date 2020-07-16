@@ -131,7 +131,8 @@ class AAF
   double getcenter() const;
 
   AAInterval convert() const;
-    
+    AAInterval partial_convert(std::vector<int>,
+                               std::vector<std::pair<double,double> >) const;
     
     // concretization
     interval convert_int() const;

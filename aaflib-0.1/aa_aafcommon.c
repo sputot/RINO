@@ -466,6 +466,59 @@ AAInterval AAF::convert() const
 }
 
 
+/*
+ * B. Schnitzler 2020-06-23
+ * Adding method to convert partially AAF to interval
+ * with bounds on certain symbols
+ */
+AAInterval AAF::partial_convert(std::vector<int> bnd_indexes, std::vector<std::pair<double,double> > bounds) const
+{
+    if(bnd_indexes.size() != bounds.size()){
+        std::cout << "partial_convert : Size of indexes and bounds not matching !" << std::endl;
+        exit(1);
+    }
+    double lo(cvalue), hi(cvalue);
+    for(int i = 0; i < length; i++){
+        int index = indexes[i];
+        int j0 = -1;
+        //Find if symbol index considered should be bounded
+        for(int j = 0; j < bnd_indexes.size(); j++){
+            if(index == bnd_indexes[j]){
+                j0 = j;
+                break;
+            }
+        }
+        if(j0 != -1){
+            //Symbol index is bounded
+            if(deviations[i] >= 0.0){
+                lo += deviations[i]*bounds[j0].first;
+                hi += deviations[i]*bounds[j0].second;
+            }
+            else {
+                lo += deviations[i]*bounds[j0].second;
+                hi += deviations[i]*bounds[j0].first;
+            }
+        }
+        else {
+            //Symbol index is not bounded, so it is in [-1, 1]
+            if(deviations[i] >= 0.0){
+                lo += -deviations[i];
+                hi += deviations[i];
+            }
+            else {
+                lo += deviations[i];
+                hi += -deviations[i];
+            }
+        }
+    }
+    return AAInterval(lo, hi);
+}
+
+
+
+
+
+
 /************************************************************
  * Method:        rad
  * Author & Date: ??? - ???
