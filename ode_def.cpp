@@ -261,6 +261,12 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             inputsdim = 1;
         }
+        else if (syschoice == 42) // HSCC 2019 paper crazyflie example+aerodynamical effects
+        {
+            sysdim = 14;
+            // sysdim_params = 3;
+            // 0 for sysdim params
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -1124,6 +1130,43 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(0.0,0.0);
             is_uncontrolled[0] = true;
             nb_inputs[0] = 5; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 42) // crazyflie HSCC 2019 paper
+        {   // do not forget to initialize the setpoints in the ode_def.h file...
+            tau = 0.03;
+            t_end = 2.;
+            order = 3;
+            
+            for (int j=0 ; j<sysdim; j++)
+                initial_values[j] = 0;
+            
+            initial_values[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
+            
+            // roll yaw pitch (degree) inputs value (here we consider input as initial)
+            // inputs[0] = interval(3.0 , 5.0) * M_PI/180.0;
+            // inputs[1] = interval(3.0 , 5.0) * M_PI/180.0;
+            // inputs[2] = 0.0 * M_PI/180.0;
+            
+            // p , q , r in rad/s -> the value here is an upper bound of the gyro noise of crazyflie
+            //  inputs[3] = interval(-0.05,0.05);
+            //  inputs[4] = interval(-0.05,0.05);
+            //  inputs[5] = interval(-0.01,0.01);;
+            
+            // err_p , err_q , err_r
+            initial_values[6] = 0.0;
+            initial_values[7] = 0.0;
+            initial_values[8] = 0.0;
+            
+            // body speed u , v and w -> for embedded verif we instead use world speed
+            initial_values[9] = 0.0;
+            initial_values[10] = 0.0;
+            initial_values[11] = 0.0;
+            
+            // Z and err_Vz
+            //  inputs[12] = interval(-0.1 , 0.1);
+            initial_values[13] = 0.0;
         }
     }
     if (systype == 1) // DDE

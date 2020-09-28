@@ -547,6 +547,204 @@ public:
               yp[0] = y[1]+y[0];
               yp[1] = param_inputs[0];
           }
+          else if(syschoice == 42) // HSCC 2019 paper crazyflie example+effets aerodynamiques
+          {
+              static const double p_sp = 1.0*M_PI/180.0;  // angular speed of 1 degree / sec
+              static const double q_sp = 0.0;
+              static const double r_sp = 0.0;
+              
+              static const double z_sp = 1.0;
+              
+              static const double C1 = 0.04076521;
+              static const double C2 = 380.8359;
+              static const double d = 0.046/sqrt(2.0);
+              static const double h = 0.005;
+              
+              static const double Ixx = 1.657171e-5;
+              static const double Iyy = 1.6655602e-5;
+              static const double Izz = 2.9261652e-5;
+              
+              static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+              static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+              
+              static const double Kp_Z = 2.0;
+              static const double Kp_VZ = 25.0;
+              static const double Ki_VZ = 15.0;
+              
+              static const double Kp_rr = 250.0;
+              static const double Kp_pr = 250.0;
+              static const double Kp_yr = 120.0;
+              
+              static const double Ki_rr = 500.0;
+              static const double Ki_pr = 500.0;
+              static const double Ki_yr = 16.7;
+              
+              /* Cross-model for aerodynamical systems from Forster */
+              /* first line */
+              static const double K11 = -10.2506;
+              static const double K12 = -0.3177;
+              static const double K13 = -0.4332;
+              /* second line */
+              static const double K21 = -0.3177;
+              static const double K22 = -10.2506;
+              static const double K23 = -0.4332;
+              /* third line */
+              static const double K31 = -7.7050;
+              static const double K32 = -7.7050;
+              static const double K33 = -7.5530;
+              
+              /* Crazyflie trajectory tracking article*/
+              static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+              static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+              static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+              
+              static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+              static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+              static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+              
+              static const double g = 9.8;
+              static const double m = 0.028;
+              
+              auto cosRoll = cos(y[0]); // cos phi
+              auto sinRoll = sin(y[0]); // sin phi
+              
+              auto cosPitch = cos(y[1]); // cos theta
+              auto sinPitch = sin(y[1]); // sin theta
+              
+              auto cosYaw = cos(y[2]); // cos psi
+              auto sinYaw = sin(y[2]); // sin psi
+              
+              auto tanPitch = tan(y[1]);
+              
+              auto err_z = z_sp - y[12];
+              
+              auto velZ_sp = Kp_Z * err_z;
+              
+              //Z derivative coordinate
+              yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
+              // Z integrale for thrust setpoint calculation
+              yp[13] = velZ_sp - yp[12];
+              
+              //auto thrust_Raw     = Kp_VZ * (velZ_sp - y[11]) + Ki_VZ * y[13];
+              auto thrust_Raw     = Kp_VZ * (yp[13]) + Ki_VZ * y[13];
+              
+              auto thrust = 1000.0*thrust_Raw + 36000;
+              
+              auto err_p = p_sp - y[3];
+              auto err_q = q_sp - y[4];
+              auto err_r = r_sp - y[5];
+              
+              auto cmd_r = y[6]*Ki_rr + err_p*Kp_rr; // cmd_phi
+              auto cmd_p = y[7]*Ki_pr + err_q*Kp_pr; // cmd_theta
+              auto cmd_y = y[8]*Ki_yr + err_r*Kp_yr; // cmd_psi
+              
+              /* computation of the PWMs */
+              auto PWM1 = thrust-cmd_r/2-cmd_p/2-cmd_y;
+              auto PWM2 = thrust-cmd_r/2+cmd_p/2+cmd_y;
+              auto PWM3 = thrust+cmd_r/2+cmd_p/2-cmd_y;
+              auto PWM4 = thrust+cmd_r/2-cmd_p/2+cmd_y;
+              
+              /* computaton of the angular velocities of the four rotors */
+              auto Om1 = C1*PWM1+C2;
+              auto Om2 = C1*PWM2+C2;
+              auto Om3 = C1*PWM3+C2;
+              auto Om4 = C1*PWM4+C2;
+              
+              /* R transpose, from inertial to body frame phi=Roll, theta=Pitch, psi=Yaw */
+              /* first line */
+              auto RT11 = cosYaw*cosPitch;
+              auto RT12 = cosPitch*sinYaw;
+              auto RT13 = -sinPitch;
+              /* second line */
+              auto RT21 = cosYaw*sinPitch*sinRoll-cosRoll*sinYaw;
+              auto RT22 = cosYaw*cosRoll+sinYaw*sinPitch*sinRoll;
+              auto RT23 = cosPitch*sinRoll;
+              /* third line */
+              auto RT31 = sinYaw*sinRoll+cosYaw*cosRoll*sinPitch;
+              auto RT32 = cosRoll*sinYaw*sinPitch-cosYaw*sinPitch;
+              auto RT33 = cosPitch*cosRoll;
+              
+              /* linear velocities of the four rotors */
+              auto u1 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
+              auto u2 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
+              auto u3 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
+              auto u4 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
+              
+              auto v1 = y[10]-y[3]*h+y[5]*d*sqrt(2)/2;
+              auto v2 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
+              auto v3 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
+              auto v4 = y[10]-y[3]*h+y[5]*d*sqrt(2)/2;
+              
+              auto w1 = y[11]+y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+              auto w2 = y[11]+y[3]*d*sqrt(2)/2-y[4]*d*sqrt(2)/2;
+              auto w3 = y[11]+y[3]*d*sqrt(2)/2-y[4]*d*sqrt(2)/2;
+              auto w4 = y[11]+y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+              
+              /* computation of the four aerodynamical forces in the body frame */
+              /* F_i^a=Om_i*K*((u_i,v_i,w_i)-RT*Wa */
+              /* calcul de RT*Wa d'abord */
+              /* for now Wa = 0 */
+              double Wa1 = 0;
+              double Wa2 = 0;
+              double Wa3 = 0;
+              auto RTWax = RT11*Wa1+RT12*Wa2+RT13*Wa3;
+              auto RTWay = RT21*Wa1+RT22*Wa2+RT23*Wa3;
+              auto RTWaz = RT31*Wa1+RT32*Wa2+RT33*Wa3;
+              
+              auto F1x = Om1*(K11*(u1-RTWax)+K12*(v1-RTWay)+K13*(w1-RTWaz));
+              auto F1y = Om1*(K21*(u1-RTWax)+K22*(v1-RTWay)+K23*(w1-RTWaz));
+              auto F1z = Om1*(K31*(u1-RTWax)+K32*(v1-RTWay)+K33*(w1-RTWaz));
+              
+              auto F2x = Om2*(K11*(u2-RTWax)+K12*(v2-RTWay)+K13*(w2-RTWaz));
+              auto F2y = Om2*(K21*(u2-RTWax)+K22*(v2-RTWay)+K23*(w2-RTWaz));
+              auto F2z = Om2*(K31*(u2-RTWax)+K32*(v2-RTWay)+K33*(w2-RTWaz));
+              
+              auto F3x = Om3*(K11*(u3-RTWax)+K12*(v3-RTWay)+K13*(w3-RTWaz));
+              auto F3y = Om3*(K21*(u3-RTWax)+K22*(v3-RTWay)+K23*(w3-RTWaz));
+              auto F3z = Om3*(K31*(u3-RTWax)+K32*(v3-RTWay)+K33*(w3-RTWaz));
+              
+              auto F4x = Om4*(K11*(u4-RTWax)+K12*(v4-RTWay)+K13*(w4-RTWaz));
+              auto F4y = Om4*(K21*(u4-RTWax)+K22*(v4-RTWay)+K23*(w4-RTWaz));
+              auto F4z = Om4*(K31*(u4-RTWax)+K32*(v4-RTWay)+K33*(w4-RTWaz));
+              
+              /* computation of the three aerodynamical moments in the body frame */
+              auto Max = d*sqrt(2)/2*F1z-h*F1x+d*sqrt(2)/2*F2z-h*F2y-d*sqrt(2)/2*F3z-h*F3y-d*sqrt(2)/2*F4z-h*F4y;
+              auto May = h*F1x-d*sqrt(2)/2*F1z+h*F2x+d*sqrt(2)/2*F2z+h*F3x+d*sqrt(2)/2*F3z+h*F4x-d*sqrt(2)/2*F4z;
+              auto Maz = d*sqrt(2)/2*F1y-d*sqrt(2)/2*F1x-d*sqrt(2)/2*F2y-d*sqrt(2)/2*F2x-d*sqrt(2)/2*F3y+d*sqrt(2)/2*F3x+d*sqrt(2)/2*F4y+d*sqrt(2)/2*F4x;
+              
+              //std:cout << getAAF(cmd_p).convert_int() << std::endl;
+              
+              /* controlled moments and vertical force are corrected using the aerodynamical effects */
+              auto Mx = ((4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_r + (-4*C1*C1*Ct*d)*cmd_p*cmd_y)+Max;
+              auto My = (-4*C1*C1*Ct*d*cmd_r*cmd_y + (4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_p)+May;
+              auto Mz = (-2*C1*C1*Cd*cmd_r*cmd_p + (8*Cd*thrust*C1*C1 + 8*C2*Cd*C1)*cmd_y)+Maz;
+              auto F  = Ct*C1*C1 *(cmd_p*cmd_p + cmd_r*cmd_r + 4.0*cmd_y*cmd_y + 4.0*thrust*thrust) + 8*Ct*C1*C2*thrust + 4*Ct*C2*C2+F1z+F2z+F3z+F4z;
+              
+              // Roll , pitch , yaw derivatives
+              yp[0] = y[3] + (y[5]*cosRoll + y[4]*sinRoll)*tanPitch;
+              yp[1] = y[4]*cosRoll - y[5]*sinRoll;
+              yp[2] = (y[5]*cosRoll + y[4]*sinRoll)/cosPitch;
+              
+              // p , q and r derivatives
+              yp[3] = Ip_qr * y[4] * y[5] + Im_xx * Mx ;
+              yp[4] = Iq_pr * y[3] * y[5] + Im_yy * My ;
+              yp[5] = Ir_pq * y[3] * y[4] + Im_zz * Mz ;
+              
+              // integrale of error in p , q and r
+              yp[6] = err_p;//err_p;
+              yp[7] = err_q;//err_q;
+              yp[8] = err_r;//err_r;
+              
+              // derivatives of body speed u , v and w, corrected with the aerodynamical forces
+              yp[9] = y[5]*y[10] - y[4]*y[11] + g*sinPitch+(F1x+F2x+F3x+F4x)/m;
+              yp[10] = y[3]*y[11] - y[5]*y[9] - g*cosPitch*sinRoll+(F1y+F2y+F3y+F4y)/m;
+              yp[11] = y[4]*y[9] - y[3]*y[10] + F/m - g*cosPitch*cosRoll;
+              
+              // //Z derivative coordinate
+              // yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
+              // // Z integrale for thrust setpoint calculation
+              // yp[13] = velZ_sp - y[11];
+          }
     }
 };
 
