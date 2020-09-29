@@ -581,17 +581,17 @@ public:
               
               /* Cross-model for aerodynamical systems from Forster */
               /* first line */
-              static const double K11 = -10.2506;
-              static const double K12 = -0.3177;
-              static const double K13 = -0.4332;
+              static const double K11 = -10.2506e-7;
+              static const double K12 = -0.3177e-7;
+              static const double K13 = -0.4332e-7;
               /* second line */
-              static const double K21 = -0.3177;
-              static const double K22 = -10.2506;
-              static const double K23 = -0.4332;
+              static const double K21 = -0.3177e-7;
+              static const double K22 = -10.2506e-7;
+              static const double K23 = -0.4332e-7;
               /* third line */
-              static const double K31 = -7.7050;
-              static const double K32 = -7.7050;
-              static const double K33 = -7.5530;
+              static const double K31 = -7.7050e-7;
+              static const double K32 = -7.7050e-7;
+              static const double K33 = -7.5530e-7;
               
               /* Crazyflie trajectory tracking article*/
               static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
