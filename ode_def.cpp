@@ -1133,9 +1133,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 42) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-            tau = 0.03;
-            t_end = 2.;
-            order = 3;
+            tau = 0.01;
+            t_end = 2.5;
+            order = 5;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
