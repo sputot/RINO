@@ -702,15 +702,15 @@ public:
 	      */
 	      
 	      /* Simplified model */ 
-	      double K11 = -9.1785e-8;
-	      double K12 = 0;
-	      double K13 = 0;
-	      double K21 = 0;
-	      double K22 = -9.1785e-8;
-	      double K23 = 0;
-	      double K31 = 0;
-	      double K32 = 0;
-	      double K33 = -10.311e-7;
+	      static const double K11 = -9.1785e-8;
+	      static const double K12 = 0;
+	      static const double K13 = 0;
+	      static const double K21 = 0;
+	      static const double K22 = -9.1785e-8;
+	      static const double K23 = 0;
+	      static const double K31 = 0;
+	      static const double K32 = 0;
+	      static const double K33 = -10.311e-7;
 	      
               /* Crazyflie trajectory tracking article*/
               static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
@@ -803,9 +803,9 @@ public:
               /* F_i^a=Om_i*K*((u_i,v_i,w_i)-RT*Wa */
               /* calcul de RT*Wa d'abord */
               /* for now Wa = 0 */
-              double Wa1 = 0;
-              double Wa2 = 0;
-              double Wa3 = 0;
+              static const double Wa1 = 0;
+              static const double Wa2 = 0;
+              static const double Wa3 = 0;
               auto RTWax = RT11*Wa1+RT12*Wa2+RT13*Wa3;
               auto RTWay = RT21*Wa1+RT22*Wa2+RT23*Wa3;
               auto RTWaz = RT31*Wa1+RT32*Wa2+RT33*Wa3;
