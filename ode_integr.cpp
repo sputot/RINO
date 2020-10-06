@@ -194,6 +194,7 @@ void TM_val::init_nextstep(double _tau)
         xp1[i].compact();  // compact the affine form: remove zero coefficients (there are some ...)
         xp1[i].sumup(tol_noise); // group small terms
    
+        
         // A REVOIR
 //        if (is_variable[i]) // removing dependencies to previous occurence in time dependent input
 //            xp1[i] = xp1[i].convert_int();
