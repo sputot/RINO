@@ -819,7 +819,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 18) // crazyflie HSCC 2019 paper
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-            tau = 0.01;
+            tau = 0.02;
             t_end = 2.;
             order = 3;
             
@@ -856,7 +856,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 181) // crazyflie HSCC 2019 paper with neural network controoller
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-            tau = 0.03;
+            tau = 0.02;
             t_end = 2.;
             order = 3;
             
@@ -866,6 +866,7 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             initial_values[3] = interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
             initial_values[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
             initial_values[12] = interval(-0.2,0.2); // * M_PI/180.0;  // z ?
+       
             
             // roll yaw pitch (degree) inputs value (here we consider input as initial)
             // inputs[0] = interval(3.0 , 5.0) * M_PI/180.0;
@@ -891,15 +892,15 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             //  inputs[12] = interval(-0.1 , 0.1);
             initial_values[13] = 0.0;
             
-            inputs[0] = interval(0.0,0.0); // cmd_phi
+            inputs[0] = interval(0.0,0.0); // cmd_phi (initial value)
             inputs[1] = interval(0.0,0.0); // cmd_theta
             inputs[2] = interval(0.0,0.0); // cmd_psi
             is_uncontrolled[0] = true;
             is_uncontrolled[1] = true;
             is_uncontrolled[2] = true;
-            nb_inputs[0] = 10; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[1] = 10; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[2] = 10; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[1] = 50; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[2] = 50; // control is constant for each step of the control loop: will take 67 different values overall
         }
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
