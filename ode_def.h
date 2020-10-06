@@ -687,19 +687,31 @@ public:
               static const double Ki_yr = 16.7;
               
               /* Cross-model for aerodynamical systems from Forster */
-              /* first line */
-              static const double K11 = -10.2506e-7;
+              /* 
+              static const double K11 = -10.2506e-7; // e-8 and below?
               static const double K12 = -0.3177e-7;
               static const double K13 = -0.4332e-7;
-              /* second line */
+              
               static const double K21 = -0.3177e-7;
               static const double K22 = -10.2506e-7;
               static const double K23 = -0.4332e-7;
-              /* third line */
+              
               static const double K31 = -7.7050e-7;
               static const double K32 = -7.7050e-7;
               static const double K33 = -7.5530e-7;
-              
+	      */
+	      
+	      /* Simplified model */ 
+	      double K11 = -9.1785e-8;
+	      double K12 = 0;
+	      double K13 = 0;
+	      double K21 = 0;
+	      double K22 = -9.1785e-8;
+	      double K23 = 0;
+	      double K31 = 0;
+	      double K32 = 0;
+	      double K33 = -10.311e-7;
+	      
               /* Crazyflie trajectory tracking article*/
               static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
               static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
@@ -772,20 +784,20 @@ public:
               auto RT33 = cosPitch*cosRoll;
               
               /* linear velocities of the four rotors */
-              auto u1 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
-              auto u2 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
-              auto u3 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
-              auto u4 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
-              
-              auto v1 = y[10]-y[3]*h+y[5]*d*sqrt(2)/2;
-              auto v2 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
-              auto v3 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
-              auto v4 = y[10]-y[3]*h+y[5]*d*sqrt(2)/2;
-              
-              auto w1 = y[11]+y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
-              auto w2 = y[11]+y[3]*d*sqrt(2)/2-y[4]*d*sqrt(2)/2;
-              auto w3 = y[11]+y[3]*d*sqrt(2)/2-y[4]*d*sqrt(2)/2;
-              auto w4 = y[11]+y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+	      auto u1 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
+	      auto u2 = y[9]+y[4]*h+y[5]*d*sqrt(2)/2;
+	      auto u3 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
+	      auto u4 = y[9]+y[4]*h-y[5]*d*sqrt(2)/2;
+  
+	      auto v1 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
+	      auto v2 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
+	      auto v3 = y[10]-y[3]*h-y[5]*d*sqrt(2)/2;
+	      auto v4 = y[10]-y[3]*h+y[5]*d*sqrt(2)/2;
+  
+	      auto w1 = y[11]-y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+	      auto w2 = y[11]-y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+	      auto w3 = y[11]+y[3]*d*sqrt(2)/2+y[4]*d*sqrt(2)/2;
+	      auto w4 = y[11]+y[3]*d*sqrt(2)/2-y[4]*d*sqrt(2)/2;
               
               /* computation of the four aerodynamical forces in the body frame */
               /* F_i^a=Om_i*K*((u_i,v_i,w_i)-RT*Wa */
@@ -815,10 +827,10 @@ public:
               auto F4z = Om4*(K31*(u4-RTWax)+K32*(v4-RTWay)+K33*(w4-RTWaz));
               
               /* computation of the three aerodynamical moments in the body frame */
-              auto Max = d*sqrt(2)/2*F1z-h*F1x+d*sqrt(2)/2*F2z-h*F2y-d*sqrt(2)/2*F3z-h*F3y-d*sqrt(2)/2*F4z-h*F4y;
-              auto May = h*F1x-d*sqrt(2)/2*F1z+h*F2x+d*sqrt(2)/2*F2z+h*F3x+d*sqrt(2)/2*F3z+h*F4x-d*sqrt(2)/2*F4z;
-              auto Maz = d*sqrt(2)/2*F1y-d*sqrt(2)/2*F1x-d*sqrt(2)/2*F2y-d*sqrt(2)/2*F2x-d*sqrt(2)/2*F3y+d*sqrt(2)/2*F3x+d*sqrt(2)/2*F4y+d*sqrt(2)/2*F4x;
-              
+	      auto Max = -d*sqrt(2)/2*F1z-h*F1y-d*sqrt(2)/2*F2z-h*F2y+d*sqrt(2)/2*F3z-h*F3y+d*sqrt(2)/2*F4z-h*F4y;
+	      auto May = h*F1x-d*sqrt(2)/2*F1z+h*F2x+d*sqrt(2)/2*F2z+h*F3x+d*sqrt(2)/2*F3z+h*F4x-d*sqrt(2)/2*F4z;
+	      auto Maz = d*sqrt(2)/2*F1y+d*sqrt(2)/2*F1x-d*sqrt(2)/2*F2y+d*sqrt(2)/2*F2x-d*sqrt(2)/2*F3y-d*sqrt(2)/2*F3x+d*sqrt(2)/2*F4y-d*sqrt(2)/2*F4x;
+
               //std:cout << getAAF(cmd_p).convert_int() << std::endl;
               
               /* controlled moments and vertical force are corrected using the aerodynamical effects */
