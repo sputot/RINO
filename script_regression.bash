@@ -29,11 +29,11 @@ fi
 
 
 # ODE examples
-examples_indexes=(1 2 3 4 5 6 7 9 10 14 15 19 21 22 13 17 18)   # indexes of ODE examples we wish to test for non regression
-sysdim=(1 2 4 5 2 4 4 6 10 2 2 2 2 2 7 12 14)
+examples_indexes=(1 2 3 4 5 6 7 9 10 11 14 15 19 21 22 13 17 18)   # indexes of ODE examples we wish to test for non regression
+sysdim=(1 2 4 5 2 4 4 6 10 3 2 2 2 2 2 7 12 14)
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
-compare_to_ref=false
+compare_to_ref=true
 
 if [ "$test_ode" == true ]
 then
