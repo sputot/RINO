@@ -462,9 +462,13 @@ public:
              auto err_q = q_sp - y[4];
              auto err_r = r_sp - y[5];
              
-             auto cmd_r = param_inputs[0]; // cmd_phi // y[6]*Ki_rr + err_p*Kp_rr;
-             auto cmd_p = param_inputs[1]; // cmd_theta // y[7]*Ki_pr + err_q*Kp_pr;
-             auto cmd_y = param_inputs[2]; // cmd_psi // y[8]*Ki_yr + err_r*Kp_yr;
+             auto expp0 = exp(2.0*param_inputs[0]);
+             auto expp1 = exp(2.0*param_inputs[1]);
+             auto expp2 = exp(2.0*param_inputs[2]);
+             
+             auto cmd_r = 800.*(expp0-1.0)/(expp0+1.0); // cmd_phi = 400*tanh(param_inputs[0]) // y[6]*Ki_rr + err_p*Kp_rr;
+             auto cmd_p = 800.0*(expp1-1.0)/(expp1+1.0); // cmd_theta // y[7]*Ki_pr + err_q*Kp_pr;
+             auto cmd_y = 3000.0*(expp2-1.0)/(expp2+1.0); // cmd_psi // y[8]*Ki_yr + err_r*Kp_yr;
              //std:cout << getAAF(cmd_p).convert_int() << std::endl;
              
              auto Mx = ((4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_r + (-4*C1*C1*Ct*d)*cmd_p*cmd_y);
