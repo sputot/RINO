@@ -466,9 +466,9 @@ public:
 	     auto sqp1 = param_inputs[1]*param_inputs[1]; // exp(2.0*param_inputs[1]);
 	     auto sqp2 = param_inputs[2]*param_inputs[2]; // exp(2.0*param_inputs[2]);
              
-             auto cmd_r = 800*param_inputs[0]*(10+sqp0)*(60+sqp0)/(600+sqp0*(270+sqp0*(11+sqp0/24))); // 800.*(expp0-1.0)/(expp0+1.0); // cmd_phi = 800*tanh(param_inputs[0]) // y[6]*Ki_rr + err_p*Kp_rr;
-	     auto cmd_p = 800*param_inputs[1]*(10+sqp1)*(60+sqp1)/(600+sqp1*(270+sqp1*(11+sqp1/24))); // 800.0*(expp1-1.0)/(expp1+1.0); // cmd_theta // y[7]*Ki_pr + err_q*Kp_pr;
-	     auto cmd_y = 800*param_inputs[2]*(10+sqp2)*(60+sqp2)/(600+sqp2*(270+sqp2*(11+sqp2/24))); // 3000.0*(expp2-1.0)/(expp2+1.0); // cmd_psi // y[8]*Ki_yr + err_r*Kp_yr;
+             auto cmd_r = 400*param_inputs[0]*(10+sqp0)*(60+sqp0)/(600+sqp0*(270+sqp0*(11+sqp0/24))); // 800.*(expp0-1.0)/(expp0+1.0); // cmd_phi = 800*tanh(param_inputs[0]) // y[6]*Ki_rr + err_p*Kp_rr;
+	     auto cmd_p = 400*param_inputs[1]*(10+sqp1)*(60+sqp1)/(600+sqp1*(270+sqp1*(11+sqp1/24))); // 800.0*(expp1-1.0)/(expp1+1.0); // cmd_theta // y[7]*Ki_pr + err_q*Kp_pr;
+	     auto cmd_y = 1000*param_inputs[2]*(10+sqp2)*(60+sqp2)/(600+sqp2*(270+sqp2*(11+sqp2/24))); // 3000.0*(expp2-1.0)/(expp2+1.0); // cmd_psi // y[8]*Ki_yr + err_r*Kp_yr;
              //std:cout << getAAF(cmd_p).convert_int() << std::endl;
              
              auto Mx = ((4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_r + (-4*C1*C1*Ct*d)*cmd_p*cmd_y);

@@ -863,10 +863,18 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
             
-            initial_values[3] = 0; // interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            initial_values[4] = 0; //interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
-            initial_values[12] = interval(-0.001,0.001); // interval(-0.2,0.2); // * M_PI/180.0;  // z ?
+         //   initial_values[3] = 0; // interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+         //   initial_values[4] = 0; //interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+         //   initial_values[12] = interval(-0.001,0.001); // interval(-0.2,0.2); // * M_PI/180.0;  // z ?
        
+            initial_values[3] =  interval(-0.001,0.001); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.001,0.001); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[12] =  interval(-0.01,0.01); // * M_PI/180.0;  // z ?
+            
+          //  initial_values[3] =  interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+          //  initial_values[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+          //  initial_values[12] =  interval(-0.2,0.2); // * M_PI/180.0;  // z ?
+            
             
             // roll yaw pitch (degree) inputs value (here we consider input as initial)
             // inputs[0] = interval(3.0 , 5.0) * M_PI/180.0;
