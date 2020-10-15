@@ -501,6 +501,120 @@ public:
              // // Z integrale for thrust setpoint calculation
              // yp[13] = velZ_sp - y[11];
          }
+         else if (syschoice == 182) // HSCC 2019 paper crazyflie example but with a different altitude controller - and now controlled by neural network
+         {
+             static const double p_sp = 0.0;  // angular speed of 1 degree / sec
+             static const double q_sp = 0.0;
+             static const double r_sp = 0.2; // prefer yaw command
+             
+             static const double z_sp = 0.0; // just stabilize at 0
+             
+             static const double C1 = 0.04076521;
+             static const double C2 = 380.8359;
+             static const double d = 0.046/sqrt(2.0);
+             
+             static const double Ixx = 1.657171e-5;
+             static const double Iyy = 1.6655602e-5;
+             static const double Izz = 2.9261652e-5;
+             
+             static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+             static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+             
+             //static const double Kp_Z = 2.0;
+             //static const double Kp_VZ = 25.0;
+             //static const double Ki_VZ = 15.0;
+             static const double Kp_Z = 3000.0;
+             static const double Kp_VZ = 500.0;
+             static const double Ki_VZ = 300.0;
+             
+             static const double Kp_rr = 250.0;
+             static const double Kp_pr = 250.0;
+             static const double Kp_yr = 120.0;
+             
+             static const double Ki_rr = 500.0;
+             static const double Ki_pr = 500.0;
+             static const double Ki_yr = 16.7;
+             
+             /* Crazyflie trajectory tracking article*/
+             static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+             static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+             static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+             
+             static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+             static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+             static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+             
+             static const double g = 9.8;
+             static const double m = 0.028;
+             
+             auto cosRoll = cos(y[0]);
+             auto sinRoll = sin(y[0]);
+             
+             auto cosPitch = cos(y[1]);
+             auto sinPitch = sin(y[1]);
+             
+             auto cosYaw = cos(y[2]);
+             auto sinYaw = sin(y[2]);
+             
+             auto tanPitch = tan(y[1]);
+             
+             auto err_z = z_sp - y[12];
+             
+             auto velZ_sp = Kp_Z * err_z;
+             
+             //Z derivative coordinate
+             yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
+             // Z integrale for thrust setpoint calculation
+             yp[13] = velZ_sp - yp[12];
+             
+             //auto thrust_Raw     = Kp_VZ * (velZ_sp - y[11]) + Ki_VZ * y[13];
+             //auto thrust_Raw     = Kp_VZ * (yp[13]) + Ki_VZ * y[13];
+             
+             auto thrust = Kp_VZ * (yp[13]) + Ki_VZ * y[13] + Kp_VZ * y[11] + 48500.0; //1000.0*thrust_Raw + 36000;
+             
+             auto err_p = p_sp - y[3];
+             auto err_q = q_sp - y[4];
+             auto err_r = r_sp - y[5];
+             
+             auto sqp0 = param_inputs[0]*param_inputs[0]; // exp(2.0*param_inputs[0]);
+	     auto sqp1 = param_inputs[1]*param_inputs[1]; // exp(2.0*param_inputs[1]);
+	     auto sqp2 = param_inputs[2]*param_inputs[2]; // exp(2.0*param_inputs[2]);
+             
+             auto cmd_r = 400*param_inputs[0]*(10+sqp0)*(60+sqp0)/(600+sqp0*(270+sqp0*(11+sqp0/24))); // 800.*(expp0-1.0)/(expp0+1.0); // cmd_phi = 800*tanh(param_inputs[0]) // y[6]*Ki_rr + err_p*Kp_rr;
+	     auto cmd_p = 400*param_inputs[1]*(10+sqp1)*(60+sqp1)/(600+sqp1*(270+sqp1*(11+sqp1/24))); // 800.0*(expp1-1.0)/(expp1+1.0); // cmd_theta // y[7]*Ki_pr + err_q*Kp_pr;
+	     auto cmd_y = 1000*param_inputs[2]*(10+sqp2)*(60+sqp2)/(600+sqp2*(270+sqp2*(11+sqp2/24))); // 3000.0*(expp2-1.0)/(expp2+1.0); // cmd_psi // y[8]*Ki_yr + err_r*Kp_yr;
+             //std:cout << getAAF(cmd_p).convert_int() << std::endl;
+             
+             auto Mx = ((4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_r + (-4*C1*C1*Ct*d)*cmd_p*cmd_y);
+             auto My = (-4*C1*C1*Ct*d*cmd_r*cmd_y + (4*Ct*d*thrust*C1*C1 + 4*C2*Ct*d*C1)*cmd_p);
+             auto Mz = (-2*C1*C1*Cd*cmd_r*cmd_p + (8*Cd*thrust*C1*C1 + 8*C2*Cd*C1)*cmd_y);
+             auto F  = Ct*C1*C1 *(cmd_p*cmd_p + cmd_r*cmd_r + 4.0*cmd_y*cmd_y + 4.0*thrust*thrust) + 8*Ct*C1*C2*thrust + 4*Ct*C2*C2;
+             
+             // Roll , pitch , yaw derivatives
+             yp[0] = y[3] + (y[5]*cosRoll + y[4]*sinRoll)*tanPitch;
+             yp[1] = y[4]*cosRoll - y[5]*sinRoll;
+             yp[2] = (y[5]*cosRoll + y[4]*sinRoll)/cosPitch;
+             
+             // p , q and r derivatives
+             yp[3] = Ip_qr * y[4] * y[5] + Im_xx * Mx ;
+             yp[4] = Iq_pr * y[3] * y[5] + Im_yy * My ;
+             yp[5] = Ir_pq * y[3] * y[4] + Im_zz * Mz ;
+             
+             // integrale of error in p , q and r
+             yp[6] = err_p;//err_p;
+             yp[7] = err_q;//err_q;
+             yp[8] = err_r;//err_r;
+             
+             // derivatives of body speed u , v and w
+             yp[9] = y[5]*y[10] - y[4]*y[11] + g*sinPitch;
+             yp[10] = y[3]*y[11] - y[5]*y[9] - g*cosPitch*sinRoll;
+             yp[11] = y[4]*y[9] - y[3]*y[10] + F/m - g*cosPitch*cosRoll;
+             
+             // //Z derivative coordinate
+             // yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
+             // // Z integrale for thrust setpoint calculation
+             // yp[13] = velZ_sp - y[11];
+         }
          else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
              yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
              yp[1] = 1; // time
