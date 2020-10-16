@@ -862,8 +862,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 181) // crazyflie HSCC 2019 paper with neural network controoller
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-            tau = 0.02;
-            t_end = 2.;
+            tau = 0.03;
+            t_end = 1.5;
             order = 3;
             
             for (int j=0 ; j<sysdim; j++)
@@ -918,8 +918,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 182) // crazyflie HSCC 2019 paper with neural network controller and agressive PID
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-	  tau = 0.02; // PB : dt_commands=0.03s it this OK still for integration?
-            t_end = 2.;
+            tau = 0.03; // PB : dt_commands=0.03s it this OK still for integration?
+            t_end = 1.5;
             order = 3;
             
             for (int j=0 ; j<sysdim; j++)
@@ -929,8 +929,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
          //   initial_values[4] = 0; //interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
          //   initial_values[12] = interval(-0.001,0.001); // interval(-0.2,0.2); // * M_PI/180.0;  // z ?
        
-            initial_values[3] =  interval(-0.,0.); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            initial_values[4] = interval(-0.,0.); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[3] =  interval(-0.001,0.001); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.001,0.001); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+       //     initial_values[5] = interval(0.019,0.021);
             initial_values[12] =  interval(-0.01,0.01); // * M_PI/180.0;  // z ?
             
           //  initial_values[3] =  interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
