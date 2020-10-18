@@ -560,17 +560,15 @@ public:
              
              auto err_z = z_sp - y[12];
              
-             auto velZ_sp = Kp_Z * err_z;
-             
              //Z derivative coordinate
              yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
              // Z integrale for thrust setpoint calculation
-             yp[13] = velZ_sp - yp[12];
+             yp[13] = err_z;
              
              //auto thrust_Raw     = Kp_VZ * (velZ_sp - y[11]) + Ki_VZ * y[13];
              //auto thrust_Raw     = Kp_VZ * (yp[13]) + Ki_VZ * y[13];
              
-             auto thrust = Kp_VZ * (yp[13]) + Ki_VZ * y[13] + Kp_VZ * y[11] + 48500.0; //1000.0*thrust_Raw + 36000;
+             auto thrust = Kp_VZ * (err_z) + Ki_VZ * y[13] + Kp_VZ * y[11] + 48500.0; //1000.0*thrust_Raw + 36000;
              
              auto err_p = p_sp - y[3];
              auto err_q = q_sp - y[4];
