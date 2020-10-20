@@ -501,11 +501,11 @@ public:
          }
          else if (syschoice == 182) // HSCC 2019 paper crazyflie example but with a different altitude controller - and now controlled by neural network
          {
-             static const double p_sp = 0.0;  // angular speed of 1 degree / sec
-             static const double q_sp = 0.0;
-             static const double r_sp = 0.2; // prefer yaw command
+             static const double p_sp = -0.1;  // angular speed of 1 degree / sec
+             static const double q_sp = 0.1;
+             static const double r_sp = 0.1; // prefer yaw command
              
-             static const double z_sp = 0.0; // just stabilize at 0
+             static const double z_sp = 0.1; // just stabilize at 0
              
              static const double C1 = 0.04076521;
              static const double C2 = 380.8359;
