@@ -445,7 +445,8 @@ public:
              auto tanPitch = tan(y[1]);
              
              auto err_z = z_sp - y[12];
-             
+
+	     auto velZ_sp = Kp_Z * err_z;
              //Z derivative coordinate
              yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
              // Z integrale for thrust setpoint calculation
