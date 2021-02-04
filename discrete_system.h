@@ -16,10 +16,14 @@
 #include "badiff.h"
 #include "fadiff.h"
 #include "fadbad_aa.h"
+#include "network_handler.h"
 #include "ode_def.h"
 
 class DiscreteFunc {
 public:
+    
+  //  template <class C> C sigmoid(C x) { return 1./(1.+exp(-x));}
+    
     template <class C>
     vector<C> operator()(vector<C> x) {
         vector<C> z(sysdim);
@@ -137,6 +141,28 @@ public:
             z[0] = x[0]; // * (1.0 - beta*x[1]*h);
             z[1] = x[1] + x[0]+ x[2]; // (beta*x[0]-x[2])*h);
             z[2] = x[2];
+        }
+        else if (syschoice == 22) { // DNN CAV-DINO
+            z[0] = sigmoid(2.0*sigmoid(2.0*x[0]-x[1]-0.4)+sigmoid(-2.0*x[0]+3.0*x[1]-0.5)-1.0);
+            z[1] = x[1];
+        }
+        else if (syschoice == 23) { // mountaincar (avec RNN)
+            vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+          //  EvalLayer EL;
+            net_outputs[0] = x;
+          //  cout << "coucou" << endl;
+            for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
+                //          L[i] = Layer(NH,i);
+              //  cout << "weights " << L[i].weights << endl;
+              //  cout << "biases " << L[i].biases << endl;
+                net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
+            }
+            vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+          //  vector<C> u(1);
+           // u[0] = 0.0;
+           // cout << "u[0]=" << endl;
+            z[0] = x[0] + x[1];
+            z[1] = x[1] - 0.0025*cos(3.0*x[0]) + 0.0015*u[0];
         }
         return z;
     }

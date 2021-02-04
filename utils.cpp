@@ -458,3 +458,45 @@ void print_ErrorMeasures(int current_iteration, double d0)
     outFile_relmeanerror_diff << t_print[current_iteration] << "\t" << rel_sum << endl;
 }
 
+
+std::ostream& operator<<(std::ostream& os, const std::vector<double> &input)
+{
+    for (auto const& i: input) {
+        os << i << " ";
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<AAF> &input)
+{
+    for (auto const& i: input) {
+        os << i.convert_int() << " ";
+    }
+    return os;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const std::vector<vector<double>> &input)
+{
+    for (int i=0 ; i<input.size(); i++) {
+        for (int j=0; j<input[i].size(); j++) {
+            os << input[i][j] << " ";
+        }
+        os << "\n";
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<vector<vector<double>>> &input)
+{
+    for (int i=0 ; i<input.size(); i++) {
+        for (int j=0; j<input[i].size(); j++) {
+            for (int k=0; k<input[i][j].size(); k++) {
+                os << input[i][j][k] << " ";
+            }
+            os << "\n";
+        }
+        os << "\n";
+    }
+    return os;
+}

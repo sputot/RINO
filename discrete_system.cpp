@@ -116,6 +116,14 @@ vector<interval> init_discrete_system(int &nb_steps)
         jacdim = 3;             // identical to 16 except parameters - gamma is now uncertain (x[3])
         sysdim = 3;
     }
+    else if (syschoice == 22) {  // DNN CAV-DINO
+        jacdim = 2;             //
+        sysdim = 2;             // a transformer en sysdim = 1 si ca fonctionne ?
+    }
+    else if (syschoice == 23) {  // mountaincar (avec NN)
+        jacdim = 2;             //
+        sysdim = 2;
+    }
     
     vector<interval> res(jacdim);
     
@@ -220,6 +228,15 @@ vector<interval> init_discrete_system(int &nb_steps)
         res[1] = interval(3.,4.); // interval(0.19,0.20);
         res[2] = interval(0.,1.0); //interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
         //  nb_steps = 30;
+    }
+    else if (syschoice == 22) {  // DNN CAV-DINO
+        res[0] = interval(0.,0.1);
+        res[1] = interval(0.,0.1);
+    }
+    else if (syschoice == 23) {  // mountain car (avec RNN)
+        res[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
+       // res[1] = interval(0.,0.00);
+        res[1] = interval(0.,0.001);
     }
     return res;
 }

@@ -45,9 +45,9 @@ start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 config_file=$rino"examples/config_0_"${examples_indexes[i]}".txt"
 if test -f $config_file
 then
-    `$rino_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+    `$rino_exec -systype ode -syschoice ${examples_indexes[i]} -configfile $config_file > /dev/null 2>&1`
 else
-    `$rino_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+    `$rino_exec -systype ode -syschoice ${examples_indexes[i]} > /dev/null 2>&1`
 fi
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_rino=$((end_ms - start_ms))
@@ -60,9 +60,9 @@ cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 if test -f $config_file
 then
-    `$ref_exec 0 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+    `$ref_exec -systype ode -syschoice ${examples_indexes[i]} -configfile $config_file > /dev/null 2>&1`
 else
-    `$ref_exec 0 ${examples_indexes[i]} > /dev/null 2>&1`
+    `$ref_exec -systype ode -syschoice ${examples_indexes[i]} > /dev/null 2>&1`
 fi
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_ref=$((end_ms - start_ms))
@@ -138,7 +138,7 @@ echo "******* Running RINO regression on DDE example no ${examples_indexes[i]} *
 cd $rino
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 config_file=$rino"examples/config_1_"${examples_indexes[i]}".txt"
-`$rino_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+`$rino_exec -systype dde -syschoice ${examples_indexes[i]} -configfile $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_rino=$((end_ms - start_ms))
 echo "Execution time for RINO: $elapsed_ms_rino milliseconds"
@@ -148,7 +148,7 @@ if [ "$compare_to_ref" = false ]
 then
 cd $ref
 start_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
-`$ref_exec 1 ${examples_indexes[i]} $config_file > /dev/null 2>&1`
+`$ref_exec -systype dde -syschoice ${examples_indexes[i]} -configfile $config_file > /dev/null 2>&1`
 end_ms=$(ruby -e 'puts (Time.now.to_f * 1000).to_i')
 elapsed_ms_ref=$((end_ms - start_ms))
 echo "Execution time for REF: $elapsed_ms_ref milliseconds"

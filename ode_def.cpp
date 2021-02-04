@@ -72,7 +72,7 @@ bool refined_mean_value;
 bool print_debug = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
-void define_system_dim(int argc, char* argv[])
+void define_system_dim(const char * params_filename)
 {
     /*************************************************************************** ODE ************************************************************/
     
@@ -231,6 +231,10 @@ void define_system_dim(int argc, char* argv[])
             sysdim = 2;
             inputsdim = 1;
         }
+        else if (syschoice == 301) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 2;
+            inputsdim = 0;
+        }
         else if (syschoice == 31) { // Quadcopter Mikhail Bessa
             sysdim = 14;
             inputsdim = 3;
@@ -297,6 +301,10 @@ void define_system_dim(int argc, char* argv[])
             // sysdim_params = 3;
             // 0 for sysdim params
         }
+        else if (syschoice == 45) { // Mountain car Verisig
+            sysdim = 2;
+            inputsdim = 0;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -350,8 +358,8 @@ void define_system_dim(int argc, char* argv[])
         }
     }
     
-    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
-        readfromfile_system_dim(argv[3], sysdim, jacdim, sysdim_params, nb_subdiv_init);
+    if (params_filename) // called with configuration file: we overwrite the initialization of init_system
+        readfromfile_system_dim(params_filename, sysdim, jacdim, sysdim_params, nb_subdiv_init);
     
 }
 
@@ -569,9 +577,9 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
 
 // the main function to define the system
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
+void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
 {
-    define_system_dim(argc,argv); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
+    define_system_dim(params_filename); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
     
     // inputs
     cout << "inputsdim=" << inputsdim << "sysdim=" << sysdim << endl;
@@ -941,8 +949,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
         }
         else if (syschoice == 182) // crazyflie HSCC 2019 paper with neural network controller and agressive PID
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-	  tau = 0.02; // PB : dt_commands=0.03s it this OK still for integration?
-            t_end = 2.;
+	  tau = 0.03; // PB : dt_commands=0.03s it this OK still for integration?
+            t_end = 1.;
             order = 3;
             
             for (int j=0 ; j<sysdim; j++)
@@ -952,9 +960,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
          //   initial_values[4] = 0; //interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
          //   initial_values[12] = interval(-0.001,0.001); // interval(-0.2,0.2); // * M_PI/180.0;  // z ?
        
-            initial_values[3] =  interval(-0.,0.); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            initial_values[4] = interval(-0.,0.); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
-            initial_values[12] =  interval(-0.01,0.01); // * M_PI/180.0;  // z ?
+          //  initial_values[3] =  interval(-0.01,0.01); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+          //  initial_values[4] = interval(-0.01,0.01); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+          //  initial_values[12] = interval(-0.01,0.01); // interval(-0.01,0.01); // * M_PI/180.0;  // z ?
             
           //  initial_values[3] =  interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
           //  initial_values[4] = interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
@@ -970,6 +978,11 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             //  inputs[3] = interval(-0.05,0.05);
             //  inputs[4] = interval(-0.05,0.05);
             //  inputs[5] = interval(-0.01,0.01);;
+            
+           // initial_values[3] = interval(-0.001,0.001);
+            initial_values[3] = interval(-0.101,-0.099); // -0.1; // interval(-0.101,-0.099); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.001,0.001);  // 0; // interval(-0.001,0.001); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[12] = interval(-0.01,0.01); // 0; // interval(-0.01,0.01); // * M_PI/180.0;  // z ?
             
             // err_p , err_q , err_r
             initial_values[6] = 0.0;
@@ -991,9 +1004,9 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             is_uncontrolled[0] = true;
             is_uncontrolled[1] = true;
             is_uncontrolled[2] = true;
-            nb_inputs[0] = 50; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[1] = 50; // control is constant for each step of the control loop: will take 67 different values overall
-            nb_inputs[2] = 50; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[0] = 33; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[1] = 33; // control is constant for each step of the control loop: will take 67 different values overall
+            nb_inputs[2] = 33; // control is constant for each step of the control loop: will take 67 different values overall
 	    // PB HERE for 2 seconds, this should be 100?
         }
         else if (syschoice == 183) // crazyflie HSCC 2019 paper with neural network controller and agressive PID
@@ -1009,8 +1022,8 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
          //   initial_values[4] = 0; //interval(-0.00872,0.00872); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
          //   initial_values[12] = interval(-0.001,0.001); // interval(-0.2,0.2); // * M_PI/180.0;  // z ?
        
-            initial_values[3] =  interval(-0.,0.); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
-            initial_values[4] = interval(-0.,0.); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
+            initial_values[3] =  interval(-0.001,0.001); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
+            initial_values[4] = interval(-0.001,0.001); //interval(-0.5,0.5) * M_PI/180.0;  // q ?
             initial_values[12] =  interval(-0.01,0.01); // * M_PI/180.0;  // z ?
             
           //  initial_values[3] =  interval(-0.00872,0.00872); // = interval(-0.5,0.5) * M_PI/180.0;  // p ?
@@ -1177,6 +1190,26 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             inputs[0] = interval(0.0,0.0);
             is_uncontrolled[0] = true;
             nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 301) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.05;
+            t_end = 0.05*30;
+            order = 3;
+            initial_values[0] = interval(0.5,0.9);
+            initial_values[1] = interval(0.5,0.9);
+            //inputs[0] = interval(0.0,0.0);
+            //is_uncontrolled[0] = true;
+            //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
+            
+            NH = network_handler("networks/sherlock_nn_ex1.sfx");
+       //     NH = network_handler("dnnuoa/networks/network_1.sfx");
+            //        L.reserve(NH.n_hidden_layers+1);
+            for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
+                cout << "before layer" << endl;
+                L[i] = Layer(NH,i);
+                cout << "after layer" << endl;
+            }
+            
         }
         else if (syschoice == 31) // Quadcopter MB vec 3 composantes en plus
         {   // do not forget to initialize the setpoints in the ode_def.h file...
@@ -1449,6 +1482,20 @@ void init_system(int argc, char* argv[], double &t_begin, double &t_end, double 
             //  inputs[12] = interval(-0.1 , 0.1);
             initial_values[13] = 0.0;
         }
+       else if (syschoice == 45) { // Mountain car Verisig
+           tau = 0.1;
+           t_end = 15.;
+           order = 3;
+           initial_values[0] = interval(-0.5,-0.48);
+           initial_values[1] = interval(0.,0.001);
+           //inputs[0] = interval(0.0,0.0);
+           //is_uncontrolled[0] = true;
+           //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
+           
+           NH = network_handler("dnnuoa/networks/verisig_mc_16x16.sfx");
+           for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+               L[i] = Layer(NH,i);
+       }
     }
     if (systype == 1) // DDE
     {

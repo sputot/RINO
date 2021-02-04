@@ -18,6 +18,7 @@
 #include "utils.h"
 #include "ode_def.h"
 #include "matrix.h"
+#include "network_handler.h"
 //#include "taylor.h"
 #include "inner.h"
 #include "ode_integr.h"
@@ -31,6 +32,7 @@
 #include <array>
 
 #include <stdlib.h>
+#include <algorithm>
 
 using namespace std;
 //using namespace tinyxml2;
@@ -50,7 +52,22 @@ using namespace std;
 // void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
 
 
+// for command line options
+char* getCmdOption(char ** begin, char ** end, const std::string & option)
+{
+    char ** itr = std::find(begin, end, option);
+    if (itr != end && ++itr != end)
+    {
+        return *itr;
+    }
+    return 0;
+}
 
+// for command line options
+bool cmdOptionExists(char** begin, char** end, const std::string& option)
+{
+    return std::find(begin, end, option) != end;
+}
 
 
 int main(int argc, char* argv[])
@@ -62,47 +79,85 @@ int main(int argc, char* argv[])
     
     double d0; // = 1;   // delay in DDE
     int nb_subdiv; // = 10;   // number of Taylor models on [0,d0]
+    const char* network_filename;
     
     vector<interval> Xouter(sysdim);
    
     /********* DEFINING SYSTEM *******************/
     // default is running example of CAV 2018 paper
-    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2
+    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2, DNN = 3
     syschoice = 1;
     
-    if (argc >= 3)
+    char * str_systype = getCmdOption(argv, argv + argc, "-systype");
+    if (str_systype)
     {
-        systype = atoi(argv[1]);
-        syschoice = atoi(argv[2]);
+        if (strcmp(str_systype,"ode")==0)
+            systype = 0;
+        else if (strcmp(str_systype,"dde")==0)
+            systype = 1;
+        else if (strcmp(str_systype,"discrete")==0)
+            systype = 2;
+        else if (strcmp(str_systype,"nn")==0)
+            systype = 3;
+   //     cout << "systype= " << systype << endl;
     }
-    else
+    
+    char * str_syschoice = getCmdOption(argv, argv + argc, "-syschoice");
+    if (str_syschoice)
+        syschoice = atoi(str_syschoice);
+  //  cout << "syschoice= " << syschoice << endl;
+    
+    network_filename = getCmdOption(argv, argv + argc, "-nnfile");
+    if (network_filename)
     {
-        cout << "You can choose your system: " << endl;
-        cout << "First argument is equation type : 0 for ODE, 1 for DDE" << endl;
-        cout << "Second argument is system number :" << endl;
-        cout << "For discrete systems, 3rd (optional) argument is number of steps, 4th (optional) argument is order of approx (1 or 2)" << endl;
+        NH = network_handler(network_filename);
+       // cout << NH.n_hidden_layers+1 << endl;
+        for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+            L[i] = Layer(NH,i);
+    }
+    
+    char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
+    
+    if ((!str_systype) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
+    {
+        cout << "Usage is: " << endl;
+        cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems, nn for neural networks" << endl;
+        cout << "-syschoice x: integer setting the predefined system ID" << endl;
+        cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
+        cout << "-AEextension_order x: for discrete systems only, (optional) order of AE-extensions (1 or 2) - default value is 1" << endl;
+        cout << "-configfile xxx: name of the (optional) config file - for ODE and DDE" << endl;
        // cout << "For ODEs: 1 for 1D running example, 2 for Brusselator, 3 for ballistic," << endl;
        // cout << "4 for linearized ballitsic, 5 for self driving car with jacdim = 2, 6 for self driving car with jacdim = 4,"<<endl;
       //  cout << "For DDEs: 1 for 1D running example, 6 for self driving car with jacdim = 2, 7 for self driving car with sysdim = 4,"<<endl;
      //   cout << "8 for selfdriving with sysdim=2, jacdim=4"<<endl;
+        exit(0);
     }
     
     /*******************************************************************************************/
-   
+   /************* Discrete Systems ************/
     if (systype == 2) {
-        int nb_steps = 1;
-        int order = 1;
-        if (argc >= 4)
-          nb_steps = atoi(argv[3]);
-        if (argc >= 5)
-            order = atoi(argv[4]);
         
-       // if (syschoice == 15)
+        int nb_steps = 1;
+        int AEextension_order = 1;
+    
+        char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
+        if (str_nbsteps)
+            nb_steps = atoi(str_nbsteps);
+        char * str_AEextension_order = getCmdOption(argv, argv + argc, "-AEextension_order");
+        if (str_AEextension_order)
+            nb_steps = atoi(str_AEextension_order);
+        
+        
+        if (syschoice == 23)
+            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
+           // discrete_dynamical_method2_preconditioned(nb_steps);
+        
+        // if (syschoice == 15)
        //     discrete_dynamical(nb_steps,order);
          if (syschoice == 15)
-            discrete_dynamical_preconditioned(nb_steps,order);
+            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
          else if (syschoice == 16)
-             discrete_dynamical_preconditioned_3d(nb_steps,order);
+             discrete_dynamical_preconditioned_3d(nb_steps,AEextension_order);
          // discrete_dynamical_preconditioned(nb_steps,order);
         else if (syschoice == 16)
             discrete_dynamical_method2(nb_steps);
@@ -117,7 +172,7 @@ int main(int argc, char* argv[])
         else if (syschoice == 20 ||  syschoice == 18)
          discrete_dynamical_method2_preconditioned(nb_steps);
         else if (syschoice == 15 || syschoice == 18 || syschoice == 19  ||  syschoice == 16 || syschoice == 20 )
-            discrete_dynamical_preconditioned(nb_steps,order);
+            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
         else
             function_range();
         
@@ -130,13 +185,27 @@ int main(int argc, char* argv[])
             discrete_dynamical_method2(nb_steps);
     //    else if (syschoice == 16)
      //       discrete_dynamical_preconditioned_3d(nb_steps);
-        
             // discrete_dynamical();
         else
             function_range(); */
         
+        return 0;
+    }
+    else if (systype == 3) {
+        // neural network range evaluation
         
+        vector<vector<AAF>> net_outputs(NH.n_hidden_layers+2); // outputs for each layer
         
+        vector<AAF> net_inputs(NH.n_inputs);
+        net_inputs[0] = interval(0,0.1);
+        net_inputs[1] = interval(0,0.1);
+        
+        net_outputs[0] = net_inputs;
+        for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
+            net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
+        }
+        for (int i=-1 ; i<NH.n_hidden_layers+1 ; i++ )
+            cout << "output layer " << i << " is " << net_outputs[i+1] << endl;
         return 0;
     }
     
@@ -145,10 +214,10 @@ int main(int argc, char* argv[])
     
     clock_t begin = clock();
 
-    init_system(argc, argv, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
+    init_system(config_filename, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
-    if (argc == 4) // called with configuration file: we overwrite the initialization of init_system
-        read_parameters(argv[3], tau, t_end, d0, t_begin, order, nb_subdiv);
+    if (config_filename) // called with configuration file: we overwrite the initialization of init_system
+        read_parameters(config_filename, tau, t_end, d0, t_begin, order, nb_subdiv);
     
     init_utils_inputs(t_begin,t_end,tau,d0,nb_subdiv);
     

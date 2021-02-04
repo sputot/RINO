@@ -15,6 +15,7 @@
 #include "tadiff.h" 
 #include "fadiff.h"
 #include "fadbad_aa.h"
+#include "network_handler.h"
 
 using namespace std;
 
@@ -93,7 +94,7 @@ void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jac
 void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv);
 
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(int argc, char* argv[], double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
+void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
 
 void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv);
 
@@ -901,6 +902,15 @@ public:
             yp[0] = y[1]-y[0]*y[0]*y[0];
             yp[1] = param_inputs[0];
         }
+        else if (syschoice == 301) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+            net_outputs[0] = y;
+            for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+                net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
+            vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+            yp[0] = y[1]-y[0]*y[0]*y[0];
+            yp[1] = u[0];
+        }
         else if (syschoice == 31) { // Quadcopter Mikhail Bessa avec 3 composantes de plus
             // y[0]=z ; y[1]=u ; y[2]=v ; y[3]=w ; y[4]=phi ; y[5]=theta ;
             // y[6]=psi ; y[7]=p ; y[8]=q ; y[9]=r ; y[10]=zI ;
@@ -939,6 +949,10 @@ public:
             yp[10] = 2*(1-y[0])-y[3]; // yp[10] = zI
         }
           else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              yp[0] = y[1];
+              yp[1] = param_inputs[0]*y[1]*y[1] - y[0];
+          }
+          else if (syschoice == 321) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
               yp[0] = y[1];
               yp[1] = param_inputs[0]*y[1]*y[1] - y[0];
           }
@@ -1539,6 +1553,15 @@ public:
               // yp[12] = cosPitch*cosRoll*y[11] - sinPitch*y[9] + cosPitch*sinRoll*y[10];
               // // Z integrale for thrust setpoint calculation
               // yp[13] = velZ_sp - y[11];
+          }
+          else if (syschoice == 45) { // Mountain car example Verisig
+              vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+              net_outputs[0] = y;
+              for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+                  net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
+              vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+              yp[0] = y[1];
+              yp[1] = 0.0015*u[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
           }
     }
 };

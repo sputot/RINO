@@ -45,4 +45,9 @@ void run_pythonscript_visualization();
 void print_ErrorMeasures(int current_iteration, double d0);
 void print_finalsolution(int max_it, double d0);
 
+std::ostream& operator<<(std::ostream& os, const std::vector<double> &input);
+std::ostream& operator<<(std::ostream& os, const std::vector<AAF> &input);
+std::ostream& operator<<(std::ostream& os, const std::vector<vector<double>> &input);
+std::ostream& operator<<(std::ostream& os, const std::vector<vector<vector<double>>> &input);
+
 #endif
