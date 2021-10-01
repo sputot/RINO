@@ -19,6 +19,7 @@
 #include "ode_def.h"
 #include "matrix.h"
 #include "network_handler.h"
+#include "sherlock.h"
 //#include "taylor.h"
 #include "inner.h"
 #include "ode_integr.h"
@@ -35,6 +36,9 @@
 #include <algorithm>
 
 using namespace std;
+
+#include "yaml-cpp/yaml.h"
+
 //using namespace tinyxml2;
 
 
@@ -70,6 +74,98 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 }
 
 
+void essai_sherlock()
+{
+    
+    string onnx_file = "./networks/sample_network.onnx";
+    string deep_2_neuron_file = "./networks/simple_deep_2.onnx";
+    
+    computation_graph CG_1;
+    //    onnx_parser my_parser_1(deep_2_neuron_file);
+    onnx_parser my_parser_1(onnx_file);
+    map<string, ParameterValues <uint32_t> > tensor_mapping_1;
+    my_parser_1.build_graph(CG_1, tensor_mapping_1);
+   /* for(auto each_pair : tensor_mapping_1)
+    {
+        cout << each_pair.first << endl;
+        each_pair.second.print();
+    }
+    */
+    //    test_poly_abstr_simple(CG_1);
+    
+    
+    computation_graph sample_graph_a;
+    test_network_sigmoid(sample_graph_a);
+    
+    map<uint32_t, double> in, out;
+   // in.insert(make_pair(1, 1.0));
+   // in.insert(make_pair(2, 0.5));
+    in.insert(make_pair(1, 5.0));
+    in.insert(make_pair(2, -2.0));
+    computation_graph_evaluate_graph(sample_graph_a,in,out);
+  //  cout << "Value in computation_graph_evaluate is " << out[13] << endl;
+    cout << "Value in computation_graph_evaluate is " << out[7] << endl;
+    print_map(in);
+    print_map(out);
+    
+    
+    map<uint32_t, interval> abstract_in, abstract_out;
+    abstract_in.insert(make_pair(1, 5.0));
+    abstract_in.insert(make_pair(2, -2.0));
+    //abstract_in.insert(make_pair(1, 1.0));
+    //abstract_in.insert(make_pair(2, 0.5));
+    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_in,abstract_out);
+  //  essai1(sample_graph_a,abstract_in,abstract_out);
+ //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
+    cout << "Abstract value in computation_graph_evaluate is " << abstract_out[7] << endl;
+   // print_map(abstract_in);
+   // print_map(abstract_out);
+    
+    map<uint32_t, AAF> abstract_affin, abstract_affout;
+    abstract_affin.insert(make_pair(1, 5.0));
+    abstract_affin.insert(make_pair(2, -2.0));
+    //abstract_in.insert(make_pair(1, 1.0));
+    //abstract_in.insert(make_pair(2, 0.5));
+    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_affin,abstract_affout);
+    //  essai1(sample_graph_a,abstract_in,abstract_out);
+    //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
+    cout << "Abstract value in computation_graph_evaluate is " << abstract_affout[7].convert_int() << endl;
+    // print_map(abstract_in);
+    // print_map(abstract_out);
+    
+    
+    sample_graph_a.evaluate_graph(in, out);
+    cout << "Value is " << out[13] << endl;
+    print_map(in);
+    print_map(out);
+    
+    
+    
+    
+    
+  //  computation_graph sample_graph_a;
+  //  test_network_sigmoid(sample_graph_a);
+    
+    //
+    auto x = 5.0;
+    auto y = -2.0;
+    map< uint32_t, double > inputs;
+    inputs.insert(make_pair(1, x));
+    inputs.insert(make_pair(2, y));
+    //
+    map< uint32_t, double > outputs;
+    //map< uint32_t, double > gradient;
+    sample_graph_a.evaluate_graph(inputs, outputs);
+    print_map(inputs);
+    print_map(outputs);
+    // inputs.clear();
+    // inputs.insert(make_pair(1, x));
+    // inputs.insert(make_pair(2, y));
+    // gradient = sample_graph_a.return_gradient_wrt_inputs(7, inputs);
+    cout << "Value at x = " << x << "  and y = " << y << " is " << outputs[7] << endl;
+}
+
+
 int main(int argc, char* argv[])
 {
     // all these parameters in initialization functions defined in ode_def.cpp
@@ -79,10 +175,28 @@ int main(int argc, char* argv[])
     
     double d0; // = 1;   // delay in DDE
     int nb_subdiv; // = 10;   // number of Taylor models on [0,d0]
-    const char* network_filename;
+    const char* sfx_filename;
+    const char* onnx_filename;
+    
+    // for ODEs only
+    vector<vector<interval>> sampled_reachset;
+    
+    // for discrete systems only
+    int nb_steps = 1;
+    int AEextension_order = 1;
+    vector<interval> xinit;
+    // end discrete systems only
     
     vector<interval> Xouter(sysdim);
+//    vector<interval> Xinner(sysdim);
    
+/*    essai_sherlock();
+    syschoice = 101;
+    function_range(NULL);
+    
+    exit(0); */
+    
+    
     /********* DEFINING SYSTEM *******************/
     // default is running example of CAV 2018 paper
     systype = 1; // EDO = 0, DDE = 1, discrete systems = 2, DNN = 3
@@ -107,25 +221,44 @@ int main(int argc, char* argv[])
         syschoice = atoi(str_syschoice);
   //  cout << "syschoice= " << syschoice << endl;
     
-    network_filename = getCmdOption(argv, argv + argc, "-nnfile");
-    if (network_filename)
+    sfx_filename = getCmdOption(argv, argv + argc, "-nnfile-sfx");
+    onnx_filename = getCmdOption(argv, argv + argc, "-nnfile-onnx");
+    if (sfx_filename)
+        NH = network_handler(sfx_filename);
+    else if (onnx_filename)
     {
-        NH = network_handler(network_filename);
-       // cout << NH.n_hidden_layers+1 << endl;
-        for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
-            L[i] = Layer(NH,i);
+    // CG is a global variable
+    onnx_parser my_parser(onnx_filename);
+    map<string, ParameterValues <uint32_t> > tensor_mapping;
+    my_parser.build_graph(CG, tensor_mapping);
+     //   test_network_tanh(CG);
+    //    test_network_sigmoid_cav(CG);
+      //  essai_sherlock();
+       // syschoice = 101;
+       // function_range(NULL);
+    }
+    else if (systype == 3) {
+        cout << "You should have entered a neural network to analyse (see option -help if needed)" << endl;
+        exit(0);
     }
     
+   // if (syschoice == 231)
+   //     test_network_mountaincar_cav(CG);
+    
     char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
+    
+  
+    
     
     if ((!str_systype) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
     {
         cout << "Usage is: " << endl;
         cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems, nn for neural networks" << endl;
+        cout << "-nnfile-sfx xxx or -nnfile-onnx xxx: in case systype is nn, then you should enter the name of file that contains the network, either in old sherlock-like format (sfx) or onnx format" << endl;
         cout << "-syschoice x: integer setting the predefined system ID" << endl;
         cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
         cout << "-AEextension_order x: for discrete systems only, (optional) order of AE-extensions (1 or 2) - default value is 1" << endl;
-        cout << "-configfile xxx: name of the (optional) config file - for ODE and DDE" << endl;
+        cout << "-configfile xxx: name of the (optional) config file " << endl;
        // cout << "For ODEs: 1 for 1D running example, 2 for Brusselator, 3 for ballistic," << endl;
        // cout << "4 for linearized ballitsic, 5 for self driving car with jacdim = 2, 6 for self driving car with jacdim = 4,"<<endl;
       //  cout << "For DDEs: 1 for 1D running example, 6 for self driving car with jacdim = 2, 7 for self driving car with sysdim = 4,"<<endl;
@@ -137,8 +270,7 @@ int main(int argc, char* argv[])
    /************* Discrete Systems ************/
     if (systype == 2) {
         
-        int nb_steps = 1;
-        int AEextension_order = 1;
+        
     
         char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
         if (str_nbsteps)
@@ -147,70 +279,79 @@ int main(int argc, char* argv[])
         if (str_AEextension_order)
             nb_steps = atoi(str_AEextension_order);
         
+//        if (config_filename) // called with configuration file: we overwrite the initialization of init_system
+//            read_parameters(config_filename, tau, t_end, d0, t_begin, order, nb_subdiv);
+  
         
-        if (syschoice == 23)
-            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
+        xinit = init_discrete_system(nb_steps, config_filename); // initial condition
+        
+        if (nb_steps == 1)
+        {
+            //if (syschoice == 111) {
+           //     nn_range(config_filename);
+           // }
+           // else
+                function_range(xinit);
+            return 0;
+        }
+        
+        if ((syschoice == 23) || (syschoice == 231))
+            discrete_dynamical_method2_preconditioned(xinit,nb_steps);
+//            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
            // discrete_dynamical_method2_preconditioned(nb_steps);
         
         // if (syschoice == 15)
        //     discrete_dynamical(nb_steps,order);
-         if (syschoice == 15)
-            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
+         else if (syschoice == 15 || syschoice == 19 )
+            discrete_dynamical_preconditioned(xinit,nb_steps,AEextension_order);
          else if (syschoice == 16)
-             discrete_dynamical_preconditioned_3d(nb_steps,AEextension_order);
+             discrete_dynamical_preconditioned_3d(xinit,nb_steps,AEextension_order);
          // discrete_dynamical_preconditioned(nb_steps,order);
         else if (syschoice == 16)
-            discrete_dynamical_method2(nb_steps);
+            discrete_dynamical_method2(xinit,nb_steps);
         else if (syschoice == 18)
 //            function_range();
             // discrete_dynamical_preconditioned_3d(nb_steps,order);
-            discrete_dynamical_method2_preconditioned(nb_steps);
+            discrete_dynamical_method2_preconditioned(xinit,nb_steps);
         else if (syschoice == 17 ||  syschoice == 21 ) {
-           discrete_dynamical_method2(nb_steps);
+           discrete_dynamical_method2(xinit,nb_steps);
          // discrete_dynamical(nb_steps,order);
         }
         else if (syschoice == 20 ||  syschoice == 18)
-         discrete_dynamical_method2_preconditioned(nb_steps);
-        else if (syschoice == 15 || syschoice == 18 || syschoice == 19  ||  syschoice == 16 || syschoice == 20 )
-            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
-        else
-            function_range();
+         discrete_dynamical_method2_preconditioned(xinit,nb_steps);
+      else
+          discrete_dynamical_preconditioned(xinit,nb_steps,AEextension_order);
+
         
- //       discrete_dynamical_preconditioned(nb_steps);
-      //  discrete_dynamical_method2(nb_steps);
-        
-     /*   if (syschoice == 15 || syschoice == 18 || syschoice == 19  ||  syschoice == 16)
-            discrete_dynamical_preconditioned(nb_steps);
-        else if (syschoice == 17)
-            discrete_dynamical_method2(nb_steps);
-    //    else if (syschoice == 16)
-     //       discrete_dynamical_preconditioned_3d(nb_steps);
-            // discrete_dynamical();
-        else
-            function_range(); */
+        // system("cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
+        char command_line[1000];
+        sprintf(command_line,"cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
+        cout << command_line << endl;
+        system(command_line);
         
         return 0;
     }
     else if (systype == 3) {
+        int nb_steps = 1;
         // neural network range evaluation
         
-        vector<vector<AAF>> net_outputs(NH.n_hidden_layers+2); // outputs for each layer
+        // vector<AAF> u = NH.eval_network(x);
         
-        vector<AAF> net_inputs(NH.n_inputs);
-        net_inputs[0] = interval(0,0.1);
-        net_inputs[1] = interval(0,0.1);
+        if (sfx_filename)
+            syschoice = 100;
+        else if (onnx_filename)
+            syschoice = 101;
         
-        net_outputs[0] = net_inputs;
-        for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
-            net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
-        }
-        for (int i=-1 ; i<NH.n_hidden_layers+1 ; i++ )
-            cout << "output layer " << i << " is " << net_outputs[i+1] << endl;
+        xinit = init_discrete_system(nb_steps, config_filename); // initial condition
+        
+        function_range(xinit);
+        
         return 0;
     }
     
     
    
+    // *************** ODEs or DDEs *******************
     
     clock_t begin = clock();
 
@@ -272,23 +413,8 @@ int main(int argc, char* argv[])
                 
                 
             }
-            if (current_subdiv<nb_subdiv_init) {
-                for (int i=0 ; i<sysdim ; i++)
-                    outFile_inner[i] << "\n";
-                if (uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++) {
-                        outFile_inner_robust[i] << "\n";
-                        outFile_outer_robust[i] << "\n";
-                    }
-                }
-                if (controlled > 0 || uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++){
-                        outFile_inner_minimal[i] << "\n";
-                        outFile_outer_minimal[i] << "\n";
-                    }
-                    
-                }
-            }
+            // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
+            // removed when passed to yaml but not tested since => check
         }
         
         print_finalsolution(ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
@@ -305,6 +431,16 @@ int main(int argc, char* argv[])
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
+            cout << "recompute_control=" << recompute_control << endl;
+            cout << "params=" << params;
+            // Runge Kutta simulations
+            cout << "Estimate reachset:" << endl;
+          //  vector<vector<interval>> sampled_reachset; // (10000,vector<interval>(sysdim));
+           sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau);
+            cout << "End estimate reachset:" << endl;
+            cout << "recompute_control=" << recompute_control << endl;
+            cout << "params=" << params;
+            
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
             
@@ -326,44 +462,185 @@ int main(int argc, char* argv[])
         //        cout << "yp[i]=" <<yp[i].convert_int() << " ";
         //    cout << endl;
             
+            vector<F<AAF>> temp(sysdim);
+            for (int j=0 ; j<sysdim; j++)
+                temp[j] = x[j];
+            //nn_outputs = NH.eval_network(temp);
+            
+            
+           
+            
+            
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
             
+          //  vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
+          //  for (int i=0; i<sysdim; i++)
+           //     J[i][i] = 1.0;
+         //   cur_step.eval_valandJacobian_nn(initial_values,param_inputs,0,tau,J);
+            
+            
+            int iter = 1;
             while (cur_step.tn < t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
                 cur_step.TM_build(param_inputs,param_inputs_center);
-                Xouter = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau);
-                cur_step.init_nextstep(tau);
+                Xouter = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);  
+                cur_step.init_nextstep(param_inputs,tau);
                 
                 if ((Xouter[0] == interval::EMPTY()) || (Xouter[0] == interval::ENTIRE())) {
                     printf("Terminated due to too large overestimation.\n");
                     break;
                 }
+                iter++;
             }
             // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
-            if (current_subdiv<nb_subdiv_init) {
-                for (int i=0 ; i<sysdim ; i++)
-                    outFile_inner[i] << "\n";
-                if (uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++) {
-                        outFile_inner_robust[i] << "\n";
-                        outFile_outer_robust[i] << "\n";
-                    }
-                }
-                if (controlled > 0 || uncontrolled > 0) {
-                    for (int i=0 ; i<sysdim ; i++){
-                        outFile_inner_minimal[i] << "\n";
-                        outFile_outer_minimal[i] << "\n";
-                    }
-                    
-                }
-            }
-            
+            // removed when passed to yaml but not tested since => check
             
         }
-        print_finalsolution(ceil((t_end-t_begin)/tau), d0);
+        
+        if (nb_subdiv_init > 1)
+            print_finalsolution(ceil((t_end-t_begin)/tau), d0);
+        
+        
+        
     }
+    
+    ofstream summaryyamlfile;
+    summaryyamlfile.open("output/sumup.yaml");
+    YAML::Emitter out_summary;
+    out_summary << YAML::BeginMap;
+    if (systype == 0 || systype == 1) {
+        out_summary << YAML::Key << "systype";
+        out_summary << YAML::Value << systype;
+        out_summary << YAML::Key << "sysdim";
+        out_summary << YAML::Value << sysdim;
+ //       out_summary << YAML::Key << "nb_timesteps";
+ //       out_summary << YAML::Value << n_steps;
+        out_summary << YAML::Key << "dt";
+        out_summary << YAML::Value << tau;
+        out_summary << YAML::Key << "nb_subdiv_init";
+        out_summary << YAML::Value << nb_subdiv_init;
+    }
+    else if (systype == 2 || systype == 3) { // discrete
+        out_summary << YAML::Key << "systype";
+        out_summary << YAML::Value << systype;
+        out_summary << YAML::Key << "sysdim";
+        out_summary << YAML::Value << sysdim;
+        out_summary << YAML::Key << "nb_steps";
+        out_summary << YAML::Value << nb_steps;
+    }
+    out_summary << YAML::EndMap;
+    summaryyamlfile << out_summary.c_str();
+    summaryyamlfile.close();
+    
+    
+    clock_t end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    
+    std::string commandLineStr= "";
+    for (int i=0;i<argc;i++) commandLineStr.append(std::string(argv[i]).append(" "));
+    
+    
+    ofstream summaryfile;
+    string sumupname = "output/sumup.txt";
+    summaryfile.open(sumupname);
+    summaryfile << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl
+//                << "                           Summary   " << timestamp << std::endl
+                << "                           Summary   " << endl
+                << "                      Command-line   " << commandLineStr << std::endl
+    << "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┯━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━" << std::endl;
+//                << "                          Dynamics │ " << system_network.dynamics_to_str() << std::endl
+    if (systype == 0) {
+        summaryfile << "                           Systype │ " << "ode"  << std::endl;
+        summaryfile << "                          Dynamics │ " << syschoice << std::endl;
+        summaryfile << "                Initial conditions │ " << initial_values << std::endl;
+        summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
+        summaryfile << "                         Time step │ " << tau << std::endl;
+        summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        summaryfile << "               Taylor Models order │ " << order << std::endl;
+        if (nb_subdiv_init >1)
+            summaryfile << "     #subdivisions of input domain │ " << nb_subdiv_init << std::endl;
+        if (sfx_filename)
+            summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
+        else if (onnx_filename)
+            summaryfile << "               Neural network file │ " << onnx_filename << std::endl;
+        summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+        summaryfile << "Sampled estimate of final reachset │ " << sampled_reachset[sampled_reachset.size()-2];  // or iter-1 would be better
+        summaryfile << "                Over-approximation │ " << Xouter;
+        // le reste: a relire/calculer des fichiers YAML que je vais produire... 
+//        summaryfile << " Projection of under-approximation │ " << Xinner << std::endl;
+
+
+    }
+    else if (systype == 1) {
+        summaryfile << "                           Systype │ " << "dde"  << std::endl;
+        summaryfile << "                          Dynamics │ " << syschoice << std::endl;
+        summaryfile << "                Initial conditions │ " << initial_values << std::endl;
+        summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
+        summaryfile << "                             Delay │ " << d0 << std::endl;
+        summaryfile << "                         Time step │ " << tau << std::endl;
+        summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        summaryfile << "               Taylor Models order │ " << order << std::endl;
+        if (nb_subdiv_init >1)
+            summaryfile << "     #subdivisions of input domain │ " << nb_subdiv_init << std::endl;
+        summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+
+    }
+    else if (systype == 2) {
+        summaryfile << "                           Systype │ " << "discrete"  << std::endl;
+        summaryfile << "                          Dynamics │ " << syschoice << std::endl;
+        summaryfile << "                Initial conditions │ " << xinit << std::endl;
+        summaryfile << "                           # steps │ " << nb_steps << std::endl;
+        summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        summaryfile << "                 AEextension order │ " << AEextension_order << std::endl;
+        if (sfx_filename)
+            summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
+        else if (onnx_filename)
+            summaryfile << "               Neural network file │ " << onnx_filename << std::endl;
+        summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+
+    }
+    else if (systype == 3) {
+        summaryfile << "                           Systype │ " << "nn"  << std::endl;
+        summaryfile << "                Initial conditions │ " << xinit << std::endl;
+        summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        if (sfx_filename)
+            summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
+        else if (onnx_filename)
+            summaryfile << "               Neural network file │ " << onnx_filename << std::endl;
+        summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+
+    }
+    
+    if (config_filename)
+        summaryfile << "                        ConfigFile │ " << config_filename << std::endl;
+    summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+    summaryfile << "                Elapsed time (sec) │ " << elapsed_secs << endl;
+  /*              << "                           Network │ " << argv[2] << std::endl
+                << "                            Method │ " << method << std::endl
+                << "                        # of steps │ " << n_steps << std::endl
+                << "                  AAF approx. type │ " << aaftype << std::endl
+                << "            # of ref. trajectories │ " << system_network.get_samples_amount() << std::endl
+                << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+    int once = 1;
+    for(int j = 0; j < n_inputs; j++){
+    summaryfile << "         x"<<j<<"  Projected UA coverage │ " << std::setw(3) << percent(stats["ua_proj_cov"][j][0]) << "/" << std::setw(3) << percent(stats["ua_proj_cov"][j][1]) << "/" << std::setw(3) << percent(stats["ua_proj_cov"][j][2]) << (once ? " (min/avg/max)" : "") << " faults : " << stats_proj_fault[j] << std::endl;
+    if(once)
+        once = 0;
+    summaryfile << "                Robust UA coverage │ " << std::setw(3) << percent(stats["ua_rob_cov"][j][0]) << "/" << std::setw(3) << percent(stats["ua_rob_cov"][j][1]) << "/" << std::setw(3) << percent(stats["ua_rob_cov"][j][2]) << " faults : " << stats_rob_fault[j] << std::endl;
+    summaryfile << "                      OA proximity │ " << std::setw(3) << percent(stats["oa_prox"][j][0]) << "/" << std::setw(3) << percent(stats["oa_prox"][j][1]) << "/" << std::setw(3) << percent(stats["oa_prox"][j][2]) << " faults : " << stats_oa_fault[j] << std::endl;
+    }
+    summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
+    summaryfile << "                  Computation time │ " << std::chrono::duration_cast<std::chrono::seconds>(t_end_method - t_start).count() << "s" << std::endl
+                << "                     Sampling time │ " << std::chrono::duration_cast<std::chrono::seconds>(t_end_sampling - t_end_method).count() << "s" << std::endl
+                << "                             TOTAL │ " << std::chrono::duration_cast<std::chrono::seconds>(t_end_sampling - t_start).count() << "s" << std::endl;
+    summaryfile << std::endl;
+    for(int i = 0; i < argc; i ++){
+        summaryfile << argv[i] << " ";
+    } */
+    summaryfile.close();
+    
     
     print_finalstats(begin);
     if (print_debug)

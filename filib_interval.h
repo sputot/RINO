@@ -127,7 +127,9 @@ inline interval atan(const interval&a){
 return filib::atan(a);
 }
 
-
+inline interval act_sigmoid(const interval&a){
+    return 1./(1.+filib::exp(-a)); 
+    }
 
 inline interval string_to_interval(const char*s)
     {

@@ -703,24 +703,57 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
             cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
     }
     
+    out_approx << YAML::BeginMap;
+    out_approx << YAML::Key << "tn";
+    out_approx << YAML::Value << tn+(s+1)*tau;
+    
+    vector<double> temp(2*sysdim);
+    
+    if (nb_subdiv_init ==1) {
+        out_approx << YAML::Key << "outer";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter[i].inf();
+            temp[2*i+1] = Xouter[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xouter does not work because of interval type (I guess I could solve this but...)
+        out_approx << YAML::Key << "center";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xcenter[i].inf();
+            temp[2*i+1] = Xcenter[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xcenter;
+    }
+    if (uncontrolled > 0) {
+        out_approx << YAML::Key << "outerrobust";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter_robust[i].inf();
+            temp[2*i+1] = Xouter_robust[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xouter_robust;
+        out_approx << YAML::Key << "innerrobust";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xinner_robust[i].inf();
+            temp[2*i+1] = Xinner_robust[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xinner_robust;
+    }
+    if (controlled > 0 || uncontrolled > 0) {
+        out_approx << YAML::Key << "outerminimal";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter_minimal[i].inf();
+            temp[2*i+1] = Xouter_minimal[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xouter_minimal;
+        out_approx << YAML::Key << "innerminimal";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xinner_minimal[i].inf();
+            temp[2*i+1] = Xinner_minimal[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xinner_minimal;
+    }
+    out_approx << YAML::EndMap;
+    
     for (int i=0 ; i<sysdim ; i++) {
-        if (nb_subdiv_init ==1)
-        {
-            outFile_outer[i] << tn+(s+1)*tau << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
-            outFile_center[i] << tn+(s+1)*tau << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
-        }
-        if (uncontrolled > 0) {
-            outFile_inner_robust[i] << tn+(s+1)*tau << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-            outFile_outer_robust[i] << tn+(s+1)*tau << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
-        }
-        
-        outFile_inner[i] << tn+(s+1)*tau << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-        
-        if (controlled > 0 || uncontrolled > 0) {
-            outFile_outer_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
-            outFile_inner_minimal[i] << tn+(s+1)*tau << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
-        }
-        
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
         Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];

@@ -29,12 +29,16 @@ vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 
 int nb_discr, nb_discr1, nb_discr2;
 
-vector<interval> init_discrete_system(int &nb_steps)
+vector<interval> init_discrete_system(int &nb_steps, char * config_filename)
 {
     
     if (syschoice == 1) {
         jacdim = 1;  // number of input components
         sysdim = 1; // number of output components
+    }
+    if (syschoice == 111) {  // test sigmoid
+        jacdim = 1;
+        sysdim = 1;
     }
     else if (syschoice == 2) {
         jacdim = 2;
@@ -120,15 +124,30 @@ vector<interval> init_discrete_system(int &nb_steps)
         jacdim = 2;             //
         sysdim = 2;             // a transformer en sysdim = 1 si ca fonctionne ?
     }
-    else if (syschoice == 23) {  // mountaincar (avec NN)
+    else if (syschoice == 23) {  // mountaincar (avec NN sfx format)
         jacdim = 2;             //
         sysdim = 2;
+    }
+    else if (syschoice == 231) {  // mountaincar (avec NN onnx format)
+        jacdim = 2;             //
+        sysdim = 2;
+    }
+    else if (syschoice == 100) { // neural network sfx format
+        jacdim = NH.n_inputs;
+        sysdim = NH.n_outputs;
+    }
+    else if (syschoice == 101) { // neural network onnx format
+        jacdim = CG.no_of_input_nodes;
+        sysdim = CG.no_of_output_nodes;
     }
     
     vector<interval> res(jacdim);
     
     if (syschoice == 1) {
         res[0] = interval(2,3);
+    }
+    else if (syschoice == 111) { // test sigmoide
+        res[0] = interval(-0.5,0.5);
     }
     else if (syschoice == 2) {
         res[0] = interval(2,3);
@@ -233,13 +252,99 @@ vector<interval> init_discrete_system(int &nb_steps)
         res[0] = interval(0.,0.1);
         res[1] = interval(0.,0.1);
     }
-    else if (syschoice == 23) {  // mountain car (avec RNN)
+    else if (syschoice == 23) {  // mountain car (avec RNN sfx format)
         res[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
        // res[1] = interval(0.,0.00);
         res[1] = interval(0.,0.001);
     }
+    else if (syschoice == 231) {  // mountain car (avec RNN onnx format)
+        res[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
+        // res[1] = interval(0.,0.00);
+        res[1] = interval(0.,0.001);
+    }
+    else if (syschoice == 100) { // neural network sfx format
+        // should be read from config file
+   //     res[0] = interval(0,0.2);
+    //    res[1] = interval(0,0.2);
+    }
+    else if (syschoice == 101) { // neural network onnx format
+        // should be read from config file
+        res[0] = interval(5,5.);
+        res[1] = interval(-2.,-2.);
+    }
+    
+    // reading initial conditions from config file
+    if (config_filename) {
+        read_initialconditions(config_filename,res);
+      //  for (int i=0 ; i<res.size(); i++)
+      //      res[i] = initial_values[i].convert_int();
+    }
     return res;
 }
+
+
+// d0 and t_begin are for DDEs only, rest are common to ODE and DDE
+void read_initialconditions(const char * params_filename, vector<interval> &res)
+{
+    const int LINESZ = 2048;
+    char buff[LINESZ];
+    char initialcondition[LINESZ];
+    const char space[2] = " ";
+    double a, b;
+    int c;
+    
+    cout << "****** Reading initial conditions from file " <<  params_filename << " ******" << endl;
+    FILE *params_file = fopen(params_filename,"r");
+    if (params_file == NULL)
+        cout << "Error reading " << params_filename << ": file not found" << endl;
+    
+    
+    
+    while (fgets(buff,LINESZ,params_file)) {
+        sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
+        //     sscanf(buff, "system = %s\n", sys_name);
+        //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
+        if (sscanf(buff, "initial-values = %s\n", initialcondition) == 1)
+        {
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i = 0;
+            nb_subdiv_init = 1;
+            component_to_subdiv = -1;
+            component_to_subdiv2 = -1;
+            // only one component can be subdivided for now (we keep the last if several...)
+            while( token != NULL ) {
+                if (sscanf(token,"([%lf,%lf],%d)",&a,&b,&c) == 3) {
+                    if (component_to_subdiv > -1) // we already have one component to subdivide
+                    {
+                        component_to_subdiv2 = i;
+                        cout << "component "<< i << " should also be subdivided " << endl;
+                    }
+                    else
+                    {
+                        nb_subdiv_init = c;
+                        component_to_subdiv = i;
+                        cout << "component "<< i << " should be dubdivided " << c << "times" << endl;
+                    }
+                }
+                else
+                    sscanf(token,"[%lf,%lf]",&a,&b);
+                res[i] = interval(a,b);
+                cout <<"initial_value="<<res[i]<<endl;
+                i++;
+                token = strtok(NULL,space);
+            }
+        }
+    }
+    fclose(params_file);
+    
+//    cout << "interactive-visualization=" << interactive_visualization << endl;
+    
+    // cout << "system name = " << sys_name << endl;
+    cout << "****** End initial conditions reading ******" << endl << endl;
+}
+
 
 
 
@@ -247,13 +352,13 @@ vector<interval> init_discrete_system(int &nb_steps)
 // iterate function range by computing joint range as input of next iterate
 // a priori no longer used => rather use discrete_dynamical_preconditioned
 // order 1 (Mean-value) or order 2 (2nd order Taylor model)
-void discrete_dynamical(int &nb_steps, int order) {
+void discrete_dynamical(vector<interval> &xinit, int &nb_steps, int order) {
     
     vector<interval> res(jacdim);
     
     //  int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+    //vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     
     //  vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
@@ -283,7 +388,8 @@ void discrete_dynamical(int &nb_steps, int order) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-     estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range = estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -293,7 +399,7 @@ void discrete_dynamical(int &nb_steps, int order) {
     z_outer = xinit;
     
     // initial state
-    print_projections(z_inner,z_inner,z_outer,0);
+    print_projections(z_inner,z_inner,z_outer,0,xinit);
     print_innerbox(z_inner, exist_quantified, varx, vary, 0);
     
     for (int i=0; i < jacdim ; i++) {
@@ -386,7 +492,7 @@ void discrete_dynamical(int &nb_steps, int order) {
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].convert_int());
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         if (sysdim >= 2) {
@@ -442,13 +548,13 @@ void discrete_dynamical(int &nb_steps, int order) {
 
 
 // computing at each step the sensitivity with respect to initial values
-void discrete_dynamical_method2(int &nb_steps) {
+void discrete_dynamical_method2(vector<interval> &xinit, int &nb_steps) {
     
     vector<interval> res(jacdim);
     
     //  int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+  //  vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     
     //  vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
@@ -467,13 +573,14 @@ void discrete_dynamical_method2(int &nb_steps) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-     estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range =  estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
     
     // initial state
-    print_projections(xinit,xinit,xinit,0);
+    print_projections(xinit,xinit,xinit,0,xinit);
     
     // for now, no input, sysdim = jacdim
     z_outer = xinit;
@@ -506,8 +613,8 @@ void discrete_dynamical_method2(int &nb_steps) {
             }
         //  cout << "Jacf evaluated on all [x]" << endl;
         //   cout << Jacf_o;
-        
-        cout << "Outer approx of f(x), direct evaluation, step "<< step << ": ";
+        cout << "\n Step " << step << ": " << endl;
+        cout << "Outer approx of f(x), direct evaluation: ";
         for (int i=0; i < sysdim ; i++)
             cout << z_o[i].x().convert_int() << " ";
         cout << endl;
@@ -524,7 +631,7 @@ void discrete_dynamical_method2(int &nb_steps) {
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         // initialize next iteration: z0 = f^n(x0)
@@ -542,20 +649,38 @@ void discrete_dynamical_method2(int &nb_steps) {
     }
     
     print_finalstats(begin);
-    system("cd GUI; python3 Visu_discrete.py; cd ..");
+    
+   
 }
 
 
+void print_outer_range(vector<F<AAF>> &z_o, vector<interval> &range) {
+    interval interv_out;
+    for (int i=0; i < sysdim ; i++) {
+        interv_out = z_o[i].x().convert_int();
+        cout << "z_o[" << i << "]=" << interv_out.inf() << ", " << interv_out.sup() << "] ";
+        cout << " eta_o["<<i<<"]=" << (range[i].sup() - range[i].inf())/ (interv_out.sup() - interv_out.inf()) <<" "; // precision metric with respect to estimated range
+    }
+    cout << endl;
+}
+
+void print_outer_range(vector<interval> &z_o, vector<interval> &range) {
+    for (int i=0; i < sysdim ; i++) {
+        cout << "z_o[" << i << "]=" << z_o[i].inf() << ", " << z_o[i].sup() << "] ";
+        cout << " eta_o["<<i<<"]=" << (range[i].sup() - range[i].inf())/ (z_o[i].sup() - z_o[i].inf()) <<" "; // precision metric with respect to estimated range
+    }
+    cout << endl;
+}
 
 // computing at each step the sensitivity with respect to initial values
 // same method as discrete_dynamical_method2 but using preconditioning uniquely for printing
-void discrete_dynamical_method2_preconditioned(int &nb_steps) {
+void discrete_dynamical_method2_preconditioned(vector<interval> &xinit, int &nb_steps) {
     
     vector<interval> res(jacdim);
     
     //  int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+  //  vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     
     //  vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
@@ -573,7 +698,8 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-    estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range =  estimate_reachset(f, nb_steps, xinit);
     
     // for each input, index of the output in which it is existentially quantified
     vector<int> exist_quantified(jacdim);
@@ -613,7 +739,7 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
         A_o[i][i] = 1.0;
     
     // initial state
-    print_projections(xinit,xinit,xinit,0);
+    print_projections(xinit,xinit,xinit,0,xinit);
     
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
@@ -647,21 +773,26 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
         //  cout << "Jacf evaluated on all [x]" << endl;
         //   cout << Jacf_o;
         
-        cout << "Outer approx of f(x), direct evaluation, step "<< step << ": ";
-        for (int i=0; i < sysdim ; i++)
-            cout << z_o[i].x().convert_int() << " ";
-        cout << endl;
+        cout << "\n Step " << step << ": " << endl;
+        cout << "Outer approx of f(x), direct evaluation:         ";
+        print_outer_range(z_o,range[step]);
+        
+         //   cout << z_o[i].x().convert_int() << " ";
+        //cout << endl;
         
         /*********************************** Evaluation ***********************************/
         
         vector<int> aux;
         
         z_outer = evaluate_outerrange(z0_o, radx_o, Jacf_o);
+        
+        
+        
         z_inner_proj = evaluate_innerrange(z0_o, radx_o, Jacf_o, true, aux);
         if (jacdim > sysdim)
             z_inner_proj_rob = evaluate_innerrange_robust(z0_o, radx_o, Jacf_o, true, aux);
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         
@@ -763,18 +894,18 @@ void discrete_dynamical_method2_preconditioned(int &nb_steps) {
     outFile_skewedouter.close();
     
     print_finalstats(begin);
-    system("cd GUI; python3 Visu_discrete.py; cd ..");
+ //   system("cd GUI; python3 Visu_discrete.py; cd ..");
 }
 
 
 // same as discrete_dynamical but with skew box for joint range
-void discrete_dynamical_preconditioned(int &nb_steps, int order) {
+void discrete_dynamical_preconditioned(vector<interval> &xinit, int &nb_steps, int order) {
     
     vector<interval> res(jacdim);
     
 //    int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+   // vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     
       vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
@@ -813,7 +944,8 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-    estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range = estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -854,7 +986,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
     }
     
     // initial state
-    print_projections(z_inner,z_inner,z_outer,0);
+    print_projections(z_inner,z_inner,z_outer,0,xinit);
     //   print_innerbox(z_inner, exist_quantified, varx, vary, 0);
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
@@ -1012,7 +1144,7 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         if (sysdim >= 2) {
@@ -1178,18 +1310,18 @@ void discrete_dynamical_preconditioned(int &nb_steps, int order) {
     outFile_skewedinner.close();
     outFile_skewedouter.close();
     
-    system("cd GUI; python3 Visu_discrete.py; cd ..");
+   // system("cd GUI; python3 Visu_discrete.py; cd ..");
 }
 
 
 // same as discrete_dynamical (algorithm 1) but with 3D skew box for joint range (same as discrete_dynamical_preconditioned but in 3D in place of 2D)
-void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
+void discrete_dynamical_preconditioned_3d(vector<interval> &xinit, int &nb_steps, int order) {
     
     vector<interval> res(jacdim);
     
     // int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+//    vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
     //  vector<AAF> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
@@ -1226,7 +1358,8 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-    estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range = estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -1264,7 +1397,7 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
     
    
     // initial state
-    print_projections(z_inner,z_inner,z_outer,0);
+    print_projections(z_inner,z_inner,z_outer,0,xinit);
     //   print_innerbox(z_inner, exist_quantified, varx, vary, 0);
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
     output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
@@ -1430,7 +1563,7 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
         else
             assert(false);
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         if (sysdim >= 2) {
@@ -1611,19 +1744,19 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps, int order) {
     outFile_skewedinner.close();
     outFile_skewedouter.close();
     
-    system("cd GUI; python3 Visu_discrete.py; cd ..");
+//    system("cd GUI; python3 Visu_discrete.py; cd ..");
 }
 
 
 
 // old version (order 1 only) - to remove
-void discrete_dynamical_preconditioned_3d(int &nb_steps) {
+void discrete_dynamical_preconditioned_3d(vector<interval> &xinit, int &nb_steps) {
     
     vector<interval> res(jacdim);
     
    // int nb_steps;
     
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+//    vector<interval> xinit = init_discrete_system(nb_steps, NULL); // initial condition
     
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
   //  vector<AAF> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
@@ -1639,7 +1772,8 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps) {
     open_outputfiles();
     
     //   estimate_range(f,xinit);
-    estimate_reachset(f, nb_steps, xinit);
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    range = estimate_reachset(f, nb_steps, xinit);
     
     clock_t begin = clock();
     cout << "begin clock" << endl;
@@ -1755,7 +1889,7 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps) {
         if (jacdim > sysdim)
             z_inner_proj_rob = evaluate_innerrange_robust(z0_i, radx_i, Jacf_i, true, aux);
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step);
+        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,range[step]);
         
         
         if (sysdim >= 2) {
@@ -1883,7 +2017,7 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps) {
     outFile_skewedinner.close();
     outFile_skewedouter.close();
     
-    system("cd GUI; python3 Visu_discrete.py; cd ..");
+   // system("cd GUI; python3 Visu_discrete.py; cd ..");
 }
 
 
@@ -1892,11 +2026,12 @@ void discrete_dynamical_preconditioned_3d(int &nb_steps) {
 
 
 
-void function_range(void) {
+void function_range(vector<interval> &xinit) {
     
     int nb_steps;
-    vector<interval> xinit = init_discrete_system(nb_steps); // initial condition
+   // vector<interval> xinit = init_discrete_system(nb_steps, config_filename); // initial condition
     
+       
     nb_discr = 10;
     nb_discr1 = nb_discr;
     nb_discr2 = nb_discr;
@@ -1911,8 +2046,9 @@ void function_range(void) {
     
     DiscreteFunc f;
     
-   
-    estimate_range(f,xinit);
+    vector<interval> range(sysdim);
+    range = estimate_range(f,xinit);
+   // range = estimate_reachset(f, 1, xinit);
     
     for (int i=0; i < jacdim ; i++) {
         x[i] = xinit[i];
@@ -1924,13 +2060,112 @@ void function_range(void) {
         x[i].diff(i,jacdim);    // differentiate to x
     }
     
+    // vector<AAF> x_nn(jacdim);
+    // vector<vector<AAF>> JacAff_nn(sysdim,vector<AAF>(jacdim));
+  /*   vector<vector<F<AAF>>> JacAff_nn(sysdim,vector<F<AAF>>(jacdim));
+     vector<vector<interval>> Jacf_nn(sysdim,vector<interval>(jacdim));
+     vector<vector<F<AAF>>> net_outputs(NH.n_hidden_layers+2,vector<F<AAF>>(jacdim));
+     
+     // for (int i=0; i < jacdim ; i++)
+     net_outputs[0] = x; // [i] = xinit[i];
+     
+     for (int k=0 ; k<NH.n_hidden_layers+1 ; k++ ) {
+         net_outputs[k+1] = NH.L[k].eval_linear_layer(net_outputs[k]);
+         for (int i=0; i < sysdim ; i++) {
+             for (int j=0; j < jacdim ; j++) {  // ===> ATTENTION PAS JACDIM ICI MAIS LA DIMENSION INTERNE
+                 JacAff_nn[i][j] = net_outputs[k+1][i].d(j); // x[i].d[j]
+                 Jacf_nn[i][j] = JacAff_nn[i][j].x().convert_int();
+             }
+             net_outputs[k+1][i] = eval_activation(NH.L[k].activation,net_outputs[k+1][i]);
+         }
+         cout << "Jacf_nn evaluated on [x]" << endl;
+         cout << Jacf_nn;
+         for (int i=0; i < sysdim ; i++) {
+             F<AAF> temp = net_outputs[k+1][i].x()*(1-net_outputs[k+1][i].x());
+             for (int j=0; j < jacdim ; j++) {
+                 JacAff_nn[i][j] =  temp*JacAff_nn[i][j]; // chain rule derivation (with s'(x) = s(x) (1 - s(x))) // net_outputs[k+1][i].d(j); //
+                 Jacf_nn[i][j] = JacAff_nn[i][j].x().convert_int();
+             }
+         }
+         cout << "Jacf_nn evaluated on [x]" << endl;
+         cout << Jacf_nn;
+     }
+     vector<F<AAF>> z_nn = net_outputs[NH.n_hidden_layers+1];
+         
+     cout << "Outer approx of network, direct evaluation: " << endl;
+     for (int i=0; i < sysdim ; i++)
+         cout << z_nn[i].x().convert_int() << endl;
+     
+      for (int i=0; i < sysdim ; i++)
+         for (int j=0; j < jacdim ; j++) {
+             Jacf_nn[i][j] = JacAff_nn[i][j].x().convert_int();
+         //    JacAff[i][j] = z[i].d(j);
+          //           cout << "JacAff[i][j]=" << JacAff[i][j] << JacAff[i][j].convert_int();
+     }
+      cout << "Jacf_nn evaluated on [x]" << endl;
+      cout << Jacf_nn;
+     */
+    
+    
+ /*   interval val = interval(-1,1);
+    interval val2 = 1.0/(1.0 + exp(-val));
+    cout << "interval image by sigmoid of [-1,1]=" << val2 << endl;
+    
+    AAF Aval = interval(-1,1);
+    AAF Aval2 = 1.0/(1.0 + exp(-Aval));
+    cout << "affine form range by sigmoid of [-1,1], CHEBYSCHEV mode=" << Aval2.convert_int()<< endl;
+    cout << "affine form by sigmoid of [-1,1], CHEBYSCHEV mode=" << Aval2 << endl;
+    
+    val = interval(-2,2);
+    val2 = 1.0/(1.0 + exp(-val));
+    cout << "interval image by sigmoid of [-2,2]=" << val2 << endl;
+    Aval = interval(-2,2);
+    try
+    {
+    Aval2 = 1.0/(1.0 + exp(-Aval));
+    cout << "affine form range by sigmoid of [-2,2], CHEBYSCHEV mode=" << Aval2.convert_int() << endl;
+    cout << "affine form by sigmoid of [-2,2], CHEBYSHEV mode=" << Aval2 << endl;
+    } catch(std::exception const& e)
+    {
+        cout << "ERREUR computing affine form by sigmoid of [-2,2] in CHEBYSHEV mode: " << e.what() << endl;
+    }
+    Aval2.setApproximationType(MINRANGE);
+    Aval2 = 1.0/(1.0 + exp(-Aval));
+    cout << "affine form range by sigmoid of [-2,2], MINMAX mode=" << Aval2.convert_int() << endl;
+    cout << "affine form by sigmoid of [-2,2], MINMAX mode=" << Aval2 << endl;
+    
+    Aval2.setApproximationType(CHEBYSHEV);
+    val = interval(-0.5,0.5);
+    val2 = 1.0/(1.0 + exp(-val));
+    cout << "interval image by sigmoid of [-0.5,0.5]=" << val2 << endl;
+    Aval = interval(-0.5,0.5);
+    Aval2 = 1.0/(1.0 + exp(-Aval));
+    cout << "affine form range by sigmoid of [-0.5,0.5], CHEBYSCHEV mode=" << Aval2.convert_int() << endl;
+    cout << "affine form by sigmoid of [-0.5,0.5], CHEBYSCHEV mode=" << Aval2 << endl;
+    
+    val = interval(0,1.);
+    val2 = 1.0/(1.0 + exp(-val));
+    cout << "interval image by sigmoid of [0,1]=" << val2 << endl;
+    Aval = interval(0,1.);
+    Aval2 = 1.0/(1.0 + exp(-Aval));
+    cout << "affine form range by sigmoid of [0,1], CHEBYSCHEV mode=" << Aval2.convert_int() << endl;
+    cout << "affine form by sigmoid of [0,1], CHEBYSCHEV mode=" << Aval2 << endl;
+  */
+    
+    for (int i=0 ; i<sysdim; i++)
+        z[i].x().setApproximationType(MINRANGE);
     z = f(x);
     
-
+    //cout << "z=" <<z[0].x().convert_int();
+   // cout << endl;
     
     cout << "Outer approx of f(x), direct evaluation: ";
-    for (int i=0; i < sysdim ; i++)
-        cout << z[i].x().convert_int() << " ";
+    interval interv_out;
+    for (int i=0; i < sysdim ; i++) {
+        interv_out = z[i].x().convert_int();
+        cout << "[" << interv_out.inf() << ", " << interv_out.sup() << "] ";
+        cout << " eta["<<i<<"]=" << (range[i].sup() - range[i].inf())/ (interv_out.sup() - interv_out.inf()) <<" "; // precision metric with respect to estimated range
+    }
     cout << endl;
     
     
@@ -1938,9 +2173,9 @@ void function_range(void) {
         for (int j=0; j < jacdim ; j++) {
             Jacf[i][j] = z[i].d(j).convert_int();
             JacAff[i][j] = z[i].d(j);
-        //    cout << "JacAff[i][j]=" << JacAff[i][j] << JacAff[i][j].convert_int();
+            cout << "JacAff[i][j]=" << JacAff[i][j] << JacAff[i][j].convert_int();
         }
-    cout << "Jacf evaluated on all [x]" << endl;
+    cout << "Jacf evaluated on [x]: ";
     cout << Jacf;
     
     
@@ -1957,9 +2192,9 @@ void function_range(void) {
     
     vector<vector<interval>> dfdx0(sysdim,vector<interval>(jacdim));
     vector<interval> zf0 = FFunc(dfdx0,x0);
-    cout << "x0=" << x0;
+  //  cout << "x0=" << x0;
  //   cout << "cf= " << zf0;
-    cout << "dfdx= " << dfdx0[0];
+  //  cout << "dfdx= " << dfdx0;
    // cout << "dfdx= " << dfdx0[1];
     
     
@@ -1998,16 +2233,16 @@ void function_range(void) {
     
     vector<interval> z0 = f(x0);
     
- evaluate_projections(z0, radx, Jacf);
+ evaluate_projections(z0, radx, Jacf,range);
     //  evaluate_projections_subdiv(z0, JacAff);
     //  evaluate_projections_subdiv_discretize(z0, JacAff);
-evaluate_projections_discretize_simultaneous(z0, radx, JacAff);
+evaluate_projections_discretize_simultaneous(z0, radx, JacAff,range);
     // center and order 1 evaluated on x0, 2nd term on [x]
-evaluate_projections_order2(z0, radx, dfdx0, Hessf);
+evaluate_projections_order2(z0, radx, dfdx0, Hessf, range);
     
     // here we actually want to use JacAff and not dfdx0 except for first subdivision
     // A LA FOIS FAUX ET IMPRECIS POUR LE MOMENT: A REPRENDRE
- evaluate_projections_order2_discretize_simultaneous(z0, radx, JacAff, dfdx0, HessAff);
+ evaluate_projections_order2_discretize_simultaneous(z0, radx, JacAff, dfdx0, HessAff, range);
     
     if (sysdim >= 2) {
  joint_ranges(z0,radx,Jacf,dfdx0,Hessf,0,1);
@@ -2021,169 +2256,66 @@ evaluate_projections_order2(z0, radx, dfdx0, Hessf);
         preconditioned_joint_ranges_discretize_simultaneous(z0,radx,JacAff,dfdx0,HessAff,0,1);
     }
    
-    
-    
-    
-    
-    
-    // F<AAF> zdiff = z[0].d(0);
-    // zdiff.diff(0,jacdim);
-    // cout << "zdiff=" << zdiff.d(0).convert_int();
-    
-    
-   // vector<F<AAF>> x(jacdim);
-  // vector<vector<interval>> Jacf(sysdim,vector<interval>(jacdim));
-/*    vector<vector<F<AAF>>> JacFAff(sysdim,vector<F<AAF>>(jacdim));
-    
-    for (int i=0; i < sysdim ; i++) {
-        for (int j=0; j < jacdim ; j++) {
-            JacFAff[i][j] = z[i].d(j);
-            cout << "JacFAff[i][j] =" << JacFAff[i][j].x().convert_int() << " ";
-            for (int k=0; k < jacdim ; k++) {
-                Laplf[i][j][k] = JacFAff[i][j].d(k).convert_int();
-                cout << "Lapl[i][j][k]=" << Laplf[i][j][k] << " ";
+    if (systype == 3) {
+        
+        cout << "Direct range evaluation for neural network: ";
+        
+        if (NH.n_inputs > 0)
+        { // network given as .sfx file
+            // direct range by AAF
+            vector<vector<AAF>> net_outputs(NH.n_hidden_layers+2); // outputs for each layer
+            //vector<AAF> net_inputs(NH.n_inputs);
+            net_outputs[0] = vector<AAF>(NH.n_inputs);
+            //net_inputs[0] = interval(0,0.2);
+            //net_inputs[1] = interval(0,0.2);
+            
+            for (int i=0 ; i<net_outputs[0].size(); i++)
+                net_outputs[0][i] = xinit[i];
+            for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
+                net_outputs[i+1] = NH.L[i].eval_layer(net_outputs[i]);
             }
-            cout << endl;
+            for (int i=-1 ; i<NH.n_hidden_layers+1 ; i++ ) {
+                cout << "output layer " << i << " is " << net_outputs[i+1] << endl;
+            }
         }
-        cout << endl;
-    }
- */
-    
-    /*********************************/
-/*
-    cout << endl;
-   // cout << "Improved mean-value:" << endl;
-    vector<vector<interval>> Jacf_refined(sysdim);
-    for (int i=0; i < sysdim ; i++)
-        Jacf_refined[i] = vector<interval>(jacdim);
-    
-    for (int i=0; i < jacdim ; i++) {
-        x[i] = initial_values[i];
-        eps[i] = initial_values[i].convert_int();
-        x0[i] = mid(eps[i]);
-        eps[i] = eps[i] - x0[i];
-    }
-    x[jacdim-1] = mid(initial_values[jacdim-1].convert_int());
-    
-    for (int i=0; i < jacdim ; i++) {
-        x[i].diff(i,jacdim);    // differentiate to x
-    }
-    z1 = f(x);
-    
-    for (int i=0; i < sysdim ; i++) {
-        for (int j=0; j < jacdim-1 ; j++) { // first column evaluated on ([x1],x2_0)
-            Jacf_refined[i][j] = z1[i].d(j).convert_int();
-            JacAff[i][j] = z1[i].d(j);
-        }
-        for (int j=jacdim-1; j < jacdim ; j++) { // rest evaluated on box
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-            JacAff[i][j] = z[i].d(j);
+        else if (CG.no_of_output_nodes > 0)
+        {
+            map<uint32_t, AAF> in, out;
+            vector<AAF> net_outputs(CG.no_of_output_nodes);
+            for (int i=1; i<=CG.no_of_input_nodes; i++)
+                in.insert(make_pair(i, xinit[i-1]));
+            computation_graph_evaluate_graph_abstract(CG,in,out);
+            //    cout << "CG.no_of_input_nodes=" << CG.no_of_input_nodes << endl;
+            //    cout << "CG.no_of_output_nodes=" << CG.no_of_output_nodes << endl;
+            vector< uint32_t > in_nodes, out_nodes;
+            CG.return_id_of_input_output_nodes(in_nodes , out_nodes );
+            for (int i=0; i<CG.no_of_output_nodes; i++) {
+                //  cout << "out_node=" << out_nodes[i] << endl;
+                net_outputs[i] = out[out_nodes[i]];
+                //cout << z[i];
+            }
+            cout << "output is " << net_outputs << endl;
         }
     }
-    cout << "Jacf: 1st column evaluated on ([x1],x2_0), 2nd column on [x]" << endl;
-    cout << Jacf_refined;
+    
 
-    evaluate_projections(z0, Jacf_refined);
-    evaluate_projections_subdiv(z0, JacAff);
-    if (sysdim >= 2) {
-        joint_ranges(z0,Jacf_refined,0,1);
-        preconditioned_joint_ranges(z0,Jacf_refined,0,1);
-    }
- */
- 
-    
- /*
-    cout << endl;
-   // cout << "Improved mean-value:" << endl;
-    for (int i=0; i < jacdim ; i++) {
-        x[i] = initial_values[i];
-        eps[i] = initial_values[i].convert_int();
-        x0[i] = mid(eps[i]);
-        eps[i] = eps[i] - x0[i];
-    }
-    x[0] = mid(initial_values[0].convert_int());
-    
-    for (int i=0; i < jacdim ; i++) {
-        x[i].diff(i,jacdim);    // differentiate to x
-    }
-    z2 = f(x);
-    
-    for (int i=0; i < sysdim ; i++) {
-        for (int j=0; j < jacdim-1 ; j++)
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-        for (int j=jacdim-1; j < jacdim ; j++)
-            Jacf_refined[i][j] = z2[i].d(j).convert_int();
-    }
-    cout << "Jacf: 1st column evaluated on [x], 2nd column on (x0_0,[x1])" << endl;
-    cout << Jacf_refined;
-    
-    evaluate_projections(z0, Jacf_refined);
-    if (sysdim >= 2) {
-        joint_ranges(z0,Jacf_refined,0,1);
-        preconditioned_joint_ranges(z0,Jacf_refined,0,1);
-    }
-  */
-
-/*
-    cout << endl;
- //   cout << "Improved mean-value:" << endl;
-    
-    for (int i=0; i < sysdim-1 ; i++) {
-        for (int j=0; j < jacdim-1 ; j++)
-            Jacf_refined[i][j] = z1[i].d(j).convert_int();
-        for (int j=jacdim-1; j < jacdim ; j++)
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-    }
-    for (int i=sysdim-1; i < sysdim ; i++) {
-        for (int j=0; j < jacdim ; j++)
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-        for (int j=jacdim-1; j < jacdim ; j++)
-            Jacf_refined[i][j] = z2[i].d(j).convert_int();
-    }
-    cout << "Jacf: f1: 1st column evaluated on ([x0],x1_0), 2nd column on [x], f2: 1st column evaluated on [x], 2nd column on (x0_0,[x1])" << endl;
-    cout << Jacf_refined;
-    
-    evaluate_projections(z0, Jacf_refined);
-    if (sysdim >= 2) {
-        joint_ranges(z0,Jacf_refined,0,1);
-        preconditioned_joint_ranges(z0,Jacf_refined,0,1);
-    }
-  */
-    
-   /*
-    cout << endl;
-    //   cout << "Improved mean-value:" << endl;
-    
-    for (int i=0; i < sysdim-1 ; i++) {
-        for (int j=0; j < jacdim-1 ; j++)
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-        for (int j=jacdim-1; j < jacdim ; j++)
-            Jacf_refined[i][j] = z2[i].d(j).convert_int();
-    }
-    for (int i=sysdim-1; i < sysdim ; i++) {
-        for (int j=0; j < jacdim ; j++)
-            Jacf_refined[i][j] = z1[i].d(j).convert_int();
-        for (int j=jacdim-1; j < jacdim ; j++)
-            Jacf_refined[i][j] = z[i].d(j).convert_int();
-    }
-    cout << "Jacf: f1: 1st column evaluated on [x], 2nd column on (x0_0,[x1]), f2: 1st column evaluated on ([x0],x1_0), 2nd column on [x]" << endl;
-    cout << Jacf_refined;
-    
-    evaluate_projections(z0, Jacf_refined);
-    if (sysdim >= 2) {
-        joint_ranges(z0,Jacf_refined,0,1);
-        preconditioned_joint_ranges(z0,Jacf_refined,0,1);
-    }
-    */
-    
     
     system("cd GUI; python3 Visu_function.py; cd ..");
 }
 
 
 
+ 
+    
+ 
 
-void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<vector<interval>> &Jacf) {
+
+
+
+
+
+// range is the estimated range of system
+void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<vector<interval>> &Jacf, vector<interval> &range) {
     interval inner_impro;
     vector<interval> z_inner, z_outer;
     vector<int> aux;
@@ -2200,10 +2332,17 @@ void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<
     vector<ofstream> outFile_inner(sysdim);
     stringstream file_name;
     
-    cout << "Outer range of f(x) by mean-value:               ";
-    cout << z_outer;
-    cout << "Projection of inner range of f(x) by mean-value: ";
-    cout << z_inner;
+    cout << "Outer range of f(x) by mean-value:                                           ";
+  //  cout << z_outer;
+   // cout << "gamma=";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_o[" << i << "]=" << z_outer[i] << " eta_o[" << i << "]=" << (range[i].sup() - range[i].inf())/ (z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to estimated range"
+    cout << endl;
+    cout << "Projection of inner range of f(x) by mean-value:                             ";
+   // cout << z_inner;
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
+    cout << endl;
     
     for (int i=0; i < sysdim ; i++) {
         file_name.str("");
@@ -2220,7 +2359,7 @@ void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<
 }
 
 
-void evaluate_projections_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf) {
+void evaluate_projections_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, vector<interval> &range) {
     interval inner_impro;
     vector<interval> z_inner, z_outer;
     vector<int> aux;
@@ -2232,10 +2371,16 @@ void evaluate_projections_order2(vector<interval> &z0, vector<interval> &radx, v
     vector<ofstream> outFile_inner(sysdim);
     stringstream file_name;
     
-    cout << "Outer range of f(x) by order 2 Taylor model:               ";
-    cout << z_outer;
-    cout << "Projection of inner range of f(x) by order 2 Taylor model: ";
-    cout << z_inner;
+    cout << "Outer range of f(x) by order 2 Taylor model:                                 ";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_o[" << i << "]=" << z_outer[i] << " eta_o[" << i << "]=" << (range[i].sup() - range[i].inf())/ (z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to estimated range"
+    cout << endl;
+    //cout << z_outer;
+    cout << "Projection of inner range of f(x) by order 2 Taylor model:                   ";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
+    cout << endl;
+//    cout << z_inner;
     
     for (int i=0; i < sysdim ; i++) {
         file_name.str("");
@@ -2344,7 +2489,7 @@ void evaluate_projections_subdiv_discretize(vector<interval> &z0, vector<interva
 
 
 // evaluate projections
-void evaluate_projections_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff) {
+void evaluate_projections_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<interval> &range) {
     interval inner_impro, temp_inner, temp_outer;
     vector<interval> z_inner(sysdim);
     vector<interval> z_outer(sysdim);
@@ -2358,10 +2503,16 @@ void evaluate_projections_discretize_simultaneous(vector<interval> &z0, vector<i
     vector<ofstream> outFile_inner(sysdim);
     stringstream file_name;
     
-    cout << "Outer range of f(x) by centered mean-value with discretization:               ";
-    cout << z_outer;
-    cout << "Projection of inner range of f(x) by centered mean-value with discretization: ";
-    cout << z_inner;
+    cout << "Outer range of f(x) by centered mean-value with discretization:              ";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_o[" << i << "]=" << z_outer[i] << " eta_o[" << i << "]=" << (range[i].sup() - range[i].inf())/ (z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to estimated range"
+    cout << endl;
+   // cout << z_outer;
+    cout << "Projection of inner range of f(x) by centered mean-value with discretization:";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
+    cout << endl;
+//    cout << z_inner;
     
     
     for (int i=0; i < sysdim ; i++) {
@@ -2380,7 +2531,7 @@ void evaluate_projections_discretize_simultaneous(vector<interval> &z0, vector<i
 
 
 // evaluate projections
-void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<interval>> &dfdx0, vector<vector<vector<AAF>>> &HessAff) {
+void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, vector<vector<interval>> &dfdx0, vector<vector<vector<AAF>>> &HessAff, vector<interval> &range) {
     interval inner_impro, temp_inner, temp_outer;
     vector<interval> z_inner(sysdim);
     vector<interval> z_outer(sysdim);
@@ -2394,10 +2545,16 @@ void evaluate_projections_order2_discretize_simultaneous(vector<interval> &z0, v
     vector<ofstream> outFile_inner(sysdim);
     stringstream file_name;
     
-    cout << "Outer range of f(x) by order 2 model with discretization:               ";
-    cout << z_outer;
-    cout << "Projection of inner range of f(x) by order 2 model with discretization: ";
-    cout << z_inner;
+    cout << "Outer range of f(x) by order 2 model with discretization:                    ";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_o[" << i << "]=" << z_outer[i] << " eta_o[" << i << "]=" << (range[i].sup() - range[i].inf())/ (z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to estimated range"
+    cout << endl;
+ //   cout << z_outer;
+    cout << "Projection of inner range of f(x) by order 2 model with discretization:      ";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
+    cout << endl;
+   // cout << z_inner;
     
     
     for (int i=0; i < sysdim ; i++) {
@@ -2883,9 +3040,9 @@ vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<inter
     
     // first subdivision: z0 + <Jacf(x0) . dx>
     multMiVi(z_outer,dfdx0,loc_eps);
-    cout << "z_outer=" << z_outer;
+  //  cout << "z_outer=" << z_outer;
     addViVi(z_outer,z0);
-    cout << "z_outer=" << z_outer;
+  //  cout << "z_outer=" << z_outer;
     
     // sum of gradients on the bordier between the xi and xi+1
     for (int m=1; m<nb_discr; m++)
@@ -2901,7 +3058,7 @@ vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<inter
                 z_outer[i] += Jac_m[i][j] * loc_eps[j];
         }
     }
-    cout << "z_outer=" << z_outer;
+//    cout << "z_outer=" << z_outer;
     
     // < x , Hessf([x]) . x >
     for (int m=0; m<nb_discr; m++)
@@ -2924,7 +3081,7 @@ vector<interval> evaluate_outerrange_order2_discretize_simultaneous(vector<inter
         addViVi(z_outer,z_temp);
     }
     
-    cout << "z_outer=" << z_outer;
+ //   cout << "z_outer=" << z_outer;
     return z_outer;
 }
 
@@ -4578,7 +4735,7 @@ void twodim_discretization_by_quadrant(vector<interval> &radx) {
 }
 
 
-void estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
+vector<interval> estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
     
     system("rm -r output");
     system("mkdir output");
@@ -4588,12 +4745,12 @@ void estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
     vector<double> output(sysdim);
     vector<double> max_output(sysdim);
     vector<double> min_output(sysdim);
-    
+    vector<interval> range(sysdim);
     
     cout << "Initial condition x: " << xinit;
     cout << endl;
     
-    int discr = 100;
+    int discr = 10;
     for (int i=0; i < jacdim ; i++)
         input[i] = xinit[i].mid();
     for (int i=0; i < sysdim ; i++) {
@@ -4614,7 +4771,23 @@ void estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
                 if (jacdim > 2) {
                     for (int i3=0; i3 <= discr ; i3++) {
                         input[2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
-                        
+                        if (jacdim > 3) {
+                            for (int i4=0; i4 <= discr ; i4++) {
+                                input[3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/discr;
+                                output = f(input);
+                                for (int i=0; i < sysdim ; i++)
+                                    outFile_xi << output[i] <<  "\t";
+                                outFile_xi << endl;
+                                for (int i=0; i < sysdim ; i++) {
+                                    if (output[i] < min_output[i])
+                                        min_output[i] = output[i];
+                                    else if (output[i] > max_output[i])
+                                        max_output[i] = output[i];
+                                }
+                            }
+                        }
+                        else
+                        {
                         output = f(input);
                         for (int i=0; i < sysdim ; i++)
                             outFile_xi << output[i] <<  "\t";
@@ -4624,6 +4797,7 @@ void estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
                                 min_output[i] = output[i];
                             else if (output[i] > max_output[i])
                                 max_output[i] = output[i];
+                        }
                         }
                     }
                 }
@@ -4658,23 +4832,26 @@ void estimate_range(DiscreteFunc &f, vector<interval> &xinit) {
     }
     outFile_xi.close();
     cout << "Estimated range f(x): ";
-    for (int i=0; i < sysdim ; i++)
+    for (int i=0; i < sysdim ; i++) {
         cout << "z["<<i << "]=[" << min_output[i] << ", " << max_output[i] <<"]  ";
+        range[i] = interval(min_output[i],max_output[i]);
+    }
     cout << endl;
     
+    return range;
 }
 
 // estimate the range of the n iterates f(x) ... f^n(xn)
-void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
+vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
     
     system("rm -r output");
     system("mkdir output");
     
-    int discr = 10;
+    int discr = 20;
     int nb_points = discr+1;
     
     // limit the number of sampled points
-    for (int i=1; i < min(jacdim,4) ; i++)
+    for (int i=1; i < min(jacdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
         nb_points = nb_points * (discr+1);
     
     // estimation of the range of f
@@ -4683,6 +4860,7 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
     
     vector<vector<double>> max_output(n+1,vector<double>(sysdim));  // store the min and max for each iterate
     vector<vector<double>> min_output(n+1,vector<double>(sysdim));
+    vector<vector<interval>> range(n+1,vector<interval>(sysdim));
     
     
     cout << "Initial condition x: " << xinit;
@@ -4721,6 +4899,7 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
                                         printf("warning, case not fully implemented");
                                     input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
                                 }
+                        //        cur_point++; // AJOUT
                             }
                             
                         }
@@ -4760,7 +4939,7 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
             for (int i=0; i < sysdim ; i++) {
                 if (output[cur_point][i] < min_output[iter][i])
                     min_output[iter][i] = output[cur_point][i];
-                else if (output[cur_point][i] > max_output[iter][i])
+                if (output[cur_point][i] > max_output[iter][i])
                     max_output[iter][i] = output[cur_point][i];
             }
             // initializing next step (iter)
@@ -4769,29 +4948,44 @@ void estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit) {
         }
         
         cout << "Estimated reachable set f^n(x) at step " << iter << " is: ";
-        for (int i=0; i < sysdim ; i++)
+        for (int i=0; i < sysdim ; i++) {
             cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
+            
+        }
         cout << endl;
+        for (int i=0; i < sysdim ; i++)
+            range[iter][i] = interval(min_output[iter][i],max_output[iter][i]);
     }
+    
+    
+    
     outFile_xi.close();
     
-    
+    return range;
 }
 
 
 
 
 // for discrete dynamical systems
-void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step)
+void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range)
 {
     vector<ofstream> outFile_outer_mean_value(sysdim);
     vector<ofstream> outFile_inner(sysdim);
     stringstream file_name;
     
     cout << "Outer range of f(x) by mean-value:               ";
-    cout << z_outer;
-    cout << "Projection of inner range of f(x) by mean-value: ";
-    cout << z_inner;
+    // cout << z_outer;
+    for (int i=0; i < sysdim ; i++) {
+        cout << "z_o[" << i << "]=" << z_outer[i].inf() << ", " << z_outer[i].sup() << "] ";
+        cout << " eta_o["<<i<<"]=" << (range[i].sup() - range[i].inf())/ (z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to estimated range
+    }
+    cout << endl;
+    cout << "Projection of inner range of f(x) by mean-value:";
+    for (int i=0; i < sysdim ; i++)
+        cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
+    cout << endl;
+  //  cout << z_inner;
     
     for (int i=0; i < sysdim ; i++) {
         file_name.str("");

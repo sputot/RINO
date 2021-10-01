@@ -21,26 +21,10 @@
 #include "ode_def.h"
 //#include "matrix.h"
 
-vector<ofstream> outFile_outer_minimal;   //  minimal outer-approximated range for each variable of the system
-vector<ofstream> outFile_outer_robust;  // robust outer-approximated range for each variable of the system
-vector<ofstream> outFile_outer;   //  maximal outer-approximated range for each variable of the system
-vector<ofstream> outFile_inner_minimal;   //  minimal inner-approximated range for each variable of the system
-vector<ofstream> outFile_inner;   //  maximal inner-approximated range for each variable of the system
+ofstream approxreachsetfile;
+YAML::Emitter out_approx;
 
-vector<vector<ofstream>> outFile_joint_inner;   // output inner-approximated range for each couple of variables of the system
-vector<vector<vector<ofstream>>> outFile_joint_inner3d;   // output inner-approximated range for each triple of variables of the system
 
-vector<ofstream> outFile_inner_robust;   // robust inner-approximated range for each variable of the system
-vector<ofstream> outFile_center;
-vector<ofstream> outFile_exact; // analytical solution if any
-
-ofstream outFile_width_ratio;     //  min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
-ofstream outFile_meanerror_outer; // mean on xi of error between outer-approx and analytical solution if any
-ofstream outFile_meanerror_inner; // mean on xi of error between inner-approx and analytical solution if any
-ofstream outFile_meanerror_diff;  // mean on xi of error between outer-approx and inner-approx
-ofstream outFile_relmeanerror_outer; // mean on xi of error between outer-approx and analytical solution if any, over width of exact tube
-ofstream outFile_relmeanerror_inner; // mean on xi of error between inner-approx and analytical solution if any, over width of exact tube
-ofstream outFile_relmeanerror_diff;  // mean on xi of error between outer-approx and inner-approx, over width of over-approx tube
 
 int systype; // 0 is ODE, 1 is DDE
 int syschoice; // choice of system to analyze
@@ -57,133 +41,16 @@ void open_outputfiles()
     system("rm -r output");
     system("mkdir output");
     
-    outFile_outer = vector<ofstream>(sysdim);   // output outer-approximated range for each variable of the system
-    outFile_exact = vector<ofstream>(sysdim);
-    if (uncontrolled > 0) {
-        outFile_outer_robust = vector<ofstream>(sysdim);
-        outFile_inner_robust = vector<ofstream>(sysdim);
-    }
-    outFile_inner = vector<ofstream>(sysdim); // vector<ofstream> outFile_inner(sysdim);   // output inner-approximated range for each variable of the system
-    if (uncontrolled > 0 || controlled > 0) {
-        outFile_outer_minimal = vector<ofstream>(sysdim);
-        outFile_inner_minimal = vector<ofstream>(sysdim);
-    }
-    outFile_center  = vector<ofstream>(sysdim);
+    approxreachsetfile.open("output/approxreachset.yaml");
     
-    outFile_joint_inner = vector<vector<ofstream>>(sysdim);
-    for (int i=0 ; i<sysdim ; i++)
-        outFile_joint_inner[i] = vector<ofstream>(sysdim);
-    
-    outFile_joint_inner3d = vector<vector<vector<ofstream>>>(sysdim);
-    for (int i=0 ; i<sysdim ; i++) {
-        outFile_joint_inner3d[i] = vector<vector<ofstream>>(sysdim);
-        for (int j=0 ; j<sysdim ; j++)
-            outFile_joint_inner3d[i][j] = vector<ofstream>(sysdim);
-    }
-    
+    out_approx << YAML::BeginMap;
+    out_approx << YAML::Key << "approx";
+    out_approx << YAML::Value << YAML::BeginSeq;
  
     char file_name[1028];
     
-    for (int i=0 ; i<sysdim ; i++) {
-        sprintf(file_name,"output/x%douter.out",i+1);
-        outFile_outer[i].open(file_name);
-        sprintf(file_name,"output/x%dexact.out",i+1);
-        outFile_exact[i].open(file_name);
-        if (uncontrolled > 0) {
-            sprintf(file_name,"output/x%douter_robust.out",i+1);
-            outFile_outer_robust[i].open(file_name);
-            sprintf(file_name,"output/x%dinner_robust.out",i+1);
-            outFile_inner_robust[i].open(file_name);
-        }
-        if (uncontrolled > 0 || controlled > 0) {
-            sprintf(file_name,"output/x%douter_minimal.out",i+1);
-            outFile_outer_minimal[i].open(file_name);
-            sprintf(file_name,"output/x%dinner_minimal.out",i+1);
-            outFile_inner_minimal[i].open(file_name);
-        }
-        sprintf(file_name,"output/x%dcenter.out",i+1);
-        outFile_center[i].open(file_name);
-        sprintf(file_name,"output/x%dinner.out",i+1);
-        outFile_inner[i].open(file_name);
-    }
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            sprintf(file_name,"output/x%dx%dinner_joint.out",i+1,j+1);
-            outFile_joint_inner[i][j].open(file_name);
-        }
-    }
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            for (int k=j+1 ; k < sysdim ; k++) {
-                sprintf(file_name,"output/x%dx%dx*dinner_joint3d.out",i+1,j+1,k+1);
-                outFile_joint_inner3d[i][j][k].open(file_name);
-            }
-        }
-    }
-  
- 
     
 
-  
- /*
-    for (int i=0 ; i<sysdim ; i++) {
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer.out";
-        outFile_outer[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x"<<i+1<<"exact.out";
-        outFile_exact[i].open(file_name.str().c_str());
-        if (uncontrolled > 0) {
-            file_name.str("");
-            file_name << "output/x" << i+1 << "outer_robust.out";
-            outFile_outer_robust[i].open(file_name.str().c_str());
-            file_name.str("");
-            file_name << "output/x" << i+1 << "inner_robust.out";
-            outFile_inner_robust[i].open(file_name.str().c_str());
-        }
-        if (uncontrolled > 0 || controlled > 0) {
-            file_name.str("");
-            file_name << "output/x" << i+1 << "outer_minimal.out";
-            outFile_outer_minimal[i].open(file_name.str().c_str());
-            file_name.str("");
-            file_name << "output/x" << i+1 << "inner_minimal.out";
-            outFile_inner_minimal[i].open(file_name.str().c_str());
-        }
-        file_name.str("");
-        file_name << "output/x" << i+1 << "center.out";
-        outFile_center[i].open(file_name.str().c_str());
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner.out";
-        outFile_inner[i].open(file_name.str().c_str());
-    }
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            file_name.str("");
-            file_name << "output/x" << i+1 << "x" << j+1 << "inner_joint.out";
-            outFile_joint_inner[i][j].open(file_name.str().c_str());
-        }
-    }
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            for (int k=j+1 ; k < sysdim ; k++) {
-                file_name.str("");
-                file_name << "output/x" << i+1 << "x" << j+1 <<  "x" << k+1 << "inner_joint3d.out";
-                outFile_joint_inner3d[i][j][k].open(file_name.str().c_str());
-            }
-        }
-    }
-    */
-    
-    
-    outFile_width_ratio.open("output/width_ratio.out");
-    outFile_meanerror_outer.open("output/meanerror_outer.out");
-    outFile_meanerror_inner.open("output/meanerror_inner.out");
-    outFile_meanerror_diff.open("output/meanerror_diff.out");
-    outFile_relmeanerror_outer.open("output/relmeanerror_outer.out");
-    outFile_relmeanerror_inner.open("output/relmeanerror_inner.out");
-    outFile_relmeanerror_diff.open("output/relmeanerror_diff.out");
 }
 
 // print after the end of the analysis
@@ -192,46 +59,14 @@ void print_finalstats(clock_t begin)
     clock_t end = clock();
     // double end_time = getTime ( );
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC; //getTotalTime (start_time , end_time );
-    cout << "elpased time (sec) =" << elapsed_secs << endl;
+    cout << "elapsed time (sec) =" << elapsed_secs << endl;
+    
+    out_approx << YAML::EndSeq;
+    out_approx << YAML::EndMap;
+    approxreachsetfile << out_approx.c_str();
+    approxreachsetfile.close();
     
     
-    for (int i=0 ; i<sysdim ; i++) {
-        
-        if (uncontrolled > 0) {
-            outFile_inner_robust[i].close();
-            outFile_outer_robust[i].close();
-        }
-        if (uncontrolled > 0 || controlled > 0) {
-            outFile_inner_minimal[i].close();
-            outFile_outer_minimal[i].close();
-        }
-        outFile_outer[i].close();
-        outFile_exact[i].close();
-        outFile_inner[i].close();
-        outFile_center[i].close();
-    }
-    
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            outFile_joint_inner[i][j].close();
-        }
-    }
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
-            for (int k=j+1 ; k < sysdim ; k++) {
-                outFile_joint_inner3d[i][j][k].close();
-            }
-        }
-    }
-    
-    
-    outFile_width_ratio.close();
-    outFile_meanerror_outer.close();
-    outFile_meanerror_inner.close();
-    outFile_meanerror_diff.close();
-    outFile_relmeanerror_outer.close();
-    outFile_relmeanerror_inner.close();
-    outFile_relmeanerror_diff.close();
 }
 
 
@@ -242,20 +77,18 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
     
     
     // print initial conditions of the ODE
+    
+    out_approx << YAML::BeginMap;
+    out_approx << YAML::Key << "tn";
+    out_approx << YAML::Value << 0;
+    
+    vector<double> temp(2*sysdim);
+    
+    
     for (int i=0 ; i<sysdim ; i++) {
         range_x = x[i].convert_int();
-        // print in exit files
-        outFile_outer[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
-        if (uncontrolled > 0) {
-            outFile_inner_robust[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
-            outFile_outer_robust[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
-        }
-        if (controlled > 0 || uncontrolled > 0) {
-            outFile_inner_minimal[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
-            outFile_outer_minimal[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
-        }
-        outFile_center[i] << 0<< "\t" << mid(range_x) << "\t" << mid(range_x) << endl;
-        outFile_inner[i] << 0 << "\t" << inf(range_x) << "\t" << sup(range_x) << endl;
+        temp[2*i] = range_x.inf();
+        temp[2*i+1] = range_x.sup();
         
         Xouter_print[current_subdiv][0][i] = range_x;
         Xouter_robust_print[current_subdiv][0][i] = range_x;
@@ -265,29 +98,145 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
         Xinner_minimal_print[current_subdiv][0][i] = range_x;
         Xexact_print[current_subdiv][0][i] = range_x;
     }
-    outFile_width_ratio << 0 << "\t" << 1.0 << endl;
+        
+    out_approx << YAML::Key << "outer";
+    out_approx << YAML::Value << temp; //
+    out_approx << YAML::Key << "inner";
+    out_approx << YAML::Value << temp; //
+    
+    if (uncontrolled > 0) {
+        out_approx << YAML::Key << "innerrobust";
+        out_approx << YAML::Value << temp; //
+        out_approx << YAML::Key << "outerrobust";
+        out_approx << YAML::Value << temp; //
+    }
+    if (controlled > 0 || uncontrolled > 0) {
+        out_approx << YAML::Key << "innerminimal";
+        out_approx << YAML::Value << temp;
+        out_approx << YAML::Key << "outerminimal";
+        out_approx << YAML::Value << temp;
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        range_x = x[i].convert_int();
+        temp[2*i] = range_x.mid();
+        temp[2*i+1] = temp[2*i];
+    }
+    out_approx << YAML::Key << "center";
+    out_approx << YAML::Value << temp;
+    
+    // error measures
+    vector<double> temp2(sysdim);
+    for (int i=0 ; i<sysdim ; i++)
+        temp2[i] = 1.0;
+    out_approx << YAML::Key << "etaouter";
+    out_approx << YAML::Value << temp2;
+    out_approx << YAML::Key << "etainner";
+    out_approx << YAML::Value << temp2;
+    out_approx << YAML::Key << "gamma";
+    out_approx << YAML::Value << temp2;
+    
+    
+
+    out_approx << YAML::Key << "inner2d";
+    out_approx << YAML::Value << YAML::BeginSeq;
+    
+    vector<double> temp2d(4);
+    vector<double> temp3d(6);
+    vector<double> tempskew(8);
+        
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            
+            
+            out_approx << YAML::BeginMap;
+            
+            out_approx << YAML::Key << "x1";
+            out_approx << YAML::Value << i;
+            out_approx << YAML::Key << "x2";
+            out_approx << YAML::Value << j;
+            
+            out_approx << YAML::Key << "maxbox";
+            temp2d[0] = inf(x[i].convert_int()); temp2d[1] = sup(x[i].convert_int()); temp2d[2] = inf(x[j].convert_int()); temp2d[3] = sup(x[j].convert_int());
+            out_approx << YAML::Value << temp2d;
+            
+            if (uncontrolled > 0 || controlled > 0) {
+                out_approx << YAML::Key << "minbox";
+                out_approx << YAML::Value << temp2d;
+            }
+            if (uncontrolled > 0) {
+                out_approx << YAML::Key << "robbox";
+                out_approx << YAML::Value << temp2d;
+            }
+            
+            tempskew[0] = temp2d[0];
+            tempskew[1] = temp2d[2];
+            tempskew[2] = temp2d[0];
+            tempskew[3] = temp2d[3];
+            tempskew[4] = temp2d[1];
+            tempskew[5] = temp2d[3];
+            tempskew[6] = temp2d[1];
+            tempskew[7] = temp2d[2];
+            
+            out_approx << YAML::Key << "maxskew";
+            out_approx << YAML::Value << tempskew;
+            
+            if (uncontrolled > 0 || controlled > 0) {
+                out_approx << YAML::Key << "minskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            if (uncontrolled > 0) {
+                out_approx << YAML::Key << "robskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            
+            out_approx << YAML::EndMap;
+        }
+    }
+    
+    out_approx << YAML::EndSeq;
+    
+    out_approx << YAML::Key << "inner3d";
+    out_approx << YAML::Value << YAML::BeginSeq;
     
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
-            outFile_joint_inner[i][j] << "maximal" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
-            if (uncontrolled > 0)
-                outFile_joint_inner[i][j] << "robust" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
-            if (uncontrolled > 0 || controlled > 0)
-                outFile_joint_inner[i][j] << "minimal"  << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << endl;
-        }
-    }
-    for (int i=0 ; i<sysdim ; i++) {
-        for (int j=i+1 ; j < sysdim ; j++) {
             for (int k=j+1 ; k < sysdim ; k++) {
-                outFile_joint_inner3d[i][j][k] << "maximal"  << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
-                if (uncontrolled > 0)
-                    outFile_joint_inner3d[i][j][k] << "robust" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+               
+                out_approx << YAML::BeginMap;
+                
+                out_approx << YAML::Key << "x1";
+                out_approx << YAML::Value << i;
+                out_approx << YAML::Key << "x2";
+                out_approx << YAML::Value << j;
+                out_approx << YAML::Key << "x3";
+                out_approx << YAML::Value << k;
+                
+                temp3d[0] = inf(x[i].convert_int()); temp3d[1] = sup(x[i].convert_int());
+                temp3d[2] = inf(x[j].convert_int()); temp3d[3] = sup(x[j].convert_int());
+                temp3d[4] = inf(x[k].convert_int()); temp3d[5] = sup(x[k].convert_int());
+                
+                out_approx << YAML::Key << "maxbox";
+                out_approx << YAML::Value << temp3d;
                 if (uncontrolled > 0 || controlled > 0)
-                    outFile_joint_inner3d[i][j][k] << "minimal" << "\t" << 0 << "\t" << inf(x[i].convert_int()) << "\t" << sup(x[i].convert_int()) << "\t" << inf(x[j].convert_int()) << "\t" << sup(x[j].convert_int()) << "\t" << inf(x[k].convert_int()) << "\t" << sup(x[k].convert_int()) << endl;
+                {
+                    out_approx << YAML::Key << "minbox";
+                    out_approx << YAML::Value << temp3d;
+                }
+                if (uncontrolled > 0) {
+                    out_approx << YAML::Key << "robbox";
+                    out_approx << YAML::Value << temp3d;
+                }
+                
+                out_approx << YAML::EndMap;
+
             }
         }
     }
     
+    out_approx << YAML::EndSeq;
+    
+    out_approx << YAML::EndMap;
     
     // a changer un jour pour t_begin (notamment pour DDE)?
     t_print[0] = 0;
@@ -375,13 +324,29 @@ void print_finalsolution(int max_it, double d0)
                 Xinner_print[0][current_iteration][i] = hull(Xinner_print[0][current_iteration][i],Xinner_print[j][current_iteration][i]);
                 Xinner_robust_print[0][current_iteration][i] = hull(Xinner_robust_print[0][current_iteration][i],Xinner_robust_print[j][current_iteration][i]);
             }
-            if (nb_subdiv_init > 1)
-                outFile_outer[i] << t_print[current_iteration] << "\t" << inf(Xouter_print[0][current_iteration][i]) << "\t" << sup(Xouter_print[0][current_iteration][i]) << endl;
+         //   if (nb_subdiv_init > 1)
+         //       outFile_outer[i] << t_print[current_iteration] << "\t" << inf(Xouter_print[0][current_iteration][i]) << "\t" << sup(Xouter_print[0][current_iteration][i]) << endl;
             
             //  outFile_inner[i] << t_print[current_iteration] << "\t" << inf(Xinner_print[0][current_iteration][i]) << "\t" << sup(Xinner_print[0][current_iteration][i]) << endl;
         }
         
+        out_approx << YAML::BeginMap;
+        out_approx << YAML::Key << "tn";
+        out_approx << YAML::Value << t_print[current_iteration];
+        out_approx << YAML::Key << "outer";
+        vector<double> temp(2*sysdim);
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter_print[0][current_iteration][i].inf();
+            temp[2*i+1] = Xouter_print[0][current_iteration][i].sup();
+        }
+        out_approx << YAML::Value << temp;
+        out_approx << YAML::Key << "currentsubdiv";
+        out_approx << YAML::Value << 0; // to indicate union of all subdivisions
+        
+        
         print_ErrorMeasures(current_iteration,d0);
+        
+        out_approx << YAML::EndMap;
     }
     
     if (no_hole)
@@ -390,29 +355,25 @@ void print_finalsolution(int max_it, double d0)
 
 void print_ErrorMeasures(int current_iteration, double d0)
 {
-    double aux, minwidth_ratio, sum, rel_sum;
+    double aux, sum, rel_sum;
     //  vector<interval> Xexact(sysdim);
-    
-    
-    // correct only of no hole
-    // min on xi of ratio of width of inner / width of outer
-    minwidth_ratio = (sup(Xinner_print[0][current_iteration][0])-inf(Xinner_print[0][current_iteration][0]))/(sup(Xouter_print[0][current_iteration][0])-inf(Xouter_print[0][current_iteration][0]));
-    for (int i=1 ; i<sysdim ; i++) {
-        aux = (sup(Xinner_print[0][current_iteration][i])-inf(Xinner_print[0][current_iteration][i]))/(sup(Xouter_print[0][current_iteration][i])-inf(Xouter_print[0][current_iteration][i]));
-        if (minwidth_ratio > aux)
-            minwidth_ratio = aux;
-    }
-    if (t_print[current_iteration] != 0)
-        outFile_width_ratio << t_print[current_iteration] << "\t" << minwidth_ratio << endl;
-    
+
+    out_approx << YAML::Key << "tn";
+    out_approx << YAML::Value << t_print[current_iteration];
     
     // fills Xexact_print with analytical solution
     AnalyticalSol(current_iteration, d0);
     // cout << "before testing x_exact, current_iteration=" << current_iteration << "t_print[current_iteration] " << t_print[current_iteration]  << endl;
     if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
     {
-        for (int i=0 ; i<sysdim ; i++)
-            outFile_exact[i] << t_print[current_iteration] << "\t" << inf(Xexact_print[0][current_iteration][i]) << "\t" << sup(Xexact_print[0][current_iteration][i]) << endl;
+        out_approx << YAML::Key << "exact";
+        vector<double> temp(2*sysdim);
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xexact_print[0][current_iteration][i].inf();
+            temp[2*i+1] = Xexact_print[0][current_iteration][i].sup();
+        }
+        out_approx << YAML::Value << temp;
+        
         // mean over the xi of the error between over-approx and exact solution
         sum = 0;
         rel_sum = 0;;
@@ -424,8 +385,11 @@ void print_ErrorMeasures(int current_iteration, double d0)
         }
         sum = sum/sysdim;
         rel_sum = rel_sum/sysdim;
-        outFile_meanerror_outer << t_print[current_iteration] << "\t" << sum << endl;
-        outFile_relmeanerror_outer << t_print[current_iteration] << "\t" << rel_sum << endl;
+        out_approx << YAML::Key << "meanerrorouter"; // mean on xi of error between outer-approx and analytical solution if any
+        out_approx << YAML::Value << sum;
+        out_approx << YAML::Key << "relmeanerrorouter"; // mean on xi of error between outer-approx and analytical solution if any, over width of exact tube
+        out_approx << YAML::Value << rel_sum;
+        
         
         // mean over the xi of the error between inner-approx and exact solution
         sum = 0;
@@ -438,8 +402,10 @@ void print_ErrorMeasures(int current_iteration, double d0)
         }
         sum = sum/sysdim;
         rel_sum = rel_sum/sysdim;
-        outFile_meanerror_inner << t_print[current_iteration] << "\t" << sum << endl;
-        outFile_relmeanerror_inner << t_print[current_iteration] << "\t" << rel_sum << endl;
+        out_approx << YAML::Key << "meanerrorinner";  // mean on xi of error between inner-approx and analytical solution if any
+        out_approx << YAML::Value << sum;
+        out_approx << YAML::Key << "relmeanerrorinner"; // mean on xi of error between inner-approx and analytical solution if any, over width of exact tube
+        out_approx << YAML::Value << rel_sum;
     }
     
     
@@ -454,8 +420,12 @@ void print_ErrorMeasures(int current_iteration, double d0)
     }
     sum = sum/sysdim;
     rel_sum = rel_sum/sysdim;
-    outFile_meanerror_diff << t_print[current_iteration] << "\t" << sum << endl;
-    outFile_relmeanerror_diff << t_print[current_iteration] << "\t" << rel_sum << endl;
+    
+    out_approx << YAML::Key << "meanerrordiff";  // mean on xi of error between outer-approx and inner-approx
+    out_approx << YAML::Value << sum;
+    out_approx << YAML::Key << "relmeanerrordiff"; // mean on xi of error between outer-approx and inner-approx, over width of over-approx tube
+    out_approx << YAML::Value << rel_sum;
+    
 }
 
 
@@ -467,11 +437,48 @@ std::ostream& operator<<(std::ostream& os, const std::vector<double> &input)
     return os;
 }
 
+/*std::ostream& operator<<(std::ostream& os, const std::vector<interval> &input)
+{
+    interval temp;
+    for (auto const& i: input) {
+        //temp = i.convert_int();
+        os << "[" << i.inf() << ", " << i.sup() << "] ";
+       // os << i.convert_int() << " ";
+    }
+    return os;
+}*/
+
+
 std::ostream& operator<<(std::ostream& os, const std::vector<AAF> &input)
 {
+    interval temp;
     for (auto const& i: input) {
-        os << i.convert_int() << " ";
+        temp = i.convert_int();
+        os << "[" << temp.inf() << ", " << temp.sup() << "] ";
+       // os << i.convert_int() << " ";
     }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<T<AAF>> &input)
+{
+    interval temp;
+    for (auto const& i: input) {
+        temp = i.val().convert_int();
+        os << "[" << temp.inf() << ", " << temp.sup() << "] ";
+      //  os << i.val().convert_int() << " ";
+    }
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os, const std::vector<T<F<AAF>>> &input)
+{
+    
+    
+    
+ //   for (auto const& i: input) {
+ //       os << i.x().convert_int() << " ";
+ //   }
     return os;
 }
 

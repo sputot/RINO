@@ -12,7 +12,10 @@
 #ifndef FADBAD_AA_H
 #define FADBAD_AA_H
 
+#include "network_handler.h"
+
 #include "filib_interval.h"
+
 #include "aa_aaf.h"
 #include "fadiff.h"
 
@@ -52,6 +55,9 @@ template <> struct Op<interval>
     static Base myAcos(const Base& x) { return acos(x); }
     static Base myAtan(const Base& x) { return atan(x); }
     
+    static Base mySig(const Base& x) { /*cout << "est bien appele (interv)";*/ return  1./(1.+exp(-x));} // act_sigmoid(x); } return act_sigmoid(x); }//
+    static Base myTanh(const Base& x) { cout << "est bien appele aussi (interv)"; return  2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
+    
     static bool myEq(const Base& x, const Base& y) { return x==y; }
     static bool myNe(const Base& x, const Base& y) { return x!=y; }
 };
@@ -90,6 +96,9 @@ template <> struct Op<AAF>
   static Base myAsin(const Base& x) { return myInteger(0); throw std::invalid_argument( "asin non prevu");}
   static Base myAcos(const Base& x) { return myInteger(0); throw std::invalid_argument( "acos non prevu"); }
   static Base myAtan(const Base& x) { return atan(x); }
+    
+    static Base mySig(const Base& x) { /*cout << "est bien appele"; */return act_sigmoid(x); }// 1./(1.+exp(-x));} //act_sigmoid(x); }
+    static Base myTanh(const Base& x) { cout << "est bien appele aussi"; return act_tanh(x); return 2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
   
   /*  static Base myPos(const Base& x) { return +x; }
   static bool myNe(const Base& x, const Base& y) { return x!=y; }

@@ -25,9 +25,10 @@
 #include <fstream>
 #include <ctime>
 #include <assert.h>
+#include <float.h>
 using namespace std;
 
-
+#include "yaml-cpp/yaml.h"
 
 
 
@@ -200,6 +201,9 @@ void TM_val::init_nextstep(double _tau)
 //            xp1[i] = xp1[i].convert_int();
     }
     x = xp1;
+    
+    
+    
 }
 
 
@@ -361,6 +365,29 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     for (int j=0 ; j<sysdim; j++)
         res[j] += odeVAR_g.x[j][order].x()*taui;
     
+    
+ /*   vector<F<AAF>> temp(sysdim);
+    taui = h;
+    
+    // only the last differentiation is computed with full intervals (improved mean value)
+    for (int j=0 ; j<sysdim; j++)
+        temp[j] = odeVAR_x[sysdim+inputsdim-1].x[j][0].x();
+    
+    // pour les premiers termes, on utilise dL^i(x0)*tau^i
+    for (int i=1; i<order ; i++)
+    {
+        for (int j=0 ; j<sysdim; j++)
+            temp[j] += odeVAR_x[sysdim+inputsdim-1].x[j][i].x()*taui;
+        taui *= h;
+    }
+    
+    // pour le dernier terme, on utilise le reste dL^i(g0_rough)*tau^i
+    for (int j=0 ; j<sysdim; j++)
+        temp[j] += odeVAR_g.x[j][order].x()*taui;
+    
+    // vector<F<AAF>>
+    nn_outputs = NH.eval_network(temp); */
+    
     // A REVOIR
   /*  for (int j=0 ; j<sysdim; j++)
     {
@@ -395,12 +422,16 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         }
     }
     
+    //if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388)
+     //   addJacfzJacfz(J_res,Jac_params);
+    
     // pour les premiers termes, Jac^i(x)*J*tau^i
     for (int i=1; i<order ; i++)
     {
         for (int j=0 ; j<sysdim; j++) {
             for (int k=0 ; k<sysdim; k++) {
                 Jaci[j][k] = odeVAR_x[k].x[j][i].d(0);  //  on each structure differentiate to only one variable
+                
           //      cout << "order=" << i << " Jaci["<< j <<"]["<< k << "]=" << Jaci[j][k].convert_int() << endl;
             }
             for (int k=0 ; k<inputsdim ; k++) {
@@ -409,15 +440,39 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
             }
         }
         
+        
+        
+        
     //    for (int k=0 ; k<sysdim+inputsdim; k++)
     //        for (int j=0 ; j<inputsdim ; j++)
      //           cout << "order=" << i << " deriv param inputs"<<  odeVAR_x[k].param_inputs[j][i].d(0).convert_int() << " deriv param inputs"<<  odeVAR_x[k].param_inputs[j][i].d(1).convert_int() << endl;
         
        //  multJacfzJaczz0(aux,Jaci,J); // Jac^i(x)*J
         multJacfzuJaczz0Jacuz0(aux,Jaci,aux2,J,offset); // Jac^i(x)*J  - includes the case where u can be a control functio,
+        
+    //    for (int i=0 ; i<Jaci.size(); i++)
+    //        for (int j=0 ; j<Jaci[i].size(); j++)
+    //            cout << "Jaci["<<i<<"]["<<j<<"]="<<Jaci[i][j].convert_int() << endl;
     /*    for (int j=0 ; j<sysdim; j++)
             for (int k=0 ; k<jacdim; k++)
                 cout << "aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl; */
+        
+        // TODO. Adding term of the jacobian due to NN control.
+        if ((i == 1) && ((syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+            addMiMi(aux,Jac_params);
+         //   for (int j=0 ; j<sysdim; j++)
+        //            for (int k=0 ; k<jacdim; k++)
+//                        cout << "Jac_params["<<j<<"]["<<k<<"]=" << Jac_params[j][k].convert_int() << endl;
+        
+        if ((i == 2) && ((syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+                addMiMi(aux,Jac_params_order2);
+    
+        // In fact we should compute this for all orders...
+        
+  //      for (int j=0 ; j<sysdim; j++)
+   //             for (int k=0 ; k<jacdim; k++)
+    //                cout << "i=" << i << " aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl;
+        
         scaleJacfz(aux,taui);
         addJacfzJacfz(J_res,aux);
         taui *= h;
@@ -440,9 +495,12 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     //    print_interv("J_rough",J_rough);
     scaleJacfz(aux,taui);
     addJacfzJacfz(J_res,aux);
-       /* for (int j=0 ; j<sysdim; j++)
-            for (int k=0 ; k<jacdim; k++)
-                cout << "J_res["<<j<<"]["<<k<<"]=" << J_res[j][k].convert_int() << endl; */
+  //      for (int j=0 ; j<sysdim; j++)
+  //          for (int k=0 ; k<jacdim; k++)
+  //              cout << "J_res["<<j<<"]["<<k<<"]=" << J_res[j][k].convert_int() << endl;
+    
+
+    
 }
 
 
@@ -472,6 +530,9 @@ void TM_Jac::init_nextstep(double _tau, vector<AAF> &_x0)
     }
     x = xp1;
     
+    
+    
+    
     for (int i=0 ; i<sysdim ; i++)
         for (int k=0 ; k<jacdim ; k++) {
             Jp1[i][k].compact();
@@ -494,12 +555,13 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
     int iter;
     interval widen, coeff;
     
-    bf(fx0,param_inputs,x0);
+    bf(fx0,param_inputs,params,x0);
     
     for (int i=0; i<sysdim ; i++)
         y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();  // modif (*tau)
     
-    
+ //   bool save_recompute = recompute_control;
+ //   recompute_control = false;
     
     y0 = x0;
     
@@ -530,7 +592,7 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
         
       //  cout << "iter=" << iter << "fx0[1]=" << fx0[1].convert_int() << "\t" "y0[1]=" << y0[1].convert_int() << endl;
         
-        bf(fx0,param_inputs,y0);
+        bf(fx0,param_inputs,params,y0);
         // cout << "fx[0]=" << fx0[0] << "\t"  << fx0[1] << endl;
         //   cout << "y1=" << y1[0] << "\t"  << y1[1] << endl;
         for (int i=0; i<sysdim ; i++)
@@ -540,6 +602,9 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
        
         iter = iter+1;
     }
+    
+//    recompute_control = save_recompute;
+    
     //cout << "y0 (end of fixpoint)=" << y0[0] << "\t"  << y0[1] << " iter=" << iter << endl;
     return y0;
 }
@@ -619,9 +684,25 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
 HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double tn, double tau, int order)
 {
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
-    OdeVar odeVAR_g = OdeVar(bf);
-    Ode ode_x0 = Ode(bf);
-    Ode ode_g0 = Ode(bf);
+    
+    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    {
+        params = NH.eval_network(x);
+        cout << "params=" << params[0].convert_int() << " x=" << x[0].convert_int() << endl;
+        
+        
+    }
+    
+    vector<F<AAF>> xf(sysdim);
+    for (int i=0 ; i<sysdim; i++)
+        xf[i] = x[i];
+    for (int i=0; i < sysdim ; i++)
+        xf[i].diff(i,sysdim);    // differentiate to x   // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
+    vector<F<AAF>> paramsf = NH.eval_network(xf);
+    
+    OdeVar odeVAR_g = OdeVar(bf,paramsf);
+    Ode ode_x0 = Ode(bf,params);
+    Ode ode_g0 = Ode(bf,params);
     vector<AAF> init_x;
     
     if (innerapprox == 1)
@@ -636,19 +717,32 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     if (innerapprox == 1) {
         for (int k = 0; k<sysdim+inputsdim; k++)
-            odeVAR_x[k] = OdeVar(bf);
+            odeVAR_x[k] = OdeVar(bf,paramsf);
     }
     TM_Jac TMJac = TM_Jac(odeVAR_x, odeVAR_g, order, x, init_x, J0, tn, tau);
     
+    
+    
     HybridStep_ode res = HybridStep_ode(bf,TMcenter,TMJac,tn,tau,order);
+    
+    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    {
+        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
+        for (int i=0; i<sysdim; i++)
+            J[i][i] = 1.0;
+        res.eval_valandJacobian_nn(x,inputs,0,tau,J);
+    }
+    
     return res;
 }
 
 
 
 
-void HybridStep_ode::init_nextstep(double _tau)
+void HybridStep_ode::init_nextstep(vector<AAF> &param_inputs, double _tau)
 {
+   
+    
     TMcenter.init_nextstep(_tau);
     // pass the center of TMcenter to TMJac
     if (innerapprox == 1)
@@ -656,11 +750,65 @@ void HybridStep_ode::init_nextstep(double _tau)
     
     tn = tn + tau;
     tau = _tau;
+    
+    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112) {
+       
+        eval_valandJacobian_nn(TMJac.xp1,param_inputs,tn,tau,TMJac.J); // J_rough ou J ???
+       /* if (control_period > 0) // control update rate is not the same as time step
+        {
+            if ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))) {
+                
+                vector<F<AAF>> xf(sysdim);
+                for (int i=0 ; i<sysdim; i++)
+                    xf[i] = TMJac.x[i];
+                vector<F<AAF>> paramsf = NH.eval_network(syst_to_nn(xf));
+                for (int i=0 ; i<paramsf.size(); i++)
+                    params[i] = paramsf[i].x();
+                // params = NH.eval_network(syst_to_nn(TMJac.x));
+                cout << "recomputing params at time " << tn << endl;
+            }
+        }
+        else {
+            vector<F<AAF>> xf(sysdim);
+            for (int i=0 ; i<sysdim; i++)
+                xf[i] = TMJac.x[i];
+            vector<F<AAF>> paramsf = NH.eval_network(syst_to_nn(xf));
+            for (int i=0 ; i<paramsf.size(); i++)
+                params[i] = paramsf[i].x();
+           // params = NH.eval_network(syst_to_nn(TMJac.x));
+            cout << "recomputing params at time " << tn << endl;
+        }
+        cout << "params=" << params[0].convert_int() << endl;
+        */
+    
+        // no need to do this if we do not modify params ?
+  /*      cout << "setting new bf" << endl;
+        bf = OdeFunc();  // to take into account new params if they have changed
+        // resetting
+        TMcenter.ode_x = Ode(bf);
+        TMcenter.ode_g = Ode(bf);
+        TMJac.odeVAR_x = vector<OdeVar>(sysdim+inputsdim);
+        for (int k = 0; k<sysdim+inputsdim; k++)
+            TMJac.odeVAR_x[k] = OdeVar(bf);
+        TMJac.odeVAR_g = OdeVar(bf); */
+    }
+    else if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
+    {
+        vector<AAF> y_temp(sysdim);
+        vector<AAF> control_inputs;
+        recompute_control = true;
+        bf(y_temp,param_inputs,control_inputs,TMJac.xp1);  // to evaluate new control value
+        recompute_control = false;
+    }
 }
 
 
 void HybridStep_ode::TM_build(vector<AAF> &param_inputs,vector<AAF> &param_inputs_center)
 {
+    
+    
+    
+    
     TMcenter.build(bf,param_inputs_center);
     if (innerapprox == 1)
         TMJac.build(bf,param_inputs,param_inputs_center);
@@ -675,12 +823,148 @@ void HybridStep_ode::TM_eval()
 }
 
 
-
-
-void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter)
+// sets params and Jac_params (Jac params should contain only df/du . du/dx and not all df/dx hence the decomposition implemented below) - separate control and the rest of dependencies because control period is different from integration period
+// Jac_params_order2 contains d/dt (df/du . du/dx) = d/dx(Jac_order_1).(dx/dt)
+void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J)
 {
-    double aux, minwidth_ratio = 1.0;  // min on xi ( width of inner-approx (xi) / width of outer-approx (xi) )
-    double mean_dist; // mean value on the xi of max distance between inner and outer approximations
+    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+    {
+        
+        if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
+        {
+                    
+            // evaluate (\partial u / partial x) separately
+            
+            vector<F<AAF>> xf(sysdim);
+            for (int i=0 ; i<sysdim; i++)
+                xf[i] = x[i];
+            for (int i=0; i < sysdim ; i++)
+                xf[i].diff(i,sysdim);    // differentiate to x
+            // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to
+            // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
+                    
+            vector<F<AAF>> paramsf = NH.eval_network(xf);
+            for (int i=0 ; i<sysdim_params; i++) {
+                params[i] = paramsf[i].x();
+                cout << "params[i]=" << params[i].convert_int() << endl;
+            }
+                        
+            vector<vector<AAF>> auxu = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
+            for (int i=0; i < sysdim_params ; i++)
+                for (int j=0; j < sysdim ; j++)
+                    auxu[i][j] = paramsf[i].d(j);
+                  
+            
+            // evaluate (\partial f) / (\partial u)
+            OdeFunc f = OdeFunc();
+            vector<vector<AAF>> auxf = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim_params));
+            
+            
+            // new experiment for order 2
+            vector<F<F<AAF>>> ffu(sysdim_params);
+            vector<F<F<AAF>>> ffxff(sysdim);
+            vector<F<F<AAF>>> fftemp(sysdim);
+            vector<F<F<AAF>>> ffparam_inputs(inputsdim);
+            
+            for (int i=0 ; i<sysdim; i++)
+                ffxff[i] = x[i];
+            for (int i=0; i < inputsdim ; i++)
+                ffparam_inputs[i] = param_inputs[i];
+            for (int i=0; i < sysdim ; i++) {
+                ffxff[i].diff(i,sysdim+sysdim_params);          // differentiate to x, first order
+                ffxff[i].x().diff(i,sysdim+sysdim_params);      // second order
+            }
+            
+            for (int i=0; i < sysdim_params ; i++) {
+                ffu[i] = params[i];
+                ffu[i].diff(sysdim+i,sysdim+sysdim_params);    // differentiate to u, first order
+                ffu[i].x().diff(sysdim+i,sysdim+sysdim_params);  // second order
+            }
+            
+            f(fftemp,ffparam_inputs,ffu,ffxff);
+            
+            for (int i=0; i < sysdim ; i++)
+                for (int j=0; j < sysdim_params ; j++)
+                    auxf[i][j] = fftemp[i].d(sysdim+j).x();   // \partial f . partial u
+           
+        //    if (syschoice == 471)
+        //        auxf[1][0] = 4 * x[1] * x[1];
+         //   if (syschoice == 1112)
+               // auxf[1][0] = 1;
+          //      auxf[1][0] = x[1];
+            
+            // compute (\partial f) / (\partial u) . (\partial u / partial x)
+            vector<vector<AAF>> aux = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
+            for (int i=0 ; i<sysdim; i++)
+                for (int j=0; j < sysdim ; j++) {
+                    aux[i][j] = 0;
+                    for (int k=0; k < sysdim_params ; k++)
+                        aux[i][j] += auxf[i][k]*auxu[k][j];
+                   // cout << "partial derivatives: " << aux[i][j].convert_int() << endl;
+                }
+            
+            // compte aux . J and store the result in Jac_params
+             multMiMi(Jac_params,aux,J);
+            
+            for (int i=0 ; i<J.size(); i++)
+                for (int j=0 ; j<J[i].size(); j++)
+                    cout << "J["<<i<<"]["<<j<<"]="<<J[i][j].convert_int() << endl;
+            
+            // EVALUATE ORDER 2 (Lie derivative of Jacobian)
+            vector<vector<AAF>> aux_order2 = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
+            vector<vector<F<AAF>>> f_order2 = vector<vector<F<AAF>>>(sysdim, vector<F<AAF>>(sysdim));
+            // if J is the 1st order jacobian, evaluate for all i,j in sysdim, \sum_k (partial J_ij / partial z_k) . (dz_k.dt) where dz_k.dt=f_k
+               for (int i=0 ; i<sysdim; i++)
+                    for (int j=0; j < sysdim ; j++) {
+                        f_order2[i][j] = 0;
+                        for (int k=0; k < sysdim_params ; k++)
+                            f_order2[i][j] += fftemp[i].d(sysdim+k)*auxu[k][j];
+                    }
+            
+            for (int i=0 ; i<sysdim; i++)
+                for (int j=0; j < sysdim ; j++) {
+                    aux_order2[i][j] = 0;
+                    for (int k=0; k < sysdim ; k++)
+                        aux_order2[i][j] += f_order2[i][j].d(k)*fftemp[k].x().x();
+               //     cout << "partial derivatives order2 " << i << " " << j << " new new : " << aux_order2[i][j].convert_int() << endl;
+                }
+       
+            // compte aux . J and store the result in Jac_params
+            multMiMi(Jac_params_order2,aux_order2,J);
+            
+            // WE COULD/SHOULD PROCEED WITH HIGHER ORDERS....
+            
+     /*       for (int i=0 ; i<sysdim; i++)
+                for (int j=0 ; j<Jac_params[i].size(); j++)
+                    cout << "Jac_params["<<i<<"]["<<j<<"]=" << Jac_params[i][j].convert_int() << endl;
+            
+            for (int i=0 ; i<sysdim; i++)
+                for (int j=0 ; j<Jac_params_order2[i].size(); j++)
+                    cout << "Jac_params_order2["<<i<<"]["<<j<<"]=" << Jac_params_order2[i][j].convert_int() << endl;
+         */
+  
+        
+        cout << "setting new bf at time " << tn << endl;
+              bf = OdeFunc();  // to take into account new params if they have changed
+              // resetting
+              TMcenter.ode_x = Ode(bf,params);
+              TMcenter.ode_g = Ode(bf,params);
+              TMJac.odeVAR_x = vector<OdeVar>(sysdim+inputsdim);
+              for (int k = 0; k<sysdim+inputsdim; k++)
+                  TMJac.odeVAR_x[k] = OdeVar(bf,paramsf);
+              TMJac.odeVAR_g = OdeVar(bf,paramsf);
+            
+    }
+    }
+        
+}
+
+
+
+
+void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv)
+{
+    //double mean_dist; // mean value on the xi of max distance between inner and outer approximations
     double tnp1 = tn + tau;
     
     
@@ -698,6 +982,15 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
             for (int i=0 ; i<sysdim ; i++) {
                 cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
                 cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
+                cout << "Sampled estim.[" << i <<"]=" << sampled_reachset[i] << "\t";
+                cout << " eta_o["<<i<<"]=" << (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf()) << "\t";
+                cout << " eta_i[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf()) << "\t";
+                cout << " gamma[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
+                if (! subseteq(sampled_reachset[i],Xouter[i]))
+                    cout << "WARNING: problem with outer-estimated approximation!\n";
+                if (! subseteq(Xinner[i],sampled_reachset[i]))
+                    cout << "WARNING: problem with inner-estimated approximation!\n";
+                cout << endl;
             }
             cout << endl;
             if (uncontrolled > 0)
@@ -719,38 +1012,89 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
         }
     }
   
+   // out_approx << YAML::BeginMap;
     
-    for (int i=0 ; i<sysdim ; i++) {
-        if (print_debug)
+    
+    
+    vector<double> temp(2*sysdim);
+    
+    if (nb_subdiv_init ==1) {
+        out_approx << YAML::Key << "outer";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter[i].inf();
+            temp[2*i+1] = Xouter[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xouter does not work because of interval type (I guess I could solve this but...)
+    }
+    
+    if (innerapprox == 1)
+    {
+        out_approx << YAML::Key << "inner";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xinner[i].inf();
+            temp[2*i+1] = Xinner[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xinner;
+        if (nb_subdiv_init ==1)
         {
-            if (innerapprox == 0) {
-                if (nb_subdiv_init ==1)
-                    outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
+            out_approx << YAML::Key << "center";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xcenter[i].inf();
+                temp[2*i+1] = Xcenter[i].sup();
             }
-            else
-            {
-                if (nb_subdiv_init ==1)
-                {
-                    outFile_outer[i] << tnp1 << "\t" << inf(Xouter[i]) << "\t" << sup(Xouter[i]) << endl;
-                    outFile_center[i] << tnp1 << "\t" << inf(Xcenter[i]) << "\t" << sup(Xcenter[i]) << endl;
-                }
-                if (uncontrolled > 0) {
-                    outFile_outer_robust[i] << tnp1 << "\t" << inf(Xouter_robust[i]) << "\t" << sup(Xouter_robust[i]) << endl;
-                    outFile_inner_robust[i] << tnp1 << "\t" << inf(Xinner_robust[i]) << "\t" << sup(Xinner_robust[i]) << endl;
-                }
-                if (controlled > 0 || uncontrolled > 0) {
-                    outFile_outer_minimal[i] << tnp1 << "\t" << inf(Xouter_minimal[i]) << "\t" << sup(Xouter_minimal[i]) << endl;
-                    outFile_inner_minimal[i] << tnp1 << "\t" << inf(Xinner_minimal[i]) << "\t" << sup(Xinner_minimal[i]) << endl;
-                }
+            out_approx << YAML::Value << temp; // Xcenter;
+        }
+        if (uncontrolled > 0) {
+            out_approx << YAML::Key << "outerrobust";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xouter_robust[i].inf();
+                temp[2*i+1] = Xouter_robust[i].sup();
             }
-            outFile_inner[i] << tnp1 << "\t" << inf(Xinner[i]) << "\t" << sup(Xinner[i]) << endl;
-            //    outFile_inner_joint[i] << tnp1 << "\t" << inf(Xinner_joint[i]) << "\t" << sup(Xinner_joint[i]) << endl;
-            
+            out_approx << YAML::Value << temp; // Xouter_robust;
+            out_approx << YAML::Key << "innerrobust";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xinner_robust[i].inf();
+                temp[2*i+1] = Xinner_robust[i].sup();
+            }
+            out_approx << YAML::Value << temp; // Xinner_robust;
+        }
+        if (controlled > 0 || uncontrolled > 0) {
+            out_approx << YAML::Key << "outerminimal";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xouter_minimal[i].inf();
+                temp[2*i+1] = Xouter_minimal[i].sup();
+            }
+            out_approx << YAML::Value << temp; // Xouter_minimal;
+            out_approx << YAML::Key << "innerminimal";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xinner_minimal[i].inf();
+                temp[2*i+1] = Xinner_minimal[i].sup();
+            }
+            out_approx << YAML::Value << temp; // Xinner_minimal;
         }
         
-        // saving result
+        // error measures
+        vector<double> temp2(sysdim);
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf());
+        out_approx << YAML::Key << "etaouter";
+        out_approx << YAML::Value << temp2;
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf());
+        out_approx << YAML::Key << "etainner";
+        out_approx << YAML::Value << temp2;
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
+        out_approx << YAML::Key << "gamma";
+        out_approx << YAML::Value << temp2;
         
-            
+        
+    }
+ //   out_approx << YAML::EndMap;
+    
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
         if (innerapprox == 1)
         {
@@ -764,22 +1108,12 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
     }
     current_iteration++;
     
-    if ((print_debug) && (innerapprox == 1))
-    {
-        minwidth_ratio = (sup(Xinner[0])-inf(Xinner[0]))/(sup(Xouter[0])-inf(Xouter[0]));
-        for (int i=1 ; i<sysdim ; i++) {
-            aux = (sup(Xinner[i])-inf(Xinner[i]))/(sup(Xouter[i])-inf(Xouter[i]));
-            if (minwidth_ratio > aux)
-                minwidth_ratio = aux;
-        }
-        if (tnp1 != 0)
-            outFile_width_ratio << tnp1 << "\t" << minwidth_ratio << endl;
-    }
+    
 }
 
 
 
-vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1)
+vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv)
 {
     assert (tn <= tnp1);
     assert (tnp1 <= tn+tau);
@@ -789,6 +1123,16 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
     // eval and store at time tnp1
     TM_eval();
     
+    out_approx << YAML::BeginMap;
+    
+    out_approx << YAML::Key << "tn";
+    out_approx << YAML::Value << tnp1;
+    if (nb_subdiv_init > 1)
+    {
+        out_approx << YAML::Key << "currentsubdiv";
+        out_approx << YAML::Value << current_subdiv;
+    }
+    
     if (innerapprox == 0)
     {
         for (int i = 0 ; i<sysdim ; i++) {
@@ -796,7 +1140,7 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xouter[i] = TMcenter.xp1[i].convert_int();
         }
-        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter);
+        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset,current_subdiv);
     }
     else {
     // deduce inner-approx by mean-value thm
@@ -823,16 +1167,20 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
         intersectViVi(Xouter,TMJac.xp1);
         
         cout << "with intersection with direct solution: ";
-        print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+        print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter,sampled_reachset,current_subdiv);
         
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
     }
+    out_approx << YAML::EndMap;
+    
     return Xouter;
 }
 
 
 // setting the k-th control_values in fullinputs and param_inputs
 // used when we need to set control values dynamically and not statically before execution as done until now
+// EN FAIT j'ai l'impression que cette fonction soit n'a pas ete terminee soit ne fait pas ce qu'elle est prevue pour
+// TODO. A vori si je corrige pour utiliser le control_input ou pas au final (dans les champs)
 void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, int k)
 {
     // the part which is statically done in init_system
@@ -880,4 +1228,233 @@ void HybridStep_ode::set_controlinput_regression(vector<AAF> &param_inputs, vect
         else
             param_inputs_center[index_param_inv[i]+k] = control_input[i] + control_input_uncertainty[i];
     }
+}
+
+
+// estimate the range of the n iterates (same stepsize as for reachability analysis)
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &param_inputs, double t_begin, double t_end, double tau)
+{
+    int n = (t_end - t_begin)/tau + 1;
+    int discr = 2;
+    int nb_points = discr+1;
+    
+    
+    
+    vector<interval> xinit(sysdim);
+    for (int i=0 ; i<sysdim ; i++)
+        xinit[i] = initial_values[i].convert_int();
+    
+    // limit the number of sampled points
+    for (int i=1; i < min(jacdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
+        nb_points = nb_points * (discr+1);
+    
+    
+    vector<vector<double>> input(nb_points,vector<double>(sysdim));  //  the iterates f^n(x_j)
+    vector<vector<double>> output(nb_points,vector<double>(sysdim));
+    
+    vector<vector<double>> max_output(n+1,vector<double>(sysdim));  // store the min and max for each iterate
+    vector<vector<double>> min_output(n+1,vector<double>(sysdim));
+    vector<vector<interval>> range(n+1,vector<interval>(sysdim));
+
+    // choosing the sampling points in the initial box
+    int cur_point = 0;
+    for (int i1=0; i1 <= discr ; i1++)
+    {
+        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
+        if (jacdim > 1)
+        {
+            for (int i2=0; i2 <= discr ; i2++)
+            {
+                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
+                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
+                if (jacdim > 2)
+                {
+                    for (int i3=0; i3 <= discr ; i3++)
+                    {
+                        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
+                        input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
+                        input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
+                        // to limit the number of sampled points
+                        if (jacdim > 3) {
+                            for (int i4=0; i4 <= discr ; i4++)
+                            {
+                                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
+                                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
+                                input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
+                                input[cur_point][3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/discr;
+                                
+                                // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
+                                if (jacdim > 4) {
+                                    if (xinit[4].inf() != xinit[4].sup())
+                                        printf("warning, case not fully implemented");
+                                    input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
+                                }
+                        //        cur_point++; // AJOUT
+                            }
+                            
+                        }
+                        cur_point++;
+                    }
+                }
+                else
+                    cur_point++;
+            }
+        }
+        else
+            cur_point++;
+    }
+
+    //ofstream outFile_xi;
+    //stringstream file_name;
+    //file_name.str("");
+    //file_name << "output/xi.out";
+    //outFile_xi.open(file_name.str().c_str());
+    
+    ofstream samplesreachsetfile;
+    samplesreachsetfile.open("output/samplesreachset.yaml");
+    
+    YAML::Emitter out_samples;
+    out_samples << YAML::BeginMap;
+    //out_samples << YAML::Key << "dimension";
+    //out_samples << YAML::Value << sysdim;
+    
+    out_samples << YAML::Key << "samples";
+    out_samples << YAML::Value << YAML::BeginSeq;
+    
+    double tn;
+    
+    
+    vector<AAF> control_inputs(sysdim_params);
+    vector<AAF> input_dummy(sysdim), output_dummy(sysdim);
+    vector<double> control(sysdim_params);
+    
+    recompute_control = false;
+    
+    int iter = 1;
+    for (tn=t_begin ; tn <=t_end ; tn = tn+tau)
+    {
+       
+        for (int i=0; i < sysdim ; i++) {
+            max_output[iter][i] = -DBL_MAX; // RK(obf,input[0],param_inputs,control_inputs,tau);
+            min_output[iter][i] = DBL_MAX; // RK(obf,input[0],param_inputs,control_inputs,tau);
+        }
+        iter++;
+    }
+    
+    for (cur_point=0 ; cur_point<nb_points; cur_point++)
+    {
+        iter = 1;
+            
+        for (tn=t_begin ; tn <=t_end ; tn = tn+tau)
+        {
+                
+            if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
+            {
+                if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+                {
+                    control = NH.eval_network(input[cur_point]);
+                    for (int i=0; i < control.size() ; i++)
+                        params[i] = control[i];
+                 }
+            }
+            
+            // param_inputs,control_inputs unused for now ?
+            output[cur_point] = RK(obf,input[cur_point],param_inputs,params,tau);
+            //outFile_xi << iter <<  "\t";
+            //for (int i=0; i < sysdim ; i++)
+            //    outFile_xi << output[cur_point][i] <<  "\t";
+            //outFile_xi << endl;
+            
+            out_samples << YAML::BeginMap;
+            out_samples << YAML::Key << "tn";
+            out_samples << YAML::Value << tn;
+            out_samples << YAML::Key << "sample";
+            out_samples << YAML::Value << output[cur_point];
+            out_samples << YAML::EndMap;
+           // out_samples << iter << output[cur_point];
+            
+            for (int i=0; i < sysdim ; i++) {
+                if (output[cur_point][i] < min_output[iter][i])
+                    min_output[iter][i] = output[cur_point][i];
+                if (output[cur_point][i] > max_output[iter][i])
+                    max_output[iter][i] = output[cur_point][i];
+            }
+            // initializing next step (iter)
+            for (int i=0; i < sysdim ; i++)
+                input[cur_point][i] = output[cur_point][i];
+                
+            iter++;
+        }
+        
+    }
+    
+    iter = 1;
+    for (tn=t_begin ; tn <=t_end ; tn = tn+tau)
+    {
+        cout << "Estimated reachable set at tn = " << tn << " is: ";
+        for (int i=0; i < sysdim ; i++) {
+            cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
+            
+        }
+        cout << endl;
+        for (int i=0; i < sysdim ; i++)
+            range[iter][i] = interval(min_output[iter][i],max_output[iter][i]);
+        
+        iter++;
+    }
+    
+    // resetting params to initial condition
+
+    params = NH.eval_network(initial_values);
+    
+    out_samples << YAML::EndSeq;
+    out_samples << YAML::EndMap;
+    samplesreachsetfile << out_samples.c_str();
+    samplesreachsetfile.close();
+    
+    // outFile_xi.close();
+    
+    return range;
+}
+
+// ponctual values but AAF necessary to comply with obf...
+vector<double> RK(OdeFunc &obf, vector<double> &yn, vector<AAF> &param_inputs, vector<AAF> &control_inputs, double h)
+{
+    vector<AAF> k1(sysdim), kb(sysdim), k2(sysdim), k3(sysdim), k4(sysdim), ynloc(sysdim);
+    vector<double> ynp1(sysdim);
+    
+    for (int i=0 ; i<sysdim; i++)
+        ynloc[i] = yn[i];
+    
+    //    k1 = h * f(yn);
+    obf(k1,param_inputs,control_inputs,ynloc);
+    for (int i=0 ; i<sysdim; i++)
+        k1[i] = h*k1[i];
+    
+    // k2 = h * (f((x0+h/2), (y0+k1/2)));
+    for (int i=0 ; i<sysdim; i++)
+        kb[i] = yn[i] + k1[i]/2.0;
+    obf(k2,param_inputs,control_inputs,kb);
+    for (int i=0 ; i<sysdim; i++)
+        k2[i] = h*k2[i];
+    
+    // k3 = h * (f((x0+h/2), (y0+k2/2)));
+    for (int i=0 ; i<sysdim; i++)
+        kb[i] = yn[i] + k2[i]/2.0;
+    obf(k3,param_inputs,control_inputs,kb);
+    for (int i=0 ; i<sysdim; i++)
+        k3[i] = h*k3[i];
+    
+    // k4 = h * (f((x0+h), (y0+k3)));
+    for (int i=0 ; i<sysdim; i++)
+        kb[i] = yn[i] + k3[i];
+    obf(k4,param_inputs,control_inputs,kb);
+    for (int i=0 ; i<sysdim; i++)
+        k4[i] = h*k4[i];
+    
+ /*   k = (k1+2*k2+2*k3+k4)/6;
+      yn = y0 + k; */
+    for (int i=0 ; i<sysdim; i++)
+        ynp1[i] = yn[i] + (k1[i].convert_int().inf()+2.0*k2[i].convert_int().inf()+2.0*k3[i].convert_int().inf()+k4[i].convert_int().inf())/6.0;
+    return ynp1;
 }

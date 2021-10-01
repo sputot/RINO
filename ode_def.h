@@ -14,8 +14,10 @@
 #include "filib_interval.h"
 #include "tadiff.h" 
 #include "fadiff.h"
-#include "fadbad_aa.h"
 #include "network_handler.h"
+#include "fadbad_aa.h"
+
+#include <algorithm>
 
 using namespace std;
 
@@ -33,9 +35,12 @@ extern int sysdim_params;  // dimension of the vector of parameters params that 
 
 extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
+extern double control_period;
 
-extern vector<AAF> params;      // params of the ODE (nondeterministic disturbances)
-
+extern vector<AAF> params;      // params of the ODE that don't appear in the Jcaobian: either constant params or control given by NN output, is it a problem to have used the same vector or non ? 
+extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
+extern vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
+ 
 extern vector<AAF> initial_values; // uncertain initial conditions
 extern vector<AAF> center_initial_values;
 
@@ -49,6 +54,9 @@ extern vector<int> index_param_inv;
 extern vector<interval> eps;
 
 extern vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,...xn): we give the jacobian
+
+//  extern vector<F<AAF>> nn_outputs; // result of NN evaluation
+
 
 // for subdivisions of the initial domain to refine precision
 extern int nb_subdiv_init; // number of subdivisiions
@@ -68,10 +76,14 @@ extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controll
 //extern int variable;  // number of non constant parameters
 //extern vector<bool> is_variable; // for each parameter, constant or variable
 
+extern vector<interval> target_set;
+extern vector<interval> unsafe_set;
+
 extern bool refined_mean_value;
 
 extern bool print_debug;
 
+extern bool recompute_control;
 
 void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
 
@@ -93,6 +105,19 @@ void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jac
 // d0 and t_begin and nb_subdiv are for DDEs only, rest are common to ODE and DDE
 void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv);
 
+//vector<F<AAF>> syst_to_nn(vector<F<AAF>> &sysval);
+template <class C> vector<C> syst_to_nn(vector<C> &sysval);
+
+template<class ForwardIterator>
+inline size_t argmax(ForwardIterator first, ForwardIterator last)
+{
+    return std::distance(first, std::max_element(first, last));
+}
+
+// vector<AAF> nn_to_control(vector<AAF> &nnoutput);
+template <class C> vector<C> nn_to_control(vector<C> nnoutput);
+
+
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
 void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
 
@@ -101,12 +126,14 @@ void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, 
 // specific to subdivisions
 void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide);
 
+// maps the ODE sys coordinates to the neural network inputs
+//vector<AAF> sys_to_nn(vector<AAF> &sysval);
 
 // define here  your ODE system yp = \dot y = f(y)
 class OdeFunc {
 public:
     template <class C>
-      void operator()(vector<C> &yp, vector<C> param_inputs, vector<C> y) {
+      void operator()(vector<C> &yp, vector<C> param_inputs, vector<C> control_inputs, vector<C> y) {
           
           
           if (syschoice == 1) // running example
@@ -903,11 +930,12 @@ public:
             yp[1] = param_inputs[0];
         }
         else if (syschoice == 301) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+           /* vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
             net_outputs[0] = y;
             for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
                 net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
             vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+            vector<C> u = NH.eval_network(y);
             yp[0] = y[1]-y[0]*y[0]*y[0];
             yp[1] = u[0];
         }
@@ -956,7 +984,7 @@ public:
               yp[0] = y[1];
               yp[1] = param_inputs[0]*y[1]*y[1] - y[0];
           }
-          else if (syschoice == 33) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+          else if (syschoice == 33) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference  // Ex 14 in sherlock/systems_with_networks
               yp[0] = -y[0]*(0.1 + (y[0]+y[1])*(y[0]+y[1]));
               yp[1] = (param_inputs[0]+y[0])*(0.1 + (y[0] + y[1])*(y[0]+y[1]));
           }
@@ -980,11 +1008,65 @@ public:
               yp[1] = y[2];
               yp[2] = param_inputs[0];
           }
-          else if (syschoice == 38) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+          else if (syschoice == 38) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference --  Ex 19 dans sherlock//systems_with_networks
               yp[0] = y[1];
               yp[1] = -9.8*y[2] + 1.6*y[2]*y[2]*y[2] + y[0]*y[3]*y[3];
               yp[2] = y[3];
               yp[3] = param_inputs[0];
+          }
+          else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference --  Ex 19 dans sherlock/systems_with_networks
+              double offset = 10;
+              double scaling_factor = 1;
+              yp[0] = y[1];
+              yp[1] = -9.8*y[2] + 1.6*y[2]*y[2]*y[2] + y[0]*y[3]*y[3];
+              yp[2] = y[3];
+              yp[3] = scaling_factor*(params[0]-offset);
+          }
+          else if (syschoice == 382) { // Ex 12 in sherlock/systems_with_networks
+              double offset = 4;
+              double scaling_factor = 1;
+              yp[0] = y[1] - y[0]*y[0]*y[0];
+              yp[1] = scaling_factor*(params[0]-offset);
+          }
+          else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 4;
+              double scaling_factor = 1;
+              yp[0] = y[1];             // Ex 13 in sherlock/systems_with_networks
+              yp[1] = (scaling_factor*(params[0]-offset))*y[1]*y[1] - y[0];
+          }
+          else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 2;
+              double scaling_factor = 1;
+              yp[0] = -y[0]*(0.1 + (y[0]+y[1])*(y[0]+y[1]));     // Ex 14 in sherlock/systems_with_networks
+              yp[1] = (scaling_factor*(params[0]-offset)+y[0])*(0.1 + (y[0] + y[1])*(y[0]+y[1])); // offset=2 (and it iss u-offset!), scale_factor=1 d'apres el "simulate_with_NN" du rep sherlock...
+          }
+          else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 10;
+              double scaling_factor = 1;
+              yp[0] = y[1] + 0.5*y[2]*y[2];    // Ex 15 in sherlock/systems_with_networks
+              yp[1] = y[2];
+              yp[2] = scaling_factor*(params[0]-offset);
+          }
+          else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 10;
+              double scaling_factor = 1;
+              yp[0] = -y[0] + y[1] - y[2]; // Ex 16 in sherlock/systems_with_networks
+              yp[1] = -y[0]*(y[2]+1) - y[1];
+              yp[2] = -y[0] + scaling_factor*(params[0]-offset);
+          }
+          else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 3;       // Ex 17 in sherlock/systems_with_networks
+              double scaling_factor = 1;
+              yp[0] = -y[0]*y[0]*y[0] + y[1];
+              yp[1] = y[1]*y[1]*y[1] + y[2];
+              yp[2] = scaling_factor*(params[0]-offset);
+          }
+          else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+              double offset = 100;       // Ex 18 in sherlock/systems_with_networks
+              double scaling_factor = 0.1;
+              yp[0] = y[2]*y[2]*y[2] - y[1];
+              yp[1] = y[2];
+              yp[2] = scaling_factor*(params[0]-offset);
           }
           else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
               yp[0] = y[1];
@@ -1554,14 +1636,180 @@ public:
               // // Z integrale for thrust setpoint calculation
               // yp[13] = velZ_sp - y[11];
           }
-          else if (syschoice == 45) { // Mountain car example Verisig
-              vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+          else if (syschoice == 45) { // Mountain car example Verisig (network format sfx)
+            /*  vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
               net_outputs[0] = y;
               for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
                   net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
               vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+              vector<C> u = NH.eval_network(y);
               yp[0] = y[1];
               yp[1] = 0.0015*u[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
+          }
+          else if (syschoice == 451) { // Mountain car example Verisig (network format sfx)
+              /*  vector<vector<C>> net_outputs(NH.n_hidden_layers+2);
+               net_outputs[0] = y;
+               for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+               net_outputs[i+1] = eval_layer(L[i],net_outputs[i]);
+               vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
+              // vector<C> u = NH.eval_network(y);
+              yp[0] = y[1];
+              yp[1] = 0.0015*control_inputs[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
+             // yp[1] = 0.0015*params[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
+          }
+          else if (syschoice == 46 || syschoice == 4601) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 46) { // tanh
+                  offset = 0.;
+                  scaling_factor = 11;
+              }
+              else { // sigmoid
+                 offset = 0.5;
+                  scaling_factor = 22;
+              }
+              static vector<C> u;
+              cout << "before eval_network";
+              u = NH.eval_network(y);
+              //cout << u << endl;
+              cout << "after eval_network" << endl;
+              yp[0] = y[1];
+              yp[1] = - y[0] + 0.1*sin(y[2]);
+              yp[2] = y[3];
+              yp[3] = scaling_factor*(u[0]-offset);  // scaling factor found in
+            //  yp[3] = scaling_factor*(nn_outputs[0].x()-offset);  // scaling factor found in https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m ???
+              // and in spec https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/Specifications.txt
+          }
+          else if (syschoice == 461|| syschoice == 4611) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat) - different way to proceed
+          {
+              double offset, scaling_factor;
+              if (syschoice == 461) { // tanh
+                  offset = 0.;
+                  scaling_factor = 11;
+              }
+              else { // sigmoid
+                 offset = 0.5;
+                  scaling_factor = 22;
+              }
+              yp[0] = y[1];
+              yp[1] = - y[0] + 0.1*sin(y[2]);
+              yp[2] = y[3];
+              yp[3] = scaling_factor*(control_inputs[0]-offset);  // offset et scaling factor found in
+              // cout << "params=" << (params[0]*11.0).convert_int() << endl;
+           //   yp[3] = scaling_factor*(params[0]-offset);  // offset et scaling factor found in
+             // yp[3] = scaling_factor*(param_inputs[0]-offset);  // offset et scaling factor found inhttps://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m ou plus exactement dans la fin du fichier .txt correspondant car different de la spec???
+              // and in spec https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/Specifications.txt
+             // cout << yp << endl; 
+          }
+          else if (syschoice == 471 || syschoice == 4711) // Ex 1 ReachNNstar  (avec nn_1_sigmoid.sfx obtenu a partir du .txt - avant derniere et derniere lignes: offset et scaling factor)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 471) { // tanh
+                  offset = 0.;
+                  scaling_factor = 4;
+              }
+              else { // sigmoid
+                  offset = 0.5;
+                  scaling_factor = 8;
+              }
+              yp[0] = y[1];
+             //  yp[1] = (0.5+8.0*params[0])*y[1]*y[1]-y[0]; // for nn_1_sigmoid.sfx => n'importe nawak, mais ressemble a l'attendu quand on prend offset et scaling du fichier tanh ?
+              yp[1] = (scaling_factor*(control_inputs[0]-offset))*(y[1]*y[1])-y[0]; // for nn_1_tanh.sfx or nn_1_tanh_retrained.sfx => satisfait spec
+           //   yp[1] = (scaling_factor*(params[0]-offset))*(y[1]*y[1])-y[0]; // for nn_1_tanh.sfx or nn_1_tanh_retrained.sfx => satisfait spec
+          }
+          else if (syschoice == 1111) // toy example
+          {
+              yp[0] = y[1];
+              yp[1] = control_inputs[0]*y[1];
+          }
+          else if (syschoice == 1113) // toy example
+          {
+              yp[0] = y[1];
+              yp[1] = y[0]*y[1];
+          }
+          else if (syschoice == 481 || syschoice == 4811) // Ex 2 ReachNNstar  (avec nn_2_sigmoid.sfx obtenu a partir du .txt)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 481) { // tanh
+                  offset = 0.;
+                  scaling_factor = 4;
+              }
+              else { // sigmoid
+                  offset = 0.5;
+                  scaling_factor = 8;
+              }
+              yp[0] = y[1] - y[0]*y[0]*y[0];
+              yp[1] = (scaling_factor*(control_inputs[0]-offset)); // ok for sigmoid but for nn_2_tanh.sfx  => plante tout de suite sur une division par 0
+          //     yp[1] = (scaling_factor*(params[0]-offset)); // for nn_2_tanh.sfx  => plante tout de suite sur une division par 0
+          }
+          else if (syschoice == 482 || syschoice == 4821) // Ex 3 ReachNNstar  (avec nn_3_sigmoid.sfx obtenu a partir du .txt)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 482) { // tanh
+                  offset = 0.;
+                  scaling_factor = 2;
+              }
+              else { // sigmoid
+                  offset = 0.5;
+                  scaling_factor = 4;
+              }
+              yp[0] = -y[0]*(0.1+(y[0]+y[1])*(y[0]+y[1]));
+           //   yp[1] = ((0.5+4.0*params[0])+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])) ; // for nn_3_sigmoid.sfx (plante assez vite)
+              //yp[1] = (scaling_factor*(params[0]-offset)+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])); // for nn_3_tanh.sfx  => satisfait la spec facilement
+              yp[1] = (scaling_factor*(control_inputs[0]-offset)+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])); // for nn_3_tanh.sfx  => satisfait la spec facilement
+          }
+          else if (syschoice == 483 || syschoice == 4831) // Ex 4 ReachNNstar  (avec nn_4_sigmoid.sfx obtenu a partir du .txt)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 483) { // tanh
+                  offset = 0.;
+                  scaling_factor = 10;
+              }
+              else { // sigmoid
+                  offset = 0.5;
+                  scaling_factor = 20;
+              }
+              yp[0] = -y[0]+y[1]-y[2];
+              yp[1] = -y[0]*(y[2]+1.0)-y[1];
+            //  yp[2] = -y[0] + (0.5+20.0*params[0]); // for nn_4_sigmoid.sfx  => parait tres precis mais ne satisfait pas du tout la spec !
+             //   yp[2] = -y[0] + (scaling_factor*(params[0]-offset)); // for nn_4_tanh.sfx  => quasi dans la spec
+              yp[2] = -y[0] + (scaling_factor*(control_inputs[0]-offset)); // for nn_4_tanh.sfx  => quasi dans la spec
+          }
+          else if (syschoice == 484 || syschoice == 4841) // Ex 5 ReachNNstar  (avec nn_5_sigmoid.sfx obtenu a partir du .txt)
+          {
+              double offset, scaling_factor;
+              if (syschoice == 484) { // tanh
+                  offset = 0.;
+                  scaling_factor = 11;
+              }
+              else { // sigmoid
+                  offset = 0.5;
+                  scaling_factor = 22;
+              }
+              yp[0] = y[2]*y[2]*y[2]-y[1];
+              yp[1] = y[2];
+            //  yp[2] = (0.5+22.0*params[0]); // for nn_5_sigmoid.sfx  => dans les choux
+               // yp[2] = (scaling_factor*(params[0]-offset)); // for nn_5_tanh.sfx  => tres legerement a cote de la spec (§correspond a ce qui est constaté sur le site web si je comprends)
+              yp[2] = (scaling_factor*(control_inputs[0]-offset)); // for nn_5_tanh.sfx  => tres legerement a cote de la spec (§correspond a ce qui est constaté sur le site web si je comprends)
+          }
+          else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
+          {
+              yp[0] = y[1];
+              yp[1] = y[2];
+              yp[2] = -4.0 - 0.0001*y[1]*y[1] - 2.0*y[2];
+              yp[3] = y[4];
+              yp[4] = y[5];
+              yp[5] = 2.0*control_inputs[0] - 0.0001*y[4]*y[4] - 2.0*y[5];
+             // yp[5] = 2.0*params[0] - 0.0001*y[4]*y[4] - 2.0*y[5];
+          }
+          else if (syschoice == 493) // EX QMPC (quadrotor MPC) de Verisig (avec nn obtenu a partir du yaml)
+          {
+              yp[0] = y[3] - 0.25;
+              yp[1] = y[4] + 0.25;
+              yp[2] = y[5];
+              yp[3] = 9.81*params[0];
+              yp[4] = -9.81*params[1];
+              yp[5] = params[2] - 9.81;
           }
     }
 };

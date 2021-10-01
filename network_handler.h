@@ -7,6 +7,9 @@
 #include <queue>
 
 #include "aa_aaf.h"
+#include "sherlock.h"
+
+
 
 using namespace std;
 
@@ -16,34 +19,13 @@ using namespace std;
 
 enum Activation {ACT_RELU, ACT_SIGMOID, ACT_TANH, ACT_LINEAR};
 
+#define max_nb_layers 10
+
+#define testmode false
 
 
-class network_handler
-{
-    public :
-    
-    char * name_of_file;
-    // data structures for the neural net information
-    
-    vector < vector < vector < double > > > actual_weights;
-    vector < vector < double > > actual_biases;
-    // contains all the biases, the size of biases is one more than
-    // the number of sets of weights
-    
-    // unsigned int no_of_inputs,no_of_outputs,no_of_hidden_layers;
-    
-    vector< unsigned int > network_configuration;
-    std::vector< Activation > activations;
-    
-    
-    int n_inputs, n_outputs, n_hidden_layers;
-    
-    network_handler() {};
-    
-    network_handler(const char* name);
-    // the constructor which takes in the information file
-    void build_from_file(const char*);
-};
+//class network_handler;
+//extern network_handler NH;
 
 
 class Layer
@@ -64,56 +46,163 @@ public:
         nb_outputs = _nb_outputs;
     }
     
-    Layer(network_handler NH, int no_layer): biases(NH.actual_biases[no_layer].size()), weights(NH.actual_biases[no_layer].size(),vector<double>(NH.actual_weights[no_layer][0].size()))
-    {
-        activation = NH.activations[no_layer];
-        nb_inputs = NH.actual_weights[no_layer][0].size();
-        nb_outputs = NH.actual_biases[no_layer].size();
-        cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
+    
+    
+    /*  Layer(network_handler NH, int no_layer): biases(NH.actual_biases[no_layer].size()), weights(NH.actual_biases[no_layer].size(),vector<double>(NH.actual_weights[no_layer][0].size()))
+     {
+     activation = NH.activations[no_layer];
+     nb_inputs = NH.actual_weights[no_layer][0].size();
+     nb_outputs = NH.actual_biases[no_layer].size();
+     cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
+     
+     for (int i=0 ; i<nb_outputs; i++) {
+     for (int j=0 ; j<nb_inputs; j++) {
+     weights[i][j] = NH.actual_weights[no_layer][i][j];
+     }
+     }
+     for (int i=0 ; i<nb_outputs; i++)
+     biases [i] = NH.actual_biases[no_layer][i];
+     cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
+     }*/
+    
+   // Layer build_layer(network_handler NH, int no_layer);
+    
+    template <class C> vector<C> eval_layer(vector<C> x) {
+        vector<C> z(nb_outputs);
+        assert(nb_inputs == x.size());
         
         for (int i=0 ; i<nb_outputs; i++) {
-            for (int j=0 ; j<nb_inputs; j++) {
-                weights[i][j] = NH.actual_weights[no_layer][i][j];
-            }
+            z[i] = 0;
+            for (int j=0 ; j<nb_inputs; j++)
+                z[i] += weights[i][j]*x[j];
+            z[i] = eval_activation(activation,z[i]+biases[i]);
         }
-        for (int i=0 ; i<nb_outputs; i++)
-            biases [i] = NH.actual_biases[no_layer][i];
-        cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
+        return z;
+    }
+    
+    template <class C> vector<C> eval_linear_layer(vector<C> x) {
+        vector<C> z(nb_outputs);
+        assert(nb_inputs == x.size());
+        
+        for (int i=0 ; i<nb_outputs; i++) {
+            z[i] = 0;
+            for (int j=0 ; j<nb_inputs; j++)
+                z[i] += weights[i][j]*x[j];
+            z[i] = z[i]+biases[i]; // eval_activation(activation,z[i]+biases[i]);
+        }
+        return z;
     }
     
 };
 
-#define max_nb_layers 10
 
+
+
+
+class network_handler
+{
+    public :
+    
+    char * name_of_file;
+    // data structures for the neural net information
+    
+    vector < vector < vector < double > > > actual_weights;
+    vector < vector < double > > actual_biases;
+    // contains all the biases, the size of biases is one more than
+    // the number of sets of weights
+    
+    // unsigned int no_of_inputs,no_of_outputs,no_of_hidden_layers;
+    
+    vector< unsigned int > network_configuration;
+    std::vector< Activation > activations;
+    
+    vector<Layer> L;
+    
+    
+    int n_inputs, n_outputs, n_hidden_layers;
+    
+    network_handler() {};
+    
+    network_handler(const char* name);
+    // the constructor which takes in the information file
+    void build_from_file(const char*);
+    
+    Layer build_layer(int no_layer);
+    
+    
+    template <class C> vector<C> eval_network(vector<C> x) {
+        
+        if (testmode)
+        {
+            vector<C> res(x.size());
+            for (int i=0 ; i<x.size(); i++)
+                res[i] = x[i];
+         //   cout << "res=" << res[0] << endl;
+            return res;
+        }
+        
+        vector<vector<C>> net_outputs(n_hidden_layers+2);
+        net_outputs[0] = x;
+        for (int i=0 ; i<n_hidden_layers+1 ; i++ ) {
+            net_outputs[i+1] = L[i].eval_layer(net_outputs[i]);
+        }
+        return net_outputs[n_hidden_layers+1];
+        
+       
+    }
+    
+        
+    
+};
+
+
+
+//extern vector<Layer> L;
 extern network_handler NH;
-extern vector<Layer> L;
 
 
-template <class C> C sigmoid(C x) { return 1./(1.+exp(-x));}  // f(x) = f(x) (1 - f(x))
+
+
+extern computation_graph CG;
+
+// interval act_sigmoid(const interval &x) { return 1./(1.+exp(-x));}
+// AAF act_sigmoid(const AAF &x) { return 1./(1.+exp(-x));}
+
+template <class C> C act_sigmoid(const C &x) { return 1./(1.+exp(-x));}  // f'(x) = f(x) (1 - f(x))
 
 template <class C> C act_tanh(C x) { return 2.0/(1.+exp(-2.0*x)) - 1.;}  // f'(x) = 1 - f(x)^2  -- a coder en dur si necessaire oour ameliorer la differentiation ?
 
+#define beta_swish 2.
+
+template <class C> C act_relu(C x) {
+// approximation by Swish function = xσ(βx), 10 >= beta >= 1
+    // a modifier pour rendre correct
+    return x*act_sigmoid(beta_swish*x);
+}
 
 template <class C> C eval_activation(Activation a, C x)
 {
     switch(a){
             case ACT_SIGMOID:
-                return sigmoid(x);
+                return act_sigmoid(x);
                 break;
             case ACT_TANH:
                 return act_tanh(x);
                 break;
             case ACT_LINEAR:
+                return x;
                 break;
             case ACT_RELU:
-                std::cout << "Error in \"compute activation\" : Relu not implemented" << std::endl;
-                exit(1);
+                return act_relu(x);
+                break;
+            //    std::cout << "Error in \"compute activation\" : Relu not implemented" << std::endl;
+            //    exit(1);
     }
 }
 
 // class EvalLayer {
 // public:
-    template <class C> vector<C> eval_layer(Layer L, vector<C> x) {
+/*    template <class C> vector<C> eval_layer(Layer L, vector<C> x) {
         vector<C> z(L.nb_outputs);
         assert(L.nb_inputs == x.size());
         
@@ -125,12 +214,212 @@ template <class C> C eval_activation(Activation a, C x)
         }
         return z;
     }
+*/
+
+// copied from evaluate_graph in computation_graph.cpp  (but external to the class => just redundant so useful only as a basis for the abstract version)
+void computation_graph_evaluate_graph( computation_graph CG, map < uint32_t, double > input_node_and_value,
+                                      map < uint32_t, double > & output_node_and_value );
+
+// same but for abstract values
+// template function has to be in header file...
+template <class C> void computation_graph_evaluate_graph_abstract( computation_graph CG, map < uint32_t, C > input_node_and_value,
+                                                                           map < uint32_t, C > & output_node_and_value )
+{
+    // Making sure you received some non empty input map
+    assert(!(input_node_and_value.empty()));
+    // Making sure that the counts are consistent
+    assert(CG.no_of_input_nodes == input_node_and_value.size());
+    
+    map< uint32_t, C > memoized_table;
+    
+    // Set the value of the input nodes and make sure those are constant nodes
+    
+    for(auto input_node : input_node_and_value)
+    {
+        assert( CG.all_nodes[input_node.first].return_node_type() == const_string );
+        //    CG.all_nodes[input_node.first].set_node_val(input_node.second);
+        memoized_table[input_node.first] = input_node.second;
+        
+      //  cout << "Setting node val of node id " << CG.all_nodes[input_node.first].get_node_number() << " as " << memoized_table[input_node.first] << endl;
+        
+    }
+    
+    // Creating the space for the outputs of the network
+    output_node_and_value.clear();
+    for(auto output_node : CG.output_nodes)
+    {
+        output_node_and_value.insert(make_pair(output_node, C(0.0)));
+    }
+    
+    
+    for(auto & output_values : output_node_and_value)
+    {
+        computation_graph_evaluate_node_abstract(CG, output_values.first, memoized_table, output_values.second);
+    }
+    
+    
+}
+
+
+// copied from evaluate_node from computation_graph.cc as a starting point to implement the abstract version (not udeful in itself)
+void computation_graph_evaluate_node(computation_graph & c_graph, uint32_t node_id ,
+                                     map< uint32_t , double > & table,
+                                     int & available_threads, double & ret_val , int thread_id);
+
+// just a simpler version of computation_graph_evaluate_node without using threads (not used in itslef, just as a test version to derive the abstract version)
+void computation_graph_evaluate_node_seq(computation_graph & c_graph, uint32_t node_id ,
+                                         map< uint32_t , double > & table, double & ret_val);
+
+// the abstract version
+template <class C> void computation_graph_evaluate_node_abstract(computation_graph & c_graph, uint32_t node_id ,
+                                                                          map< uint32_t , C > & table, C & ret_val)
+{
+    
+    auto & current_node = c_graph.all_nodes[node_id];
+    map< uint32_t , pair< node * , datatype > > backward_connections_, backward_connections;
+    current_node.get_backward_connections(backward_connections_);
+    backward_connections = backward_connections_;
+    
+    
+    for(auto it = backward_connections.rbegin(); it != backward_connections.rend(); it ++)
+    {
+        
+        auto input_node_ptr = it->second.first;
+        
+        if(  input_node_ptr->return_node_type() == const_string) // If a constant node then just get the value and store in the table
+        {
+            
+            pair< uint32_t , C > node_and_value = make_pair(it->first, input_node_ptr->return_current_output()) ;
+            table.insert(node_and_value);
+            continue;
+        }
+        
+        // check if the value is already in the table
+        bool value_in_the_table = ( ( table.find(input_node_ptr->get_node_number())  == table.end() ) ? (false) : (true) ) ;
+        if( value_in_the_table )
+            pair< uint32_t , C > node_and_value = make_pair(it->first, table[input_node_ptr->get_node_number()] ) ;
+        else // make  a recursive call to the inputs, get the value and compute
+        {
+            C buffer;
+            computation_graph_evaluate_node_abstract(c_graph, it->first, table, buffer);
+            pair< uint32_t, C > node_and_value = make_pair(it->first, buffer);
+            table.insert(node_and_value);
+        }
+    }
+    
+    
+    // Since the input to all the nodes is ready, compute the output now
+    
+    map< uint32_t, C > inputs_to_the_node;
+    for(auto some_connection : backward_connections)
+    {
+        auto input_node_ptr = some_connection.second.first;
+        
+        bool value_in_the_table = ( ( table.find(input_node_ptr->get_node_number())  == table.end() ) ? (false) : (true) ) ;
+        assert( value_in_the_table );
+        pair< uint32_t , C > node_and_value = make_pair(some_connection.first, table[input_node_ptr->get_node_number()] ) ;
+        
+        inputs_to_the_node.insert(node_and_value);
+    }
+    
+    
+    
+    
+    // current_node.set_inputs(inputs_to_the_node);
+    //interval result = current_node.return_current_output();
+    
+    C result = return_abstract_output(current_node,inputs_to_the_node);
+    
+    table.insert( make_pair ( node_id , result ) );
+    // if(debug_eval)
+    // {
+ //   cout << "Computed value of node_id : " << node_id << endl; // << " as " << result <<  endl;
+  //  cout << "Current table : " << " [ " ;
+  //  for(auto each_entry : table)
+  //  {
+ //       cout << each_entry.first << " --- " << each_entry.second << " , ";
+ //   }
+ //   cout << " ] " << endl;
+    
+    // }
+    
+    ret_val = result;
+    
+    return;
+    
+}
 
 
 
+template <class C> C return_abstract_output(node current_node, map< uint32_t, C > &inputs_to_the_node)
+{
+    //  interval result;
+    
+    type node_type =  current_node.get_node_type();
+    
+    if (node_type == constant)
+    {
+        cout << "constant_val=" << current_node.return_current_output() << endl;
+        return current_node.return_current_output();
+    }
+    
+    datatype bias;
+    current_node.get_bias(bias);
+    C argument = bias;
+    
+    map < uint32_t, pair< node * , datatype > > backward_nodes;
+    current_node.get_backward_connections(backward_nodes);
+    
+    // input_node.second = weight, backward_nodes[input_node.first].second = input
+    for(auto input_node : inputs_to_the_node)
+    {
+        argument += (backward_nodes[input_node.first].second * inputs_to_the_node[input_node.first] ) ;
+    }
+    
+    if(node_type == _tanh_ )
+    {
+        return act_tanh(argument);
+    }
+    else if(node_type == _sigmoid_ )
+    {
+        
+        return act_sigmoid(argument);
+    }
+    else if (node_type == _relu_)
+    {
+        // last_signature[node_id] = ((argument > 0) ? true : false) ;
+        
+        //return (argument > 0) ? argument : 0 ;
+        cout << "ReLU not handled ! Exiting....  " << endl;
+        exit(0);
+    }
+    else if(node_type == _none_)
+    {
+        return argument;
+    }
+    else
+    {
+        cout << "Node type not included in the list of evaluation functions ! Exiting....  " << endl;
+        exit(0);
+    }
+    
+    
+    //   return result;
+}
+
+/*
+class abstract_node
+{
+public:
+  //  map < uint32_t, node >
+    map< uint32_t, interval > neuron_bounds;
+    map < uint32_t, pair< node * , datatype > > node_bounds;
+    
+    abstract_node();
+};
+ */
 
 
-
-
+void test_network_sigmoid_cav(computation_graph & CG);
 
 #endif

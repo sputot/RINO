@@ -30,9 +30,12 @@ int sysdim_params;
 
 double t_end; // ending time of integration
 double t_begin; // starting time of initialization
+double control_period = 0.0;
 
 // parameters of the system of the ODEs
-vector<AAF> params;  // params of the ODE (nondeterministic disturbances)
+vector<AAF> params;  // params of the ODE that don't appear in the Jcaobian such as control given by NN output (or nondeterministic disturbances ?)
+vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
+vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
 
 vector<AAF> initial_values;
 vector<AAF> center_initial_values;
@@ -47,6 +50,8 @@ vector<int> index_param_inv;
 vector<interval> eps;
 
 vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,...xn): we give the jacobian
+
+//vector<F<AAF>> nn_outputs; // result of NN evaluation
 
 // for subdivisions of the initial domain to refine precision
 int nb_subdiv_init = 1; // number of subdivisiions
@@ -67,9 +72,14 @@ vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for
 //int variable; // number of non constant parameters
 //vector<bool> is_variable;  // for each parameter, constant or variable
 
+vector<interval> target_set;
+vector<interval> unsafe_set;
+
 bool refined_mean_value;
 
 bool print_debug = true;
+
+bool recompute_control = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
 void define_system_dim(const char * params_filename)
@@ -271,6 +281,40 @@ void define_system_dim(const char * params_filename)
             sysdim = 4;
             inputsdim = 1;
         }
+        else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 4;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 382) {
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 2;                // EX13  sherlock/systems_with_networks
+            sysdim_params = 1;
+        }
+        else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 2;              // EX14  sherlock/systems_with_networks
+            sysdim_params = 1;      // EX15  sherlock/systems_with_networks
+        }
+        else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            sysdim = 3;
+            sysdim_params = 1;
+        }
         else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 4;
             inputsdim = 1;
@@ -304,6 +348,67 @@ void define_system_dim(const char * params_filename)
         else if (syschoice == 45) { // Mountain car Verisig
             sysdim = 2;
             inputsdim = 0;
+        }
+        else if (syschoice == 451) { // Mountain car Verisig
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 46 || syschoice == 4601) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
+            sysdim = 4;
+            inputsdim = 0;
+        }
+        else if (syschoice == 461|| syschoice == 4611) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
+            sysdim = 4;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 471|| syschoice == 4711) {  // // Ex 1 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 1111) {  // toy example
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 1113) {  // toy example
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 0;
+        }
+        else if (syschoice == 481|| syschoice == 4811) {  // // Ex 2 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 482|| syschoice == 4821) {  // // Ex 3 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+            sysdim = 2;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 483|| syschoice == 4831) {  // // Ex 4 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+            sysdim = 3;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 484|| syschoice == 4841) {  // // Ex 5 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+            sysdim = 3;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
+        {
+            sysdim = 6;
+            inputsdim = 0;
+            sysdim_params = 1;
+        }
+        else if (syschoice == 493) // Ex QMPC de Verisig (avec nn obtenu a partir du yaml)
+        {
+            sysdim = 6;
+            inputsdim = 0;
+            sysdim_params = 3;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -429,6 +534,7 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
         sscanf(buff, "time-horizon = %lf\n", &t_end);
         sscanf(buff, "sampling-time = %lf\n", &tau);
+        sscanf(buff, "control-period = %lf\n", &control_period);
         //      sscanf(buff, "output-variables = %[^\n]\n", output_variables);
         sscanf(buff, "delay = %lf\n", &d0);               // for DDEs
         sscanf(buff, "starting-time = %lf\n", &t_begin);  // for DDEs
@@ -575,6 +681,64 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
 
 
 
+// maps the ODE sys coordinates to the neural network inputs when they do not correspond
+//vector<F<AAF>> syst_to_nn(vector<F<AAF>> &sysval){
+    template <class C> vector<C> syst_to_nn(vector<C> &sysval) {
+    vector<C> res; //= vector<AAF>(NH.n_inputs);
+                                  
+    if ((syschoice == 491) || (syschoice == 492)) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
+     {
+         res = vector<C>(NH.n_inputs);
+         res[0] = 30.0;
+         res[1] = 1.4;
+         res[2] = sysval[4]; // v_ego
+         res[3] = sysval[0]-sysval[3]; // x_lead-x_ego
+         res[4] = sysval[1]-sysval[4]; // v_lead-v_ego
+    }
+    else
+        res = sysval;
+    return res;
+}
+
+// maps the neural network output to the control commands when they do not correspond
+//vector<AAF> nn_to_control(vector<AAF> &nnoutput)
+template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
+    
+    if (syschoice == 493) // QMPC
+    {
+        //vector<AAF> res = vector<AAF>(sysdim_params);
+        vector<double> actions(NH.n_outputs);
+        for (int i=0 ; i<NH.n_outputs ; i++)
+            actions[i] = sup(nnoutput[i].convert_int());
+        // unsound implementation for now: should do the union over all argmax for the interval outputs of the NN...
+        int index = argmax(actions.begin(),actions.end());
+        cout << "index=" << index;
+        if (index == 0)
+            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
+        else if (index == 1)
+            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
+        else if (index == 2)
+            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(7.81,7.81)};
+        else if (index == 3)
+            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(11.81,11.81)};
+        else if (index == 4)
+            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
+        else if (index == 5)
+            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
+        else if (index == 6)
+            return {interval(0.1,0.1), interval(0.1,0.1), interval(7.81,7.81)};
+        else
+            return {interval(0.1,0.1), interval(0.1,0.1), interval(11.81,11.81)};
+    }
+    else
+        return nnoutput;
+}
+
+
+
+
+
+
 // the main function to define the system
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
 void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
@@ -594,15 +758,18 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
     for (int i=0 ; i<inputsdim; i++)
         is_uncontrolled[i] = false;  // controlled input or parameter
     
-    
+    target_set = vector<interval>(sysdim);
+    unsafe_set = vector<interval>(sysdim);
     
     // initial values
     initial_values = vector<AAF>(sysdim);
     
     // parameters not part of the jacobian
-    if (sysdim_params > 0)
+    if (sysdim_params > 0) {
         params = vector<AAF>(sysdim_params);
-    
+        Jac_params = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim+inputsdim));  // should probably be sysdim \times jacdim but jacdim not yet defined ?
+        Jac_params_order2 = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim+inputsdim));  // should probably be sysdim \times jacdim but jacdim not yet defined ?
+    }
 
     refined_mean_value = false;
     
@@ -1204,11 +1371,11 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
             NH = network_handler("networks/sherlock_nn_ex1.sfx");
        //     NH = network_handler("dnnuoa/networks/network_1.sfx");
             //        L.reserve(NH.n_hidden_layers+1);
-            for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
-                cout << "before layer" << endl;
-                L[i] = Layer(NH,i);
-                cout << "after layer" << endl;
-            }
+           // for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ ) {
+           //     cout << "before layer" << endl;
+           //     L[i] = Layer(NH,i);
+          //      cout << "after layer" << endl;
+          //  }
             
         }
         else if (syschoice == 31) // Quadcopter MB vec 3 composantes en plus
@@ -1331,6 +1498,87 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
             inputs[0] = interval(0.0,0.0);
             is_uncontrolled[0] = true;
             nb_inputs[0] = 25; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference - EX 19 dnas le repository
+            tau = 0.02;
+            t_end = 0.2*25;
+            order = 3;
+            initial_values[0] = interval(0.5,0.501); //interval(0.5,0.6);
+            initial_values[1] = interval(0.5,0.501); //interval(0.5,0.6);
+            initial_values[2] = interval(0.5,0.501); //interval(0.5,0.6);
+            initial_values[3] = interval(0.5,0.501); //interval(0.5,0.6);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2;
+//            inputs[0] = interval(0.0,0.0);
+//            is_uncontrolled[0] = true;
+//            nb_inputs[0] = 25; // control is constant for each step of the control loop: will take 30 different values overall
+        }
+        else if (syschoice == 382) { // Ex 12 in sherlock/systems_with_networks
+            tau = 0.01;
+            t_end = 6;
+            order = 3;
+            initial_values[0] = interval(0.5,0.55);  // interval(0.5,0.9);
+            initial_values[1] = interval(0.5,0.55);   // interval(0.5,0.9);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2; // a verifier
+        }
+        else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;                 // Ex 13 in sherlock/systems_with_networks
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.7,0.9); // interval(0.7,0.9);
+            initial_values[1] = interval(0.42,0.5); // interval(0.42,0.58);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2;
+        }
+        else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;              // Ex 14 in sherlock/systems_with_networks
+            t_end = 0.1*100;
+            order = 3;
+            initial_values[0] = interval(0.8,0.9); // interval(0.8,0.9);
+            initial_values[1] = interval(0.4,0.5); // interval(0.4,0.5);
+            params= NH.eval_network(initial_values);
+            control_period = 0.1;
+        }
+        else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;                 // Ex 15 in sherlock/systems_with_networks
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.35,0.45);
+            initial_values[1] = interval(0.25,0.35);
+            initial_values[2] = interval(0.35,0.45);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2;
+        }
+        else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;             // Ex 16 in sherlock/systems_with_networks
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.3,0.4);
+            initial_values[1] = interval(0.3,0.4);
+            initial_values[2] = interval(-0.4,-0.3);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2;
+        }
+        else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.02;             // Ex 17 in sherlock/systems_with_networks
+            t_end = 0.2*50;
+            order = 3;
+            initial_values[0] = interval(0.35,0.4);
+            initial_values[1] = interval(-0.35,-0.3);
+            initial_values[2] = interval(0.35,0.4);
+            params= NH.eval_network(initial_values);
+            control_period = 0.2;
+        }
+        else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
+            tau = 0.05;
+            t_end = 0.5*20;
+            order = 3;
+            initial_values[0] = interval(0.39,0.41); // interval(0.35,0.45);
+            initial_values[1] = interval(0.49,0.51); // interval(0.45,0.55);
+            initial_values[2] = interval(0.29,0.31); // interval(0.25,0.35);
+            params= NH.eval_network(initial_values);
+            control_period = 0.5;
         }
         else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.1;
@@ -1493,9 +1741,173 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
            
            NH = network_handler("dnnuoa/networks/verisig_mc_16x16.sfx");
-           for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
-               L[i] = Layer(NH,i);
+          // for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+          //     L[i] = Layer(NH,i);
        }
+       else if (syschoice == 451) { // Mountain car Verisig
+           tau = 0.5;
+           t_end = 71.; // t_end = 115.;
+           order = 3;
+      //     initial_values[0] = interval(-0.41,-0.4);  // interval(-0.53,-0.5); // interval(-0.53,-0.5);  // interval(-0.5,-0.48);
+           initial_values[0] = interval(-0.53,-0.5);
+           initial_values[1] = interval(0.,0.);   // interval(0.,0.001);
+           
+           params= NH.eval_network(initial_values);
+           //inputs[0] = interval(0.0,0.0);
+           //is_uncontrolled[0] = true;
+           //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
+           
+         //  NH = network_handler("dnnuoa/networks/verisig_mc_16x16.sfx");
+           // for (int i=0 ; i<NH.n_hidden_layers+1 ; i++ )
+           //     L[i] = Layer(NH,i);
+           control_period = 1.;
+       }
+       else if (syschoice == 46 || syschoice == 4601) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
+                                    // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
+           tau = 0.1;
+           t_end = 5.;
+           order = 3;
+           initial_values[0] = interval(-0.77,-0.75);
+           initial_values[1] = interval(-0.45,-0.43);
+           initial_values[2] = interval(0.51,0.54);
+           initial_values[3] = interval(-0.3,-0.28);
+           // lb = [-0.77; -0.45; 0.51; -0.3];
+           // ub = [-0.75; -0.43; 0.54; -0.28];
+           // reachStep = 0.01; controlPeriod = 0.5;
+          // goal = Box([-0.1;-0.9],[0.2;-0.6]);
+       }
+       else if (syschoice == 461 || syschoice == 4611) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat), // ReachNN avec version tanh
+           // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
+           tau = 0.01;
+           t_end = 5.;
+           order = 3;
+           initial_values[0] = interval(-0.77,-0.75);
+           initial_values[1] = interval(-0.45,-0.43);
+           initial_values[2] = interval(0.51,0.54);
+           initial_values[3] = interval(-0.3,-0.28);
+           // lb = [-0.77; -0.45; 0.51; -0.3];
+           // ub = [-0.75; -0.43; 0.54; -0.28];
+           // reachStep = 0.01; controlPeriod = 0.5;
+           // goal = Box([-0.1;0.2 ],[-0.9;-0.6]);
+            params= NH.eval_network(initial_values);
+           
+            control_period = 0.1;
+       }
+       else if (syschoice == 471 || syschoice == 4711) {  // Ex 1 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+           tau = 0.01; // a bit strange, is more precise this way (and satisfies the spec) than when tau = 0.005
+           t_end = 7.;  // 35 control steps
+          //  t_end = 6.;
+           order = 3;
+           initial_values[0] = interval(0.8,0.9);
+           initial_values[1] = interval(0.5,0.6);
+           params= NH.eval_network(initial_values);
+           // goal [0,0.2],[0.05,0.3]
+           target_set[0] = interval(0,0.2);
+           target_set[1] = interval(0.05,0.3);
+           unsafe_set[0] = interval(0.3,0.8);
+           unsafe_set[1] = interval(-0.1,0.4);
+           control_period = 0.2;
+       }
+       else if (syschoice == 1111) {  //toy example
+           tau = 0.01; //
+           t_end = 1.0;
+           order = 3;
+           initial_values[0] = interval(0.8,0.9);
+           initial_values[1] = interval(0.5,0.6);
+           params= NH.eval_network(initial_values);
+           control_period = 0.2; // 0.01; // control_period = 0.2;
+       }
+       else if (syschoice == 1113) {  //toy example
+           tau = 0.01; //
+           t_end = 1.0;
+           order = 3;
+           initial_values[0] = interval(0.8,0.9);
+           initial_values[1] = interval(0.5,0.6);
+           control_period = 0.2; // 0.01; // control_period = 0.2;
+       }
+       else if (syschoice == 481 || syschoice == 4811) {  // Ex 2 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+           tau = 0.01; //
+           t_end = 1.8;  // 9 control steps
+           //  t_end = 6.;
+           order = 3;
+           initial_values[0] = interval(0.7,0.9);
+           initial_values[1] = interval(0.7,0.9);
+           params= NH.eval_network(initial_values);
+           // goal [-0.3,0.1],[-0.35,0.5]
+           control_period = 0.2;
+       }
+       else if (syschoice == 482 || syschoice == 4821) {  // Ex 3 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+           tau = 0.02; //
+           t_end = 6.0;  // 60 control steps
+           //  t_end = 6.;
+           order = 3;
+           initial_values[0] = interval(0.8,0.9);
+           initial_values[1] = interval(0.4,0.5);
+           params= NH.eval_network(initial_values);
+           // goal [0.2,0.3],[-0.3,-0.05]
+           control_period = 0.1;
+       }
+       else if (syschoice == 483 || syschoice == 4831) {  // Ex 4 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+           tau = 0.005; //
+           t_end = 1.0;  // 10 control steps
+           //  t_end = 6.;
+           order = 3;
+           initial_values[0] = interval(0.25,0.27);
+           initial_values[1] = interval(0.08,0.1);
+           initial_values[2] = interval(0.25,0.27);
+           params= NH.eval_network(initial_values);
+           // goal [-0.05,0.05],[-0.05,-0.]
+           control_period = 0.1;
+       }
+       else if (syschoice == 484 || syschoice == 4841) {  // Ex 5 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+           tau = 0.005; //
+           t_end = 2.0;  // 10 control steps
+           //  t_end = 6.;
+           order = 3;
+           initial_values[0] = interval(0.38,0.4);
+           initial_values[1] = interval(0.45,0.47);
+           initial_values[2] = interval(0.25,0.27);
+           params= NH.eval_network(initial_values);
+           // goal [-0.4,-0.28],[0.05,0.22]
+           control_period = 0.2;
+       }
+       else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
+       {
+           tau = 0.01; //
+           t_end = 5.0;
+           order = 3;
+           initial_values[0] = interval(90.0,91.0);
+           initial_values[1] = interval(32,32.05);
+           initial_values[2] = interval(0,0);
+           initial_values[3] = interval(10,11);
+           initial_values[4] = interval(30,30.05);
+           initial_values[5] = interval(0,0);
+           params= NH.eval_network(syst_to_nn(initial_values));
+         //  cout << params;
+         //  params= NH.eval_network(initial_values);
+           control_period = 0.1;
+       }
+       else if (syschoice == 493) // Ex QMPC de Verisig (avec nn obtenu a partir du yaml)
+       {
+           tau = 0.01; //
+           t_end = 5.0; // ? a voir
+           order = 3;
+           initial_values[0] = interval(0.025,0.05);
+           initial_values[1] = interval(0,0.025);
+           initial_values[2] = interval(0,0);
+           initial_values[3] = interval(0,0);
+           initial_values[4] = interval(0,0);
+           initial_values[5] = interval(0,0);
+           // A REPRENDRE UN JOUR
+       //    params= nn_to_control(NH.eval_network(syst_to_nn(initial_values)));
+         //  cout << params;
+         //  params= NH.eval_network(initial_values);
+           control_period = 0.1; // ?  a verifier
+       }
+//        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
+ //       for (int i=0; i<sysdim; i++)
+ //           J[i][i] = 1.0;
+    //    eval_valandJacobian_nn(initial_values,inputs,0,tau,J);  // remplace l'evaluation params= NH.eval_network(syst_to_nn(initial_values)); ... (a supprimer ensuite de chaque systeme)
     }
     if (systype == 1) // DDE
     {
@@ -1650,6 +2062,8 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
     
         
 }
+
+
 
 
 void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv)
