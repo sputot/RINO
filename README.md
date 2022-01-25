@@ -149,9 +149,3 @@ Plans to propose cleaner versions in the future include (contributions and sugge
 
 This project is licensed under the GNU LGPLv3 license - see the [LICENSE](LICENSE) file for details
 
-## Acknowledgments
-
-Thanks to Franck Djeumou for helpful contributions, among which 
-- the crazyflie quadcoptor system example (full non linear model of the dynamics with realistic control loop)
-- modifications on the aaflib library for trigonometric functions
-- better compatibility with Ubuntu
