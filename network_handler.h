@@ -7,7 +7,12 @@
 #include <queue>
 
 #include "aa_aaf.h"
-#include "sherlock.h"
+
+#define ONNX_active 0
+
+#if ONNX_active
+    #include "sherlock.h"
+#endif
 
 
 
@@ -22,10 +27,6 @@ enum Activation {ACT_RELU, ACT_SIGMOID, ACT_TANH, ACT_LINEAR};
 #define max_nb_layers 10
 
 #define testmode false
-
-
-//class network_handler;
-//extern network_handler NH;
 
 
 class Layer
@@ -45,27 +46,6 @@ public:
         nb_inputs = _nb_inputs;
         nb_outputs = _nb_outputs;
     }
-    
-    
-    
-    /*  Layer(network_handler NH, int no_layer): biases(NH.actual_biases[no_layer].size()), weights(NH.actual_biases[no_layer].size(),vector<double>(NH.actual_weights[no_layer][0].size()))
-     {
-     activation = NH.activations[no_layer];
-     nb_inputs = NH.actual_weights[no_layer][0].size();
-     nb_outputs = NH.actual_biases[no_layer].size();
-     cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
-     
-     for (int i=0 ; i<nb_outputs; i++) {
-     for (int j=0 ; j<nb_inputs; j++) {
-     weights[i][j] = NH.actual_weights[no_layer][i][j];
-     }
-     }
-     for (int i=0 ; i<nb_outputs; i++)
-     biases [i] = NH.actual_biases[no_layer][i];
-     cout << "nb_inputs = " << nb_inputs << " nb_outputs = " << nb_outputs << endl;
-     }*/
-    
-   // Layer build_layer(network_handler NH, int no_layer);
     
     template <class C> vector<C> eval_layer(vector<C> x) {
         vector<C> z(nb_outputs);
@@ -156,17 +136,8 @@ class network_handler
 };
 
 
-
-//extern vector<Layer> L;
 extern network_handler NH;
 
-
-
-
-extern computation_graph CG;
-
-// interval act_sigmoid(const interval &x) { return 1./(1.+exp(-x));}
-// AAF act_sigmoid(const AAF &x) { return 1./(1.+exp(-x));}
 
 template <class C> C act_sigmoid(const C &x) { return 1./(1.+exp(-x));}  // f'(x) = f(x) (1 - f(x))
 
@@ -200,21 +171,13 @@ template <class C> C eval_activation(Activation a, C x)
     }
 }
 
-// class EvalLayer {
-// public:
-/*    template <class C> vector<C> eval_layer(Layer L, vector<C> x) {
-        vector<C> z(L.nb_outputs);
-        assert(L.nb_inputs == x.size());
-        
-        for (int i=0 ; i<L.nb_outputs; i++) {
-            z[i] = 0;
-            for (int j=0 ; j<L.nb_inputs; j++)
-                z[i] += L.weights[i][j]*x[j];
-            z[i] = eval_activation(L.activation,z[i]+L.biases[i]);
-        }
-        return z;
-    }
-*/
+
+
+// Below for ONNX FILES - relying on Sherlock code
+
+#if ONNX_active
+extern computation_graph CG;
+
 
 // copied from evaluate_graph in computation_graph.cpp  (but external to the class => just redundant so useful only as a basis for the abstract version)
 void computation_graph_evaluate_graph( computation_graph CG, map < uint32_t, double > input_node_and_value,
@@ -322,27 +285,10 @@ template <class C> void computation_graph_evaluate_node_abstract(computation_gra
         inputs_to_the_node.insert(node_and_value);
     }
     
-    
-    
-    
-    // current_node.set_inputs(inputs_to_the_node);
-    //interval result = current_node.return_current_output();
-    
     C result = return_abstract_output(current_node,inputs_to_the_node);
     
     table.insert( make_pair ( node_id , result ) );
-    // if(debug_eval)
-    // {
- //   cout << "Computed value of node_id : " << node_id << endl; // << " as " << result <<  endl;
-  //  cout << "Current table : " << " [ " ;
-  //  for(auto each_entry : table)
-  //  {
- //       cout << each_entry.first << " --- " << each_entry.second << " , ";
- //   }
- //   cout << " ] " << endl;
-    
-    // }
-    
+   
     ret_val = result;
     
     return;
@@ -388,7 +334,6 @@ template <class C> C return_abstract_output(node current_node, map< uint32_t, C 
     else if (node_type == _relu_)
     {
         // last_signature[node_id] = ((argument > 0) ? true : false) ;
-        
         //return (argument > 0) ? argument : 0 ;
         cout << "ReLU not handled ! Exiting....  " << endl;
         exit(0);
@@ -403,23 +348,10 @@ template <class C> C return_abstract_output(node current_node, map< uint32_t, C 
         exit(0);
     }
     
-    
-    //   return result;
 }
-
-/*
-class abstract_node
-{
-public:
-  //  map < uint32_t, node >
-    map< uint32_t, interval > neuron_bounds;
-    map < uint32_t, pair< node * , datatype > > node_bounds;
-    
-    abstract_node();
-};
- */
 
 
 void test_network_sigmoid_cav(computation_graph & CG);
+#endif  // endif ONNX_active
 
 #endif

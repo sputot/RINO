@@ -464,7 +464,7 @@ void define_system_dim(const char * params_filename)
     }
     
     if (params_filename) // called with configuration file: we overwrite the initialization of init_system
-        readfromfile_system_dim(params_filename, sysdim, jacdim, sysdim_params, nb_subdiv_init);
+        readfromfile_nbsubdiv(params_filename, nb_subdiv_init);
     
 }
 
@@ -494,7 +494,7 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
     
 }
 
-void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init)
+void readfromfile_nbsubdiv(const char * params_filename, int &nb_subdiv_init)
 {
     const int LINESZ = 2048;
     char buff[LINESZ];
@@ -504,9 +504,9 @@ void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jac
     if (params_file == NULL)
         cout << "Error reading " << params_filename << ": file not found" << endl;
     while (fgets(buff,LINESZ,params_file)) {
-        sscanf(buff, "system-dimension = %d\n", &sysdim);
-        sscanf(buff, "inputs-dimension = %d\n", &inputsdim);
-        sscanf(buff, "sys-parameters-dimension = %d\n", &sysdim_params);
+//        sscanf(buff, "system-dimension = %d\n", &sysdim);
+//        sscanf(buff, "inputs-dimension = %d\n", &inputsdim);
+//        sscanf(buff, "sys-parameters-dimension = %d\n", &sysdim_params);
         sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
     }
     fclose(params_file);
@@ -1778,7 +1778,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
        }
        else if (syschoice == 461 || syschoice == 4611) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat), // ReachNN avec version tanh
            // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
-           tau = 0.01;
+           tau = 0.05;
            t_end = 5.;
            order = 3;
            initial_values[0] = interval(-0.77,-0.75);
@@ -1794,7 +1794,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
             control_period = 0.1;
        }
        else if (syschoice == 471 || syschoice == 4711) {  // Ex 1 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
-           tau = 0.01; // a bit strange, is more precise this way (and satisfies the spec) than when tau = 0.005
+           tau = 0.05; // a bit strange, is more precise with 0.01 or 0.02 this way (and satisfies the spec) than when tau = 0.005
            t_end = 7.;  // 35 control steps
           //  t_end = 6.;
            order = 3;
@@ -1826,7 +1826,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            control_period = 0.2; // 0.01; // control_period = 0.2;
        }
        else if (syschoice == 481 || syschoice == 4811) {  // Ex 2 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
-           tau = 0.01; //
+           tau = 0.05; //
            t_end = 1.8;  // 9 control steps
            //  t_end = 6.;
            order = 3;
@@ -1837,7 +1837,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            control_period = 0.2;
        }
        else if (syschoice == 482 || syschoice == 4821) {  // Ex 3 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
-           tau = 0.02; //
+           tau = 0.05; //
            t_end = 6.0;  // 60 control steps
            //  t_end = 6.;
            order = 3;
@@ -1848,7 +1848,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            control_period = 0.1;
        }
        else if (syschoice == 483 || syschoice == 4831) {  // Ex 4 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
-           tau = 0.005; //
+           tau = 0.05; //
            t_end = 1.0;  // 10 control steps
            //  t_end = 6.;
            order = 3;
@@ -1860,7 +1860,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            control_period = 0.1;
        }
        else if (syschoice == 484 || syschoice == 4841) {  // Ex 5 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
-           tau = 0.005; //
+           tau = 0.05; //
            t_end = 2.0;  // 10 control steps
            //  t_end = 6.;
            order = 3;
@@ -1873,7 +1873,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
        }
        else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
        {
-           tau = 0.01; //
+           tau = 0.05; //
            t_end = 5.0;
            order = 3;
            initial_values[0] = interval(90.0,91.0);
@@ -2142,7 +2142,7 @@ void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, 
     
     //  cout << "controlled=" << controlled  << " uncontrolled=" << uncontrolled << endl;
     
-    open_outputfiles(); // needs sysdim to be first defined but also controlled and uncontrolled...
+    
     
     // for saving results
     //  cout << "(t_end-t_begin)*nb_subdiv/d0+1=" << ((t_end-t_begin)/d0+1)*(nb_subdiv+1) << endl;

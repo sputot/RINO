@@ -7,8 +7,6 @@
 
 std::mutex mtx2;
 network_handler NH;
-//vector<Layer> L(max_nb_layers);
-computation_graph CG;
 
 network_handler :: network_handler(const char* name)
 {
@@ -195,6 +193,15 @@ Layer network_handler::build_layer(int no_layer)
 }
 
 
+
+
+// BELOW FOR ONNX - relying on Sherlock
+
+#if ONNX_active
+
+computation_graph CG;
+
+
 // parser for ONNX : copied from evaluate_graph in computation_graph.cpp  (but external to the class => just redundant so useful only as a basis for the abstract version which is in the header file as it operates on templates)
 void computation_graph_evaluate_graph( computation_graph CG, map < uint32_t, double > input_node_and_value,
                                       map < uint32_t, double > & output_node_and_value )
@@ -233,9 +240,6 @@ void computation_graph_evaluate_graph( computation_graph CG, map < uint32_t, dou
         
         
 }
-
-
-
 
 
 
@@ -610,13 +614,84 @@ void test_network_sigmoid_cav(computation_graph & CG)
     
 }
 
-
-
-/*
-abstract_node::abstract_node()
+void essai_sherlock()
 {
-   
-    neuron_bounds.clear();
-    node_bounds.clear();
+    
+    string onnx_file = "./networks/sample_network.onnx";
+    string deep_2_neuron_file = "./networks/simple_deep_2.onnx";
+    
+    computation_graph CG_1;
+    //    onnx_parser my_parser_1(deep_2_neuron_file);
+    onnx_parser my_parser_1(onnx_file);
+    map<string, ParameterValues <uint32_t> > tensor_mapping_1;
+    my_parser_1.build_graph(CG_1, tensor_mapping_1);
+    
+    computation_graph sample_graph_a;
+    test_network_sigmoid(sample_graph_a);
+    
+    map<uint32_t, double> in, out;
+   // in.insert(make_pair(1, 1.0));
+   // in.insert(make_pair(2, 0.5));
+    in.insert(make_pair(1, 5.0));
+    in.insert(make_pair(2, -2.0));
+    computation_graph_evaluate_graph(sample_graph_a,in,out);
+  //  cout << "Value in computation_graph_evaluate is " << out[13] << endl;
+    cout << "Value in computation_graph_evaluate is " << out[7] << endl;
+    print_map(in);
+    print_map(out);
+    
+    
+    map<uint32_t, interval> abstract_in, abstract_out;
+    abstract_in.insert(make_pair(1, 5.0));
+    abstract_in.insert(make_pair(2, -2.0));
+    //abstract_in.insert(make_pair(1, 1.0));
+    //abstract_in.insert(make_pair(2, 0.5));
+    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_in,abstract_out);
+  //  essai1(sample_graph_a,abstract_in,abstract_out);
+ //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
+    cout << "Abstract value in computation_graph_evaluate is " << abstract_out[7] << endl;
+   // print_map(abstract_in);
+   // print_map(abstract_out);
+    
+    map<uint32_t, AAF> abstract_affin, abstract_affout;
+    abstract_affin.insert(make_pair(1, 5.0));
+    abstract_affin.insert(make_pair(2, -2.0));
+    //abstract_in.insert(make_pair(1, 1.0));
+    //abstract_in.insert(make_pair(2, 0.5));
+    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_affin,abstract_affout);
+    //  essai1(sample_graph_a,abstract_in,abstract_out);
+    //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
+    cout << "Abstract value in computation_graph_evaluate is " << abstract_affout[7].convert_int() << endl;
+    // print_map(abstract_in);
+    // print_map(abstract_out);
+    
+    
+    sample_graph_a.evaluate_graph(in, out);
+    cout << "Value is " << out[13] << endl;
+    print_map(in);
+    print_map(out);
+    
+    
+  //  computation_graph sample_graph_a;
+  //  test_network_sigmoid(sample_graph_a);
+    
+    //
+    auto x = 5.0;
+    auto y = -2.0;
+    map< uint32_t, double > inputs;
+    inputs.insert(make_pair(1, x));
+    inputs.insert(make_pair(2, y));
+    //
+    map< uint32_t, double > outputs;
+    //map< uint32_t, double > gradient;
+    sample_graph_a.evaluate_graph(inputs, outputs);
+    print_map(inputs);
+    print_map(outputs);
+    // inputs.clear();
+    // inputs.insert(make_pair(1, x));
+    // inputs.insert(make_pair(2, y));
+    // gradient = sample_graph_a.return_gradient_wrt_inputs(7, inputs);
+    cout << "Value at x = " << x << "  and y = " << y << " is " << outputs[7] << endl;
 }
- */
+
+#endif

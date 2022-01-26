@@ -35,6 +35,44 @@ vector<bool> variables_to_display;
 
 using namespace std;
 
+
+// reading system choice and neural network from file
+void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename)
+{
+    const int LINESZ = 2048;
+    char buff[LINESZ];
+    char str_systype[LINESZ];
+    
+    cout << "****** Reading system choice from file " <<  params_filename << " ******" << endl;
+    FILE *params_file = fopen(params_filename,"r");
+    if (params_file == NULL)
+        cout << "Error reading " << params_filename << ": file not found" << endl;
+    while (fgets(buff,LINESZ,params_file)) {
+        sscanf(buff, "systype = %s\n", str_systype);
+        sscanf(buff, "syschoice = %d\n", &syschoice);
+        sscanf(buff, "nnfile-sfx = %s\n", sfx_filename);
+        sscanf(buff, "nnfile-onnx = %s\n", onnx_filename);
+    }
+    
+    if (str_systype)
+    {
+        if (strcmp(str_systype,"ode")==0)
+            systype = 0;
+        else if (strcmp(str_systype,"dde")==0)
+            systype = 1;
+        else if (strcmp(str_systype,"discrete")==0)
+            systype = 2;
+        else if (strcmp(str_systype,"nn")==0)
+            systype = 3;
+        // cout << "systype in readfromfile= " << systype << endl;
+    }
+    if (sfx_filename)
+        cout << "sfx =" << sfx_filename;
+    
+    fclose(params_file);
+}
+
+
 void open_outputfiles()
 {
     system("mv output output_sauv");
@@ -70,7 +108,185 @@ void print_finalstats(clock_t begin)
 }
 
 
+// print initial conditions and init XML in the discrete systems case
+void print_init_discrete(vector<interval> &x, bool skew)
+{
+    
+    out_approx << YAML::BeginMap;
+    out_approx << YAML::Key << "tn";
+    out_approx << YAML::Value << 0;
+    
+    vector<double> temp(2*sysdim);
+    
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        temp[2*i] = x[i].inf();
+        temp[2*i+1] = x[i].sup();
+    }
+        
+    out_approx << YAML::Key << "outer";
+    out_approx << YAML::Value << temp; //
+    out_approx << YAML::Key << "inner";
+    out_approx << YAML::Value << temp; //
+    
+/*    if (uncontrolled > 0) {
+        out_approx << YAML::Key << "innerrobust";
+        out_approx << YAML::Value << temp; //
+        out_approx << YAML::Key << "outerrobust";
+        out_approx << YAML::Value << temp; //
+    }
+    if (controlled > 0 || uncontrolled > 0) {
+        out_approx << YAML::Key << "innerminimal";
+        out_approx << YAML::Value << temp;
+        out_approx << YAML::Key << "outerminimal";
+        out_approx << YAML::Value << temp;
+    }
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        range_x = x[i].convert_int();
+        temp[2*i] = range_x.mid();
+        temp[2*i+1] = temp[2*i];
+    }
+    out_approx << YAML::Key << "center";
+    out_approx << YAML::Value << temp;
+   */
+    
+    // error measures
+    vector<double> temp2(sysdim);
+    for (int i=0 ; i<sysdim ; i++)
+        temp2[i] = 1.0;
+    out_approx << YAML::Key << "etaouter";
+    out_approx << YAML::Value << temp2;
+    out_approx << YAML::Key << "etainner";
+    out_approx << YAML::Value << temp2;
+    out_approx << YAML::Key << "gamma";
+    out_approx << YAML::Value << temp2;
+    
+    
 
+    out_approx << YAML::Key << "inner2d";
+    out_approx << YAML::Value << YAML::BeginSeq;
+    
+    vector<double> temp2d(4);
+    vector<double> temp3d(6);
+    vector<double> tempskew(8);
+        
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            
+            
+            out_approx << YAML::BeginMap;
+            
+            out_approx << YAML::Key << "x1";
+            out_approx << YAML::Value << i;
+            out_approx << YAML::Key << "x2";
+            out_approx << YAML::Value << j;
+            
+            temp2d[0] = inf(x[i]); temp2d[1] = sup(x[i]); temp2d[2] = inf(x[j]); temp2d[3] = sup(x[j]);
+            if (!skew) {
+                out_approx << YAML::Key << "maxbox";
+                out_approx << YAML::Value << temp2d;
+            }
+            else {
+        
+                tempskew[0] = temp2d[0];
+                tempskew[1] = temp2d[2];
+                tempskew[2] = temp2d[0];
+                tempskew[3] = temp2d[3];
+                tempskew[4] = temp2d[1];
+                tempskew[5] = temp2d[3];
+                tempskew[6] = temp2d[1];
+                tempskew[7] = temp2d[2];
+            
+                out_approx << YAML::Key << "maxskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            
+            /*    if (uncontrolled > 0 || controlled > 0) {
+                    out_approx << YAML::Key << "minbox";
+                    out_approx << YAML::Value << temp2d;
+                }
+                if (uncontrolled > 0) {
+                    out_approx << YAML::Key << "robbox";
+                    out_approx << YAML::Value << temp2d;
+                }
+                */
+            
+            
+      /*      if (uncontrolled > 0 || controlled > 0) {
+                out_approx << YAML::Key << "minskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            if (uncontrolled > 0) {
+                out_approx << YAML::Key << "robskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            */
+            out_approx << YAML::EndMap;
+        }
+    }
+    
+    out_approx << YAML::EndSeq;
+    
+    /* TODO. A AJOUTER PLUS TARD
+    
+    out_approx << YAML::Key << "inner3d";
+    out_approx << YAML::Value << YAML::BeginSeq;
+    
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            for (int k=j+1 ; k < sysdim ; k++) {
+               
+                out_approx << YAML::BeginMap;
+                
+                out_approx << YAML::Key << "x1";
+                out_approx << YAML::Value << i;
+                out_approx << YAML::Key << "x2";
+                out_approx << YAML::Value << j;
+                out_approx << YAML::Key << "x3";
+                out_approx << YAML::Value << k;
+                
+                temp3d[0] = inf(x[i]); temp3d[1] = sup(x[i]);
+                temp3d[2] = inf(x[j]); temp3d[3] = sup(x[j]);
+                temp3d[4] = inf(x[k]); temp3d[5] = sup(x[k]);
+                
+                out_approx << YAML::Key << "maxbox";
+                out_approx << YAML::Value << temp3d;
+         //       if (uncontrolled > 0 || controlled > 0)
+         //       {
+         //           out_approx << YAML::Key << "minbox";
+         //           out_approx << YAML::Value << temp3d;
+         //       }
+         //       if (uncontrolled > 0) {
+         //           out_approx << YAML::Key << "robbox";
+         //           out_approx << YAML::Value << temp3d;
+         //       }
+         //
+                out_approx << YAML::EndMap;
+
+            }
+        }
+    }
+    
+    out_approx << YAML::EndSeq;
+    
+     FIN A AJOUTER PLUS TARD */
+     
+     
+    out_approx << YAML::EndMap;
+    
+     
+    
+    
+ /*   cout << "At t=0 :" << endl;
+    for (int i=0 ; i<sysdim ; i++)
+        cout << "x[" << i <<"]=" << x[i].convert_int() << "\t";
+    cout << endl;
+   */
+     
+}
+
+// print initial conditions and init XML in the ODE case
 void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
 {
     interval range_x;
@@ -250,14 +466,6 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
         cout << "param_inputs[" << i <<"]=" << param_inputs[i].convert_int() << "\t";
     cout << endl;
      
-     
-    /*
-     cout << "x0=" << endl;
-     for (int i=0 ; i<sysdim ; i++)
-     cout << "x0[" << i <<"]=" << mid(x[i].convert_int()) << "\t";
-     cout << endl;
-     */
-    
 }
 
 
@@ -271,9 +479,12 @@ void run_pythonscript_visualization()
     char displayed_variables[100];
     bool init=true;
     int j = 0;
-    for (int i=0; i<sysdim; i++) {
-        if (variables_to_display[i]) {
-            j++;
+    if (systype == 2) // discrete systems
+        sprintf(displayed_variables,"%s","all");
+    else {
+        for (int i=0; i<sysdim; i++) {
+            if (variables_to_display[i]) {
+             j++;
             if (init) {
                 sprintf(displayed_variables,"-%d",i+1);
                 init = false;
@@ -287,7 +498,7 @@ void run_pythonscript_visualization()
     cout << displayed_variables << endl;
     if (j == sysdim)
         sprintf(displayed_variables,"%s","all");
-    cout << displayed_variables << endl;
+    }
     sprintf(command_line,"cd GUI; python3 Visu_output.py --interactive=%d --printvar=%s; cd ..",interactive_visualization,displayed_variables);
     cout << command_line << endl;
     system(command_line);
@@ -446,6 +657,13 @@ std::ostream& operator<<(std::ostream& os, const std::vector<double> &input)
        // os << i.convert_int() << " ";
     }
     return os;
+}*/
+
+
+/*std::ostream& operator<<(std::ostream& os, const interval &input)
+{
+    os.precision(6);
+    os << "[" << input.inf() << ", " << input.sup() << "] ";
 }*/
 
 

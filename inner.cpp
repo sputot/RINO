@@ -242,22 +242,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                     
                 
                 
-                
-       //     }
-       // }
-        
-    
-    
-    
-    // computing joint inner-approximations WITH PRECONDITIONING
-    // for any pair (i,k) of system outputs which we wish to jointly inner-approximate
-    //    component j for j < sysdim/2 is existential in z_i and universal in z_k
-    //    same for inputs
-    // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
 
-        
-    //    for (int i=0 ; i<sysdim; i++) {
-    //        for (int k=i+1 ; k<sysdim; k++) {
                 
                 for (int p=0 ; p<sysdim; p++) {
                     for (int q=0 ; q<sysdim; q++) {

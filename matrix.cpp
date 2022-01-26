@@ -320,11 +320,12 @@ void setId(vector<vector<AAF>> &J) {
 }
 
  // resulting quadrilatere A * inner is an inner approximation of the range of f
-vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary) {
+vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary)
+{
     vector<vector<double>> output_skewedbox(4);
-    for (int i=0; i<4; i++) {
+    for (int i=0; i<4; i++)
         output_skewedbox[i] = vector<double>(2);
-    }
+    
     
     output_skewedbox[0][0] = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
     output_skewedbox[0][1] = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
@@ -334,6 +335,47 @@ vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_in
     output_skewedbox[2][1] = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
     output_skewedbox[3][0] = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
     output_skewedbox[3][1] = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    
+    return output_skewedbox;
+}
+
+vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<vector<double>> &A, int varx, int vary, int varz)
+{
+    vector<vector<double>> output_skewedbox(8);
+    for (int i=0; i<8; i++)
+        output_skewedbox[i] = vector<double>(3);
+    
+    output_skewedbox[0][0] = inf(temp_inner[varx])*A[varx][varx] + inf(temp_inner[vary])*A[varx][vary] + inf(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[0][1] = inf(temp_inner[varx])*A[vary][varx] + inf(temp_inner[vary])*A[vary][vary] + inf(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[0][2] = inf(temp_inner[varx])*A[varz][varx] + inf(temp_inner[vary])*A[varz][vary] + inf(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[1][0] = inf(temp_inner[varx])*A[varx][varx] + sup(temp_inner[vary])*A[varx][vary] + inf(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[1][1] = inf(temp_inner[varx])*A[vary][varx] + sup(temp_inner[vary])*A[vary][vary] + inf(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[1][2] = inf(temp_inner[varx])*A[varz][varx] + sup(temp_inner[vary])*A[varz][vary] + inf(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[2][0] = sup(temp_inner[varx])*A[varx][varx] + sup(temp_inner[vary])*A[varx][vary] + inf(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[2][1] = sup(temp_inner[varx])*A[vary][varx] + sup(temp_inner[vary])*A[vary][vary] + inf(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[2][2] = sup(temp_inner[varx])*A[varz][varx] + sup(temp_inner[vary])*A[varz][vary] + inf(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[3][0] = sup(temp_inner[varx])*A[varx][varx] + inf(temp_inner[vary])*A[varx][vary] + inf(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[3][1] = sup(temp_inner[varx])*A[vary][varx] + inf(temp_inner[vary])*A[vary][vary] + inf(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[3][2] = sup(temp_inner[varx])*A[varz][varx] + inf(temp_inner[vary])*A[varz][vary] + inf(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[4][0] = inf(temp_inner[varx])*A[varx][varx] + inf(temp_inner[vary])*A[varx][vary] + sup(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[4][1] = inf(temp_inner[varx])*A[vary][varx] + inf(temp_inner[vary])*A[vary][vary] + sup(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[4][2] = inf(temp_inner[varx])*A[varz][varx] + inf(temp_inner[vary])*A[varz][vary] + sup(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[5][0] = inf(temp_inner[varx])*A[varx][varx] + sup(temp_inner[vary])*A[varx][vary] + sup(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[5][1] = inf(temp_inner[varx])*A[vary][varx] + sup(temp_inner[vary])*A[vary][vary] + sup(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[5][2] = inf(temp_inner[varx])*A[varz][varx] + sup(temp_inner[vary])*A[varz][vary] + sup(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[6][0] = sup(temp_inner[varx])*A[varx][varx] + sup(temp_inner[vary])*A[varx][vary] + sup(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[6][1] = sup(temp_inner[varx])*A[vary][varx] + sup(temp_inner[vary])*A[vary][vary] + sup(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[6][2] = sup(temp_inner[varx])*A[varz][varx] + sup(temp_inner[vary])*A[varz][vary] + sup(temp_inner[varz])*A[varz][varz];
+    
+    output_skewedbox[7][0] = sup(temp_inner[varx])*A[varx][varx] + inf(temp_inner[vary])*A[varx][vary] + sup(temp_inner[varz])*A[varx][varz];
+    output_skewedbox[7][1] = sup(temp_inner[varx])*A[vary][varx] + inf(temp_inner[vary])*A[vary][vary] + sup(temp_inner[varz])*A[vary][varz];
+    output_skewedbox[7][2] = sup(temp_inner[varx])*A[varz][varx] + inf(temp_inner[vary])*A[varz][vary] + sup(temp_inner[varz])*A[varz][varz];
     
     return output_skewedbox;
 }

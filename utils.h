@@ -17,6 +17,8 @@
 
 //#include "ode_def.h"
 
+void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename);
+
 void open_outputfiles();
 
 extern ofstream approxreachsetfile;
@@ -28,8 +30,12 @@ extern YAML::Emitter out_approx;
 extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
 
+// close XML and print final time: common to ODEs / discrete systems
 void print_finalstats(clock_t begin);
 
+// print initial conditions and init XML in the discrete systems case
+void print_init_discrete(vector<interval> &x, bool skew);
+// print initial conditions and init XML in the ODE case
 void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
 
 void run_pythonscript_visualization();

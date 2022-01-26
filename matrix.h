@@ -56,7 +56,7 @@ void setVi(vector<interval> &x,vector<AAF> &y, vector<AAF> &constraints);
 void setId(vector<vector<AAF>> &J);
 
 vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary);
-
+vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<vector<double>> &A, int varx, int vary, int varz);
 #endif
 
 

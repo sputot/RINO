@@ -685,7 +685,9 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
 {
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     
-    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    if (syschoice == 491)
+        params = NH.eval_network(syst_to_nn(x));
+    else    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
     {
         params = NH.eval_network(x);
         cout << "params=" << params[0].convert_int() << " x=" << x[0].convert_int() << endl;
@@ -698,7 +700,18 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         xf[i] = x[i];
     for (int i=0; i < sysdim ; i++)
         xf[i].diff(i,sysdim);    // differentiate to x   // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
-    vector<F<AAF>> paramsf = NH.eval_network(xf);
+    vector<F<AAF>> paramsf;
+    if (syschoice == 491) {
+        vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
+        resf[0] = 30.0;
+        resf[1] = 1.4;
+        resf[2] = xf[4]; // v_ego
+        resf[3] = xf[0]-xf[3]; // x_lead-x_ego
+        resf[4] = xf[1]-xf[4];
+        paramsf = NH.eval_network(resf);
+    }
+    else
+        paramsf = NH.eval_network(xf);
     
     OdeVar odeVAR_g = OdeVar(bf,paramsf);
     Ode ode_x0 = Ode(bf,params);
@@ -843,7 +856,18 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to
             // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
                     
-            vector<F<AAF>> paramsf = NH.eval_network(xf);
+            vector<F<AAF>> paramsf;
+            if (syschoice == 491) {
+                vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
+                resf[0] = 30.0;
+                resf[1] = 1.4;
+                resf[2] = xf[4]; // v_ego
+                resf[3] = xf[0]-xf[3]; // x_lead-x_ego
+                resf[4] = xf[1]-xf[4];
+                paramsf = NH.eval_network(resf);
+            }
+            else
+                paramsf = NH.eval_network(xf);
             for (int i=0 ; i<sysdim_params; i++) {
                 params[i] = paramsf[i].x();
                 cout << "params[i]=" << params[i].convert_int() << endl;
@@ -906,9 +930,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             // compte aux . J and store the result in Jac_params
              multMiMi(Jac_params,aux,J);
             
-            for (int i=0 ; i<J.size(); i++)
-                for (int j=0 ; j<J[i].size(); j++)
-                    cout << "J["<<i<<"]["<<j<<"]="<<J[i][j].convert_int() << endl;
+        
             
             // EVALUATE ORDER 2 (Lie derivative of Jacobian)
             vector<vector<AAF>> aux_order2 = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
@@ -980,9 +1002,11 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
         else
         {
             for (int i=0 ; i<sysdim ; i++) {
-                cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
-                cout << "Xinner_maximal[" << i <<"]=" << Xinner[i] << "\t";
-                cout << "Sampled estim.[" << i <<"]=" << sampled_reachset[i] << "\t";
+                cout.precision(6);
+                cout << "Xouter_maximal[" << i <<"]=[" << Xouter[i].inf() << ", " << Xouter[i].sup() << "] \t";
+                //printf("%.6f\t", Xouter[i]);
+                cout << "Xinner_maximal[" << i <<"]=[" << Xinner[i].inf() << ", " << Xinner[i].sup() << "] \t"; //<<"]=" << Xinner[i] << "\t";
+                cout << "Sampled estim.[" << i <<"]=[" << sampled_reachset[i].inf() << ", " << sampled_reachset[i].sup() << "] \t"; //<<"]=" << sampled_reachset[i] << "\t";
                 cout << " eta_o["<<i<<"]=" << (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf()) << "\t";
                 cout << " eta_i[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf()) << "\t";
                 cout << " gamma[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
@@ -1232,10 +1256,10 @@ void HybridStep_ode::set_controlinput_regression(vector<AAF> &param_inputs, vect
 
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
-vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &param_inputs, double t_begin, double t_end, double tau)
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
 {
     int n = (t_end - t_begin)/tau + 1;
-    int discr = 2;
+   // int discr = 2;
     int nb_points = discr+1;
     
     
@@ -1304,19 +1328,12 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
             cur_point++;
     }
 
-    //ofstream outFile_xi;
-    //stringstream file_name;
-    //file_name.str("");
-    //file_name << "output/xi.out";
-    //outFile_xi.open(file_name.str().c_str());
     
     ofstream samplesreachsetfile;
     samplesreachsetfile.open("output/samplesreachset.yaml");
     
     YAML::Emitter out_samples;
     out_samples << YAML::BeginMap;
-    //out_samples << YAML::Key << "dimension";
-    //out_samples << YAML::Value << sysdim;
     
     out_samples << YAML::Key << "samples";
     out_samples << YAML::Value << YAML::BeginSeq;
@@ -1345,17 +1362,29 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     {
         iter = 1;
             
-        for (tn=t_begin ; tn <=t_end ; tn = tn+tau)
+        for (tn=t_begin ; tn <t_end-0.00001*t_end ; tn = tn+tau)
         {
                 
             if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
             {
-                if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+                if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
                 {
                     control = NH.eval_network(input[cur_point]);
                     for (int i=0; i < control.size() ; i++)
                         params[i] = control[i];
                  }
+                else if (syschoice == 491)
+                {
+                    vector<double> res = vector<double>(NH.n_inputs);
+                    res[0] = 30.0;
+                    res[1] = 1.4;
+                    res[2] = input[cur_point][4]; // v_ego
+                    res[3] = input[cur_point][0]-input[cur_point][3]; // x_lead-x_ego
+                    res[4] = input[cur_point][1]-input[cur_point][4];
+                    control = NH.eval_network(res);
+                    for (int i=0; i < control.size() ; i++)
+                        params[i] = control[i];
+                }
             }
             
             // param_inputs,control_inputs unused for now ?
@@ -1367,7 +1396,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
             
             out_samples << YAML::BeginMap;
             out_samples << YAML::Key << "tn";
-            out_samples << YAML::Value << tn;
+            out_samples << YAML::Value << tn+tau;
             out_samples << YAML::Key << "sample";
             out_samples << YAML::Value << output[cur_point];
             out_samples << YAML::EndMap;
@@ -1405,7 +1434,10 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     
     // resetting params to initial condition
 
-    params = NH.eval_network(initial_values);
+    if (syschoice == 491)
+        params = NH.eval_network(syst_to_nn(initial_values));
+    else
+        params = NH.eval_network(initial_values);
     
     out_samples << YAML::EndSeq;
     out_samples << YAML::EndMap;

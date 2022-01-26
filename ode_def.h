@@ -100,7 +100,7 @@ vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial
 void AnalyticalSol(int current_iteration, double d0);
 
 // reading sysdim, jacdim, etc
-void readfromfile_system_dim(const char * params_filename, int &sysdim, int &jacdim, int &sysdim_params, int &nb_subdiv_init);
+void readfromfile_nbsubdiv(const char * params_filename, int &nb_subdiv_init);
 
 // d0 and t_begin and nb_subdiv are for DDEs only, rest are common to ODE and DDE
 void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv);

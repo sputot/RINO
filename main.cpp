@@ -19,8 +19,6 @@
 #include "ode_def.h"
 #include "matrix.h"
 #include "network_handler.h"
-#include "sherlock.h"
-//#include "taylor.h"
 #include "inner.h"
 #include "ode_integr.h"
 #include "dde_integr.h"
@@ -41,20 +39,12 @@ using namespace std;
 
 //using namespace tinyxml2;
 
-
-
-
 //using namespace fadbad;
-
-
 
 // void read_system(const char * system_filename, char *sys_name);
 
 //int systype; // 0 is ODE, 1 is DDE
 //int syschoice; // choice of system to analyze
-
-// void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
-
 
 // for command line options
 char* getCmdOption(char ** begin, char ** end, const std::string & option)
@@ -74,109 +64,20 @@ bool cmdOptionExists(char** begin, char** end, const std::string& option)
 }
 
 
-void essai_sherlock()
-{
-    
-    string onnx_file = "./networks/sample_network.onnx";
-    string deep_2_neuron_file = "./networks/simple_deep_2.onnx";
-    
-    computation_graph CG_1;
-    //    onnx_parser my_parser_1(deep_2_neuron_file);
-    onnx_parser my_parser_1(onnx_file);
-    map<string, ParameterValues <uint32_t> > tensor_mapping_1;
-    my_parser_1.build_graph(CG_1, tensor_mapping_1);
-   /* for(auto each_pair : tensor_mapping_1)
-    {
-        cout << each_pair.first << endl;
-        each_pair.second.print();
-    }
-    */
-    //    test_poly_abstr_simple(CG_1);
-    
-    
-    computation_graph sample_graph_a;
-    test_network_sigmoid(sample_graph_a);
-    
-    map<uint32_t, double> in, out;
-   // in.insert(make_pair(1, 1.0));
-   // in.insert(make_pair(2, 0.5));
-    in.insert(make_pair(1, 5.0));
-    in.insert(make_pair(2, -2.0));
-    computation_graph_evaluate_graph(sample_graph_a,in,out);
-  //  cout << "Value in computation_graph_evaluate is " << out[13] << endl;
-    cout << "Value in computation_graph_evaluate is " << out[7] << endl;
-    print_map(in);
-    print_map(out);
-    
-    
-    map<uint32_t, interval> abstract_in, abstract_out;
-    abstract_in.insert(make_pair(1, 5.0));
-    abstract_in.insert(make_pair(2, -2.0));
-    //abstract_in.insert(make_pair(1, 1.0));
-    //abstract_in.insert(make_pair(2, 0.5));
-    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_in,abstract_out);
-  //  essai1(sample_graph_a,abstract_in,abstract_out);
- //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
-    cout << "Abstract value in computation_graph_evaluate is " << abstract_out[7] << endl;
-   // print_map(abstract_in);
-   // print_map(abstract_out);
-    
-    map<uint32_t, AAF> abstract_affin, abstract_affout;
-    abstract_affin.insert(make_pair(1, 5.0));
-    abstract_affin.insert(make_pair(2, -2.0));
-    //abstract_in.insert(make_pair(1, 1.0));
-    //abstract_in.insert(make_pair(2, 0.5));
-    computation_graph_evaluate_graph_abstract(sample_graph_a,abstract_affin,abstract_affout);
-    //  essai1(sample_graph_a,abstract_in,abstract_out);
-    //   cout << "Abstract value in computation_graph_evaluate is " << abstract_out[13] << endl;
-    cout << "Abstract value in computation_graph_evaluate is " << abstract_affout[7].convert_int() << endl;
-    // print_map(abstract_in);
-    // print_map(abstract_out);
-    
-    
-    sample_graph_a.evaluate_graph(in, out);
-    cout << "Value is " << out[13] << endl;
-    print_map(in);
-    print_map(out);
-    
-    
-    
-    
-    
-  //  computation_graph sample_graph_a;
-  //  test_network_sigmoid(sample_graph_a);
-    
-    //
-    auto x = 5.0;
-    auto y = -2.0;
-    map< uint32_t, double > inputs;
-    inputs.insert(make_pair(1, x));
-    inputs.insert(make_pair(2, y));
-    //
-    map< uint32_t, double > outputs;
-    //map< uint32_t, double > gradient;
-    sample_graph_a.evaluate_graph(inputs, outputs);
-    print_map(inputs);
-    print_map(outputs);
-    // inputs.clear();
-    // inputs.insert(make_pair(1, x));
-    // inputs.insert(make_pair(2, y));
-    // gradient = sample_graph_a.return_gradient_wrt_inputs(7, inputs);
-    cout << "Value at x = " << x << "  and y = " << y << " is " << outputs[7] << endl;
-}
-
 
 int main(int argc, char* argv[])
 {
     // all these parameters in initialization functions defined in ode_def.cpp
+    const int LINESZ = 2048;
     double tn;    // current time
     double tau;   // integration time step (fixed step for now)
     int order;    // order of Taylor expansion
     
     double d0; // = 1;   // delay in DDE
     int nb_subdiv; // = 10;   // number of Taylor models on [0,d0]
-    const char* sfx_filename;
-    const char* onnx_filename;
+    char sfx_filename[LINESZ]={0};
+    char onnx_filename[LINESZ]={0};
+    //const char* onnx_filename;
     
     // for ODEs only
     vector<vector<interval>> sampled_reachset;
@@ -184,8 +85,12 @@ int main(int argc, char* argv[])
     // for discrete systems only
     int nb_steps = 1;
     int AEextension_order = 1;
+    int iter_method = 1;
+    bool skew = true; // compute skewboxes or regular boxes approx
     vector<interval> xinit;
     // end discrete systems only
+    
+    int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
     
     vector<interval> Xouter(sysdim);
 //    vector<interval> Xinner(sysdim);
@@ -221,36 +126,15 @@ int main(int argc, char* argv[])
         syschoice = atoi(str_syschoice);
   //  cout << "syschoice= " << syschoice << endl;
     
-    sfx_filename = getCmdOption(argv, argv + argc, "-nnfile-sfx");
-    onnx_filename = getCmdOption(argv, argv + argc, "-nnfile-onnx");
-    if (sfx_filename)
-        NH = network_handler(sfx_filename);
-    else if (onnx_filename)
-    {
-    // CG is a global variable
-    onnx_parser my_parser(onnx_filename);
-    map<string, ParameterValues <uint32_t> > tensor_mapping;
-    my_parser.build_graph(CG, tensor_mapping);
-     //   test_network_tanh(CG);
-    //    test_network_sigmoid_cav(CG);
-      //  essai_sherlock();
-       // syschoice = 101;
-       // function_range(NULL);
-    }
-    else if (systype == 3) {
-        cout << "You should have entered a neural network to analyse (see option -help if needed)" << endl;
-        exit(0);
-    }
-    
-   // if (syschoice == 231)
-   //     test_network_mountaincar_cav(CG);
+    char* sfx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-sfx");
+    char* onnx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-onnx");
     
     char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
     
-  
+    if (config_filename)
+        readfromfile_syschoice(config_filename,sfx_filename,onnx_filename);
     
-    
-    if ((!str_systype) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
+    if ((!str_systype && !config_filename) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
     {
         cout << "Usage is: " << endl;
         cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems, nn for neural networks" << endl;
@@ -258,82 +142,128 @@ int main(int argc, char* argv[])
         cout << "-syschoice x: integer setting the predefined system ID" << endl;
         cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
         cout << "-AEextension_order x: for discrete systems only, (optional) order of AE-extensions (1 or 2) - default value is 1" << endl;
+        cout << "-iter_method x: for discrete systems only, (optional) choice of iterating method (1 or 2) - default value is 1" << endl;
+        cout << "-skew x: for discrete systems only, (optional) skewing/preconditioning for joint range (0 is false or 1 is true) - default value is 1" << endl;
         cout << "-configfile xxx: name of the (optional) config file " << endl;
-       // cout << "For ODEs: 1 for 1D running example, 2 for Brusselator, 3 for ballistic," << endl;
-       // cout << "4 for linearized ballitsic, 5 for self driving car with jacdim = 2, 6 for self driving car with jacdim = 4,"<<endl;
-      //  cout << "For DDEs: 1 for 1D running example, 6 for self driving car with jacdim = 2, 7 for self driving car with sysdim = 4,"<<endl;
-     //   cout << "8 for selfdriving with sysdim=2, jacdim=4"<<endl;
         exit(0);
     }
+    
+    
+    // parsing neural network
+    cout << "where am i" << endl;
+    if (sfx_filename && (sfx_filename[0] != 0)) {// read from config file
+        cout << "reading network from" << sfx_filename << endl;
+        NH = network_handler(sfx_filename);
+    }
+    else if (sfx_filename_temp) { // read from command-line
+        cout << "reading network from" << sfx_filename_temp << endl;
+        NH = network_handler(sfx_filename_temp);
+}
+    else if (onnx_filename && (onnx_filename[0] != 0)) // read from config file
+    {
+#if ONNX_active
+        onnx_parser my_parser(onnx_filename);
+        map<string, ParameterValues <uint32_t> > tensor_mapping;
+        my_parser.build_graph(CG, tensor_mapping);
+#endif
+    }
+    else if (onnx_filename_temp) // read from command-line
+    {
+#if ONNX_active
+        onnx_parser my_parser(onnx_filename_temp);
+        map<string, ParameterValues <uint32_t> > tensor_mapping;
+        my_parser.build_graph(CG, tensor_mapping);
+#endif
+    }
+    else if (systype == 3) {
+        cout << "You should have entered a neural network to analyse (see option -help if needed)" << endl;
+        exit(0);
+    }
+    
+    
+    open_outputfiles();
+    clock_t begin; //  = clock();
     
     /*******************************************************************************************/
    /************* Discrete Systems ************/
     if (systype == 2) {
         
-        
+        DiscreteFunc f;
+        nb_sample_per_dim = 20;
     
+        // default parameter values
+        if (syschoice == 23)
+        {
+            iter_method = 1;
+            skew = false;
+        } else if (syschoice == 231 || syschoice == 18 || syschoice == 20)
+        {
+            iter_method = 2;
+            skew = true;
+        }
+        else if (syschoice == 15 || syschoice == 19 || syschoice == 16) {
+            iter_method = 1;
+            skew = true; // 3D prec for 16
+        }
+        else if (syschoice == 17 ||  syschoice == 21 ) {
+            iter_method = 2;
+            skew = false;
+        }
+        
+        
         char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
         if (str_nbsteps)
             nb_steps = atoi(str_nbsteps);
+        
         char * str_AEextension_order = getCmdOption(argv, argv + argc, "-AEextension_order");
         if (str_AEextension_order)
-            nb_steps = atoi(str_AEextension_order);
+            AEextension_order = atoi(str_AEextension_order);
         
-//        if (config_filename) // called with configuration file: we overwrite the initialization of init_system
-//            read_parameters(config_filename, tau, t_end, d0, t_begin, order, nb_subdiv);
+        char * str_method = getCmdOption(argv, argv + argc, "-iter_method");
+        if (str_method)
+            iter_method = atoi(str_method); //
+        
+        char * str_skew = getCmdOption(argv, argv + argc, "-skew");
+        if (str_skew)
+            skew = atoi(str_skew); //
+                
   
         
-        xinit = init_discrete_system(nb_steps, config_filename); // initial condition
+        xinit = init_discrete_system(); // reading hard-coded initial condition and reading config file
         
-        if (nb_steps == 1)
+        // reading initial conditions from config file if any
+        if (config_filename)
+            read_initialconditions(config_filename,xinit);
+        
+        
+        if (nb_steps == 1) {
+            vector<interval> estimated_range = estimate_range(f,xinit, nb_sample_per_dim);
+            print_init_discrete(xinit,skew);
+            begin = clock();
+            function_range(f,xinit,estimated_range);
+        }
+        else
         {
-            //if (syschoice == 111) {
-           //     nn_range(config_filename);
-           // }
-           // else
-                function_range(xinit);
-            return 0;
-        }
-        
-        if ((syschoice == 23) || (syschoice == 231))
-            discrete_dynamical_method2_preconditioned(xinit,nb_steps);
-//            discrete_dynamical_preconditioned(nb_steps,AEextension_order);
-           // discrete_dynamical_method2_preconditioned(nb_steps);
-        
-        // if (syschoice == 15)
-       //     discrete_dynamical(nb_steps,order);
-         else if (syschoice == 15 || syschoice == 19 )
-            discrete_dynamical_preconditioned(xinit,nb_steps,AEextension_order);
-         else if (syschoice == 16)
-             discrete_dynamical_preconditioned_3d(xinit,nb_steps,AEextension_order);
-         // discrete_dynamical_preconditioned(nb_steps,order);
-        else if (syschoice == 16)
-            discrete_dynamical_method2(xinit,nb_steps);
-        else if (syschoice == 18)
-//            function_range();
-            // discrete_dynamical_preconditioned_3d(nb_steps,order);
-            discrete_dynamical_method2_preconditioned(xinit,nb_steps);
-        else if (syschoice == 17 ||  syschoice == 21 ) {
-           discrete_dynamical_method2(xinit,nb_steps);
-         // discrete_dynamical(nb_steps,order);
-        }
-        else if (syschoice == 20 ||  syschoice == 18)
-         discrete_dynamical_method2_preconditioned(xinit,nb_steps);
-      else
-          discrete_dynamical_preconditioned(xinit,nb_steps,AEextension_order);
+            
+            vector<vector<interval>> estimated_range = estimate_reachset(f, nb_steps, xinit, nb_sample_per_dim);
+            
+            print_init_discrete(xinit,skew);
 
-        
-        // system("cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
-        char command_line[1000];
-        sprintf(command_line,"cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
-        cout << command_line << endl;
-        system(command_line);
-        
-        return 0;
+            begin = clock();
+            
+            if (iter_method == 1)
+                    discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
+            else // (iter_method == 2)
+                    discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
+            
+        }
+       
     }
     else if (systype == 3) {
-        int nb_steps = 1;
-        // neural network range evaluation
+        
+        DiscreteFunc f;
+        nb_steps = 1;
+        nb_sample_per_dim = 20;
         
         // vector<AAF> u = NH.eval_network(x);
         
@@ -342,18 +272,26 @@ int main(int argc, char* argv[])
         else if (onnx_filename)
             syschoice = 101;
         
-        xinit = init_discrete_system(nb_steps, config_filename); // initial condition
+        xinit = init_discrete_system(); // hard-coded initial condition
         
-        function_range(xinit);
+        if (config_filename)
+            read_initialconditions(config_filename,xinit);  // initial condition from config file
         
-        return 0;
+        vector<interval> estimated_range = estimate_range(f, xinit, nb_sample_per_dim);
+        
+        print_init_discrete(xinit,skew);
+
+        begin = clock();
+        
+        function_range(f,xinit,estimated_range);
     }
-    
+    else if (systype == 0 || systype == 1)
+    {
     
    
     // *************** ODEs or DDEs *******************
     
-    clock_t begin = clock();
+    
 
     init_system(config_filename, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
     
@@ -387,6 +325,7 @@ int main(int argc, char* argv[])
             // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
             current_iteration = 0;
             
+            begin = clock();
             tn = t_begin;
             
             HybridStep_dde prev_step = HybridStep_dde(bf,bbf,order,tn,tau,d0,nb_subdiv);
@@ -428,27 +367,22 @@ int main(int argc, char* argv[])
         vector<AAF> param_inputs_center(jacdim-sysdim);
         vector<AAF> xcenter(sysdim);
         
+        cout << "params=" << params;
+        cout << "Estimate reachset:" << endl;
+        nb_sample_per_dim = 2;
+        sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        cout << "End estimate reachset:" << endl;
+        begin = clock();
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
-            cout << "recompute_control=" << recompute_control << endl;
-            cout << "params=" << params;
-            // Runge Kutta simulations
-            cout << "Estimate reachset:" << endl;
-          //  vector<vector<interval>> sampled_reachset; // (10000,vector<interval>(sysdim));
-           sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau);
-            cout << "End estimate reachset:" << endl;
-            cout << "recompute_control=" << recompute_control << endl;
-            cout << "params=" << params;
-            
+           
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
-         //   for (int i=0 ; i<sysdim ; i++)
-         //       cout << "x[i]=" << x[i] << endl;
-            
+         
             
             tn = t_begin;
             print_initstats(initial_values,param_inputs);
@@ -481,11 +415,11 @@ int main(int argc, char* argv[])
             
             
             int iter = 1;
-            while (cur_step.tn < t_end)
+            while (cur_step.tn < t_end-0.0001*t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
                 cur_step.TM_build(param_inputs,param_inputs_center);
-                Xouter = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);  
+                Xouter = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
                 cur_step.init_nextstep(param_inputs,tau);
                 
                 if ((Xouter[0] == interval::EMPTY()) || (Xouter[0] == interval::ENTIRE())) {
@@ -504,6 +438,7 @@ int main(int argc, char* argv[])
         
         
         
+    }
     }
     
     ofstream summaryyamlfile;
@@ -529,6 +464,12 @@ int main(int argc, char* argv[])
         out_summary << YAML::Value << sysdim;
         out_summary << YAML::Key << "nb_steps";
         out_summary << YAML::Value << nb_steps;
+        out_summary << YAML::Key << "nb_sample_per_dim";
+        out_summary << YAML::Value << nb_sample_per_dim;
+        out_summary << YAML::Key << "skew";
+        out_summary << YAML::Value << skew;
+        out_summary << YAML::Key << "iter_method";
+        out_summary << YAML::Value << iter_method;
     }
     out_summary << YAML::EndMap;
     summaryyamlfile << out_summary.c_str();
@@ -568,7 +509,7 @@ int main(int argc, char* argv[])
         summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
         summaryfile << "Sampled estimate of final reachset │ " << sampled_reachset[sampled_reachset.size()-2];  // or iter-1 would be better
         summaryfile << "                Over-approximation │ " << Xouter;
-        // le reste: a relire/calculer des fichiers YAML que je vais produire... 
+        // le reste: a relire/calculer des fichiers YAML que je vais produire...
 //        summaryfile << " Projection of under-approximation │ " << Xinner << std::endl;
 
 
@@ -591,9 +532,12 @@ int main(int argc, char* argv[])
         summaryfile << "                           Systype │ " << "discrete"  << std::endl;
         summaryfile << "                          Dynamics │ " << syschoice << std::endl;
         summaryfile << "                Initial conditions │ " << xinit << std::endl;
-        summaryfile << "                           # steps │ " << nb_steps << std::endl;
+        summaryfile << "                            #steps │ " << nb_steps << std::endl;
         summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        summaryfile << "                  #samples per dim │ " << nb_sample_per_dim << std::endl;
         summaryfile << "                 AEextension order │ " << AEextension_order << std::endl;
+        summaryfile << "                  Iteration method │ " << iter_method << std::endl;
+        summaryfile << " Skewing/preconditiong joint range │ " << skew << std::endl;
         if (sfx_filename)
             summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
         else if (onnx_filename)
@@ -605,6 +549,7 @@ int main(int argc, char* argv[])
         summaryfile << "                           Systype │ " << "nn"  << std::endl;
         summaryfile << "                Initial conditions │ " << xinit << std::endl;
         summaryfile << "                  System dimension │ " << sysdim << std::endl;
+        summaryfile << "                  #samples per dim │ " << nb_sample_per_dim << std::endl;
         if (sfx_filename)
             summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
         else if (onnx_filename)
@@ -643,8 +588,23 @@ int main(int argc, char* argv[])
     
     
     print_finalstats(begin);
+    
     if (print_debug)
-        run_pythonscript_visualization();
+    {
+        if (systype == 0 || systype == 1 || systype == 2)
+            run_pythonscript_visualization();
+        else if (systype == 2) {
+            // system("cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
+            char command_line[1000];
+            sprintf(command_line,"cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
+            cout << command_line << endl;
+            system(command_line);
+          //  system("cd GUI; python3 Visu_discrete.py; cd ..");
+        }
+        else if (systype == 3)
+            system("cd GUI; python3 Visu_function.py; cd ..");
+        
+    }
 }
 
 
