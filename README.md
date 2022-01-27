@@ -1,7 +1,7 @@
 # ![RINO](https://github.com/cosynus-lix/RINO/blob/master/RINO2.jpg)
 
 
-# WARNING (January 22) - Obsolete Documentation, to be updated soon 
+# WARNING (January 22) - Documentation currently being updated 
 
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
@@ -33,19 +33,22 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 For now, the models of systems to analyse are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
 Running an existing example is then performed at command line, by 
 ```
-./main system_type system_id [config_file.txt]
+./rino [-systype system_type -syschoice system_id] [-nnfile-sfx filename.sfx] [config_file.txt]
 ```
 where 
-- system_type is either 0 (for a system of ODEs - Ordinary Differential Equations) or 1 (for a system of DDEs - Delay Differential Equations)
-- system_id is an integer specifying the predefined system identifier.
-- optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). In the examples directory, we provide configuration files for existing systems.
+- system_type is either ode (for a system of ODEs - Ordinary Differential Equations) or dde (for a system of DDEs - Delay Differential Equations) or discrete (for a discrete-time dynamical system)
+- system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ode_def.h)
+- optional filename.sfx is the name of a file containing a neural network with the Sherlock inspired sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
+- optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). 
+- configuration files for some examples are available in directory Examples/ConfigFiles. 
+- at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
 In praticular:
-  - the Brusselator example of Reference [HSCC 2017] below is run by "./main 0 2 [examples/config_0_2.txt] "
-  - the self-driving car example of Reference [HSCC 2019]  is run by "./main 0 6 [examples/config_0_6.txt]"
-  - the self-driving car example of Reference [CAV 2018]  is run by "./main 1 7 [examples/config_1_7.txt]" (here the model is with delays, hence the system_type 1)
-  - the crazyflie model of Reference [HSCC 2019]  is run by "./main 0 18 [examples/config_0_18.txt]" 
-  - the platoon examples  of Reference [CAV 2018] are run  by "./main 1 10 [examples/config_1_10.txt]" (5 vehicles) or "./main 1 11 [examples/config_1_11.txt]" (10 vehicles) 
+  - the Brusselator example of Reference [HSCC 2017] below is run by "./rino -systype ode -syschoice 2 [Examples/ConfigFiles/cfg_ode_2.txt] "
+  - the self-driving car example of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 6 [examples/config_0_6.txt]"
+  -   - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [examples/config_0_18.txt]" 
+  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [examples/config_1_7.txt]" (here the model is with delays, hence the system_type 1)
+  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [examples/config_1_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [examples/config_1_11.txt]" (10 vehicles) 
 
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
 More documentation on how to use these (and better input mechanisms) should come.
