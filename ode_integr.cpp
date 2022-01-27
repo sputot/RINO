@@ -555,7 +555,7 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
     int iter;
     interval widen, coeff;
     
-    bf(fx0,param_inputs,params,x0);
+    bf(fx0,param_inputs,nncontrol,x0);
     
     for (int i=0; i<sysdim ; i++)
         y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();  // modif (*tau)
@@ -592,7 +592,7 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
         
       //  cout << "iter=" << iter << "fx0[1]=" << fx0[1].convert_int() << "\t" "y0[1]=" << y0[1].convert_int() << endl;
         
-        bf(fx0,param_inputs,params,y0);
+        bf(fx0,param_inputs,nncontrol,y0);
         // cout << "fx[0]=" << fx0[0] << "\t"  << fx0[1] << endl;
         //   cout << "y1=" << y1[0] << "\t"  << y1[1] << endl;
         for (int i=0; i<sysdim ; i++)
@@ -686,11 +686,11 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     
     if (syschoice == 491)
-        params = NH.eval_network(syst_to_nn(x));
+        nncontrol = NH.eval_network(syst_to_nn(x));
     else    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
     {
-        params = NH.eval_network(x);
-        cout << "params=" << params[0].convert_int() << " x=" << x[0].convert_int() << endl;
+        nncontrol = NH.eval_network(x);
+        cout << "nncontrol=" << nncontrol[0].convert_int() << " x=" << x[0].convert_int() << endl;
         
         
     }
@@ -700,7 +700,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         xf[i] = x[i];
     for (int i=0; i < sysdim ; i++)
         xf[i].diff(i,sysdim);    // differentiate to x   // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
-    vector<F<AAF>> paramsf;
+    vector<F<AAF>> nncontrolf;
     if (syschoice == 491) {
         vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
         resf[0] = 30.0;
@@ -708,14 +708,14 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         resf[2] = xf[4]; // v_ego
         resf[3] = xf[0]-xf[3]; // x_lead-x_ego
         resf[4] = xf[1]-xf[4];
-        paramsf = NH.eval_network(resf);
+        nncontrolf = NH.eval_network(resf);
     }
-    else
-        paramsf = NH.eval_network(xf);
+    else if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+        nncontrolf = NH.eval_network(xf);
     
-    OdeVar odeVAR_g = OdeVar(bf,paramsf);
-    Ode ode_x0 = Ode(bf,params);
-    Ode ode_g0 = Ode(bf,params);
+    OdeVar odeVAR_g = OdeVar(bf,nncontrolf);
+    Ode ode_x0 = Ode(bf,nncontrol);
+    Ode ode_g0 = Ode(bf,nncontrol);
     vector<AAF> init_x;
     
     if (innerapprox == 1)
@@ -730,7 +730,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     if (innerapprox == 1) {
         for (int k = 0; k<sysdim+inputsdim; k++)
-            odeVAR_x[k] = OdeVar(bf,paramsf);
+            odeVAR_x[k] = OdeVar(bf,nncontrolf);
     }
     TM_Jac TMJac = TM_Jac(odeVAR_x, odeVAR_g, order, x, init_x, J0, tn, tau);
     
@@ -774,29 +774,29 @@ void HybridStep_ode::init_nextstep(vector<AAF> &param_inputs, double _tau)
                 vector<F<AAF>> xf(sysdim);
                 for (int i=0 ; i<sysdim; i++)
                     xf[i] = TMJac.x[i];
-                vector<F<AAF>> paramsf = NH.eval_network(syst_to_nn(xf));
-                for (int i=0 ; i<paramsf.size(); i++)
-                    params[i] = paramsf[i].x();
-                // params = NH.eval_network(syst_to_nn(TMJac.x));
-                cout << "recomputing params at time " << tn << endl;
+                vector<F<AAF>> nncontrolf = NH.eval_network(syst_to_nn(xf));
+                for (int i=0 ; i<nncontrolf.size(); i++)
+        nncontrol[i] = nncontrolf[i].x();
+                // nncontrol = NH.eval_network(syst_to_nn(TMJac.x));
+                cout << "recomputing nncontrol at time " << tn << endl;
             }
         }
         else {
             vector<F<AAF>> xf(sysdim);
             for (int i=0 ; i<sysdim; i++)
                 xf[i] = TMJac.x[i];
-            vector<F<AAF>> paramsf = NH.eval_network(syst_to_nn(xf));
-            for (int i=0 ; i<paramsf.size(); i++)
-                params[i] = paramsf[i].x();
-           // params = NH.eval_network(syst_to_nn(TMJac.x));
-            cout << "recomputing params at time " << tn << endl;
+            vector<F<AAF>> nncontrolf = NH.eval_network(syst_to_nn(xf));
+            for (int i=0 ; i<nncontrolf.size(); i++)
+        nncontrol[i] = nncontrolf[i].x();
+           // nncontrol = NH.eval_network(syst_to_nn(TMJac.x));
+            cout << "recomputing nncontrol at time " << tn << endl;
         }
-        cout << "params=" << params[0].convert_int() << endl;
+        cout << "nncontrol=" << nncontrol[0].convert_int() << endl;
         */
     
-        // no need to do this if we do not modify params ?
+        // no need to do this if we do not modify nncontrol ?
   /*      cout << "setting new bf" << endl;
-        bf = OdeFunc();  // to take into account new params if they have changed
+        bf = OdeFunc();  // to take into account new nncontrol if they have changed
         // resetting
         TMcenter.ode_x = Ode(bf);
         TMcenter.ode_g = Ode(bf);
@@ -836,7 +836,7 @@ void HybridStep_ode::TM_eval()
 }
 
 
-// sets params and Jac_params (Jac params should contain only df/du . du/dx and not all df/dx hence the decomposition implemented below) - separate control and the rest of dependencies because control period is different from integration period
+// sets nncontrol and Jac_params (Jac params should contain only df/du . du/dx and not all df/dx hence the decomposition implemented below) - separate control and the rest of dependencies because control period is different from integration period
 // Jac_params_order2 contains d/dt (df/du . du/dx) = d/dx(Jac_order_1).(dx/dt)
 void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J)
 {
@@ -856,7 +856,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to
             // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
                     
-            vector<F<AAF>> paramsf;
+            vector<F<AAF>> nncontrolf;
             if (syschoice == 491) {
                 vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
                 resf[0] = 30.0;
@@ -864,28 +864,28 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
                 resf[2] = xf[4]; // v_ego
                 resf[3] = xf[0]-xf[3]; // x_lead-x_ego
                 resf[4] = xf[1]-xf[4];
-                paramsf = NH.eval_network(resf);
+                nncontrolf = NH.eval_network(resf);
             }
             else
-                paramsf = NH.eval_network(xf);
-            for (int i=0 ; i<sysdim_params; i++) {
-                params[i] = paramsf[i].x();
-                cout << "params[i]=" << params[i].convert_int() << endl;
+                nncontrolf = NH.eval_network(xf);
+            for (int i=0 ; i<nncontroldim; i++) {
+                nncontrol[i] = nncontrolf[i].x();
+                cout << "nncontrol[i]=" << nncontrol[i].convert_int() << endl;
             }
                         
             vector<vector<AAF>> auxu = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
-            for (int i=0; i < sysdim_params ; i++)
+            for (int i=0; i < nncontroldim ; i++)
                 for (int j=0; j < sysdim ; j++)
-                    auxu[i][j] = paramsf[i].d(j);
+                    auxu[i][j] = nncontrolf[i].d(j);
                   
             
             // evaluate (\partial f) / (\partial u)
             OdeFunc f = OdeFunc();
-            vector<vector<AAF>> auxf = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim_params));
+            vector<vector<AAF>> auxf = vector<vector<AAF>>(sysdim, vector<AAF>(nncontroldim));
             
             
             // new experiment for order 2
-            vector<F<F<AAF>>> ffu(sysdim_params);
+            vector<F<F<AAF>>> ffu(nncontroldim);
             vector<F<F<AAF>>> ffxff(sysdim);
             vector<F<F<AAF>>> fftemp(sysdim);
             vector<F<F<AAF>>> ffparam_inputs(inputsdim);
@@ -895,20 +895,20 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             for (int i=0; i < inputsdim ; i++)
                 ffparam_inputs[i] = param_inputs[i];
             for (int i=0; i < sysdim ; i++) {
-                ffxff[i].diff(i,sysdim+sysdim_params);          // differentiate to x, first order
-                ffxff[i].x().diff(i,sysdim+sysdim_params);      // second order
+                ffxff[i].diff(i,sysdim+nncontroldim);          // differentiate to x, first order
+                ffxff[i].x().diff(i,sysdim+nncontroldim);      // second order
             }
             
-            for (int i=0; i < sysdim_params ; i++) {
-                ffu[i] = params[i];
-                ffu[i].diff(sysdim+i,sysdim+sysdim_params);    // differentiate to u, first order
-                ffu[i].x().diff(sysdim+i,sysdim+sysdim_params);  // second order
+            for (int i=0; i < nncontroldim ; i++) {
+                ffu[i] = nncontrol[i];
+                ffu[i].diff(sysdim+i,sysdim+nncontroldim);    // differentiate to u, first order
+                ffu[i].x().diff(sysdim+i,sysdim+nncontroldim);  // second order
             }
             
             f(fftemp,ffparam_inputs,ffu,ffxff);
             
             for (int i=0; i < sysdim ; i++)
-                for (int j=0; j < sysdim_params ; j++)
+                for (int j=0; j < nncontroldim ; j++)
                     auxf[i][j] = fftemp[i].d(sysdim+j).x();   // \partial f . partial u
            
         //    if (syschoice == 471)
@@ -922,7 +922,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             for (int i=0 ; i<sysdim; i++)
                 for (int j=0; j < sysdim ; j++) {
                     aux[i][j] = 0;
-                    for (int k=0; k < sysdim_params ; k++)
+                    for (int k=0; k < nncontroldim ; k++)
                         aux[i][j] += auxf[i][k]*auxu[k][j];
                    // cout << "partial derivatives: " << aux[i][j].convert_int() << endl;
                 }
@@ -939,7 +939,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
                for (int i=0 ; i<sysdim; i++)
                     for (int j=0; j < sysdim ; j++) {
                         f_order2[i][j] = 0;
-                        for (int k=0; k < sysdim_params ; k++)
+                        for (int k=0; k < nncontroldim ; k++)
                             f_order2[i][j] += fftemp[i].d(sysdim+k)*auxu[k][j];
                     }
             
@@ -969,12 +969,12 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
         cout << "setting new bf at time " << tn << endl;
               bf = OdeFunc();  // to take into account new params if they have changed
               // resetting
-              TMcenter.ode_x = Ode(bf,params);
-              TMcenter.ode_g = Ode(bf,params);
+              TMcenter.ode_x = Ode(bf,nncontrol);
+              TMcenter.ode_g = Ode(bf,nncontrol);
               TMJac.odeVAR_x = vector<OdeVar>(sysdim+inputsdim);
               for (int k = 0; k<sysdim+inputsdim; k++)
-                  TMJac.odeVAR_x[k] = OdeVar(bf,paramsf);
-              TMJac.odeVAR_g = OdeVar(bf,paramsf);
+                  TMJac.odeVAR_x[k] = OdeVar(bf,nncontrolf);
+              TMJac.odeVAR_g = OdeVar(bf,nncontrolf);
             
     }
     }
@@ -1201,58 +1201,7 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
 }
 
 
-// setting the k-th control_values in fullinputs and param_inputs
-// used when we need to set control values dynamically and not statically before execution as done until now
-// EN FAIT j'ai l'impression que cette fonction soit n'a pas ete terminee soit ne fait pas ce qu'elle est prevue pour
-// TODO. A vori si je corrige pour utiliser le control_input ou pas au final (dans les champs)
-void HybridStep_ode::set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, int k)
-{
-    // the part which is statically done in init_system
-    interval temp;
-    for (int i=0; i<inputsdim; i++) {
-        cout << index_param_inv[i]+k << endl;
-        fullinputs[index_param_inv[i]+k] = control_input[i];
-        temp = control_input[i].convert_int();
-        center_fullinputs[index_param_inv[i]+k] = mid(temp);
-        eps[sysdim+index_param_inv[i]+k] = temp - mid(temp);
-    }
-    
-    // the part which is statically done in set_initialconditions
-    for (int i=0; i<inputsdim; i++) {
-        param_inputs[index_param_inv[i]+k] = fullinputs[index_param_inv[i]+k];
-        if (innerapprox == 1)
-            param_inputs_center[index_param_inv[i]+k] = center_fullinputs[index_param_inv[i]+k];
-        else
-            param_inputs_center[index_param_inv[i]+k] = fullinputs[index_param_inv[i]+k];
-    }
-}
 
-// setting the k-th control_values in fullinputs and param_inputs
-// used when we need to set control values dynamically and not statically before execution as done until now
-void HybridStep_ode::set_controlinput_regression(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, const vector<interval> &control_input_uncertainty, vector<vector<interval>> Jac_control_input, int k)
-{
-    // the part which is statically done in init_system
-    interval temp;
-    for (int i=0; i<inputsdim; i++) {
-        cout << index_param_inv[i]+k << endl;
-        fullinputs[index_param_inv[i]+k] = control_input_uncertainty[i];
-        temp = control_input_uncertainty[i];
-        center_fullinputs[index_param_inv[i]+k] = mid(temp);
-        eps[sysdim+index_param_inv[i]+k] = temp - mid(temp);
-    }
-    
-    // the part which is statically done in set_initialconditions
-    for (int i=0; i<inputsdim; i++) {
-        param_inputs[index_param_inv[i]+k] = control_input[i] + control_input_uncertainty[i];
-        for (int j=0 ; j<sysdim; j++)
-           // Jac_param_inputs[index_param_inv[i]+k][j] = Jac_control_input[i][j];
-            Jac_param_inputs[i][j] = Jac_control_input[i][j];
-        if (innerapprox == 1)
-            param_inputs_center[index_param_inv[i]+k] = mid(control_input[i].convert_int()) + center_fullinputs[index_param_inv[i]+k];
-        else
-            param_inputs_center[index_param_inv[i]+k] = control_input[i] + control_input_uncertainty[i];
-    }
-}
 
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
@@ -1341,9 +1290,8 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     double tn;
     
     
-    vector<AAF> control_inputs(sysdim_params);
     vector<AAF> input_dummy(sysdim), output_dummy(sysdim);
-    vector<double> control(sysdim_params);
+    vector<double> control(nncontroldim);
     
     recompute_control = false;
     
@@ -1352,8 +1300,8 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     {
        
         for (int i=0; i < sysdim ; i++) {
-            max_output[iter][i] = -DBL_MAX; // RK(obf,input[0],param_inputs,control_inputs,tau);
-            min_output[iter][i] = DBL_MAX; // RK(obf,input[0],param_inputs,control_inputs,tau);
+            max_output[iter][i] = -DBL_MAX; //
+            min_output[iter][i] = DBL_MAX; //
         }
         iter++;
     }
@@ -1371,7 +1319,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                 {
                     control = NH.eval_network(input[cur_point]);
                     for (int i=0; i < control.size() ; i++)
-                        params[i] = control[i];
+                        nncontrol[i] = control[i];
                  }
                 else if (syschoice == 491)
                 {
@@ -1383,12 +1331,12 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                     res[4] = input[cur_point][1]-input[cur_point][4];
                     control = NH.eval_network(res);
                     for (int i=0; i < control.size() ; i++)
-                        params[i] = control[i];
+                        nncontrol[i] = control[i];
                 }
             }
             
-            // param_inputs,control_inputs unused for now ?
-            output[cur_point] = RK(obf,input[cur_point],param_inputs,params,tau);
+            // param_inputs ?
+            output[cur_point] = RK(obf,input[cur_point],param_inputs,nncontrol,tau);
             //outFile_xi << iter <<  "\t";
             //for (int i=0; i < sysdim ; i++)
             //    outFile_xi << output[cur_point][i] <<  "\t";
@@ -1432,12 +1380,12 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
         iter++;
     }
     
-    // resetting params to initial condition
+    // resetting nncontrol to initial condition
 
     if (syschoice == 491)
-        params = NH.eval_network(syst_to_nn(initial_values));
-    else
-        params = NH.eval_network(initial_values);
+        nncontrol = NH.eval_network(syst_to_nn(initial_values));
+    else if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+        nncontrol = NH.eval_network(initial_values);
     
     out_samples << YAML::EndSeq;
     out_samples << YAML::EndMap;

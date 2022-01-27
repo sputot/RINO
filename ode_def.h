@@ -32,6 +32,7 @@ extern int inputsdim; // dimension of the uncertain inputs and parameters of the
 extern int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
 extern int jacdim; // Jacobian will be dimension jacdim = sysdim + fullinputsdim
 extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
+extern int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
 
 extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
@@ -39,7 +40,8 @@ extern double control_period;
 
 
 
-extern vector<AAF> params;      // params of the ODE that don't appear in the Jcaobian: either constant params or control given by NN output, is it a problem to have used the same vector or non ? 
+extern vector<AAF> params;      // params of the ODE that don't appear in the Jcaobian: either constant params or control given by NN output, is it a problem to have used the same vector or non ?
+extern vector<AAF> nncontrol;
 extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 extern vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
  

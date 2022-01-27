@@ -26,7 +26,8 @@ int sysdim; // dimension of system of ODE/DDE
 int inputsdim; // dimension of the uncertain inputs and parameters of the system
 int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
 int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + fullinputsdim
-int sysdim_params;
+int sysdim_params; // dimension of the vector of parameters params that do not appear in Jacobian
+int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
 
 double t_end; // ending time of integration
 double t_begin; // starting time of initialization
@@ -34,6 +35,8 @@ double control_period = 0.0;
 
 // parameters of the system of the ODEs
 vector<AAF> params;  // params of the ODE that don't appear in the Jcaobian such as control given by NN output (or nondeterministic disturbances ?)
+vector<AAF> nncontrol;
+
 vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
 
@@ -88,6 +91,7 @@ void define_system_dim(const char * params_filename)
     
     sysdim_params = 0;
     inputsdim = 0;
+    nncontroldim = 0;
     nb_subdiv_init = 1; // nb of initial subdivisions of the input range
 
     if (systype == 0) // ODE
@@ -352,7 +356,7 @@ void define_system_dim(const char * params_filename)
         else if (syschoice == 451) { // Mountain car Verisig
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 46) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
             sysdim = 4;
@@ -361,17 +365,17 @@ void define_system_dim(const char * params_filename)
         else if (syschoice == 461) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
             sysdim = 4;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 471) {  // // Ex 1 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 1111) {  // toy example
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 1113) {  // toy example
             sysdim = 2;
@@ -381,34 +385,34 @@ void define_system_dim(const char * params_filename)
         else if (syschoice == 481) {  // // Ex 2 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 482) {  // // Ex 3 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 483) {  // // Ex 4 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 3;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
-        else if (syschoice == 484|| syschoice == 4841) {  // // Ex 5 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+        else if (syschoice == 484) {  // // Ex 5 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 3;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
         {
             sysdim = 6;
             inputsdim = 0;
-            sysdim_params = 1;
+            nncontroldim = 1;
         }
         else if (syschoice == 493) // Ex QMPC de Verisig (avec nn obtenu a partir du yaml)
         {
             sysdim = 6;
             inputsdim = 0;
-            sysdim_params = 3;
+            nncontroldim = 3;
         }
     }
     /*************************************************************************** DDE ************************************************************/
@@ -734,8 +738,11 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
     initial_values = vector<AAF>(sysdim);
     
     // parameters not part of the jacobian
-    if (sysdim_params > 0) {
+    if (sysdim_params > 0)
         params = vector<AAF>(sysdim_params);
+    
+    if (nncontroldim > 0) {
+        nncontrol = vector<AAF>(nncontroldim);
         Jac_params = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim+inputsdim));  // should probably be sysdim \times jacdim but jacdim not yet defined ?
         Jac_params_order2 = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim+inputsdim));  // should probably be sysdim \times jacdim but jacdim not yet defined ?
     }
@@ -1721,7 +1728,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            initial_values[0] = interval(-0.53,-0.5);
            initial_values[1] = interval(0.,0.);   // interval(0.,0.001);
            
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            //inputs[0] = interval(0.0,0.0);
            //is_uncontrolled[0] = true;
            //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
@@ -1757,7 +1764,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            // ub = [-0.75; -0.43; 0.54; -0.28];
            // reachStep = 0.01; controlPeriod = 0.5;
            // goal = Box([-0.1;0.2 ],[-0.9;-0.6]);
-            params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            
             control_period = 0.1;
        }
@@ -1768,7 +1775,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            // goal [0,0.2],[0.05,0.3]
            target_set[0] = interval(0,0.2);
            target_set[1] = interval(0.05,0.3);
@@ -1782,7 +1789,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            control_period = 0.2; // 0.01; // control_period = 0.2;
        }
        else if (syschoice == 1113) {  //toy example
@@ -1800,7 +1807,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            order = 3;
            initial_values[0] = interval(0.7,0.9);
            initial_values[1] = interval(0.7,0.9);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            // goal [-0.3,0.1],[-0.35,0.5]
            control_period = 0.2;
        }
@@ -1811,7 +1818,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.4,0.5);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            // goal [0.2,0.3],[-0.3,-0.05]
            control_period = 0.1;
        }
@@ -1823,7 +1830,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            initial_values[0] = interval(0.25,0.27);
            initial_values[1] = interval(0.08,0.1);
            initial_values[2] = interval(0.25,0.27);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            // goal [-0.05,0.05],[-0.05,-0.]
            control_period = 0.1;
        }
@@ -1835,7 +1842,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            initial_values[0] = interval(0.38,0.4);
            initial_values[1] = interval(0.45,0.47);
            initial_values[2] = interval(0.25,0.27);
-           params= NH.eval_network(initial_values);
+           nncontrol= NH.eval_network(initial_values);
            // goal [-0.4,-0.28],[0.05,0.22]
            control_period = 0.2;
        }
@@ -1850,7 +1857,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            initial_values[3] = interval(10,11);
            initial_values[4] = interval(30,30.05);
            initial_values[5] = interval(0,0);
-           params= NH.eval_network(syst_to_nn(initial_values));
+           nncontrol= NH.eval_network(syst_to_nn(initial_values));
          //  cout << params;
          //  params= NH.eval_network(initial_values);
            control_period = 0.1;

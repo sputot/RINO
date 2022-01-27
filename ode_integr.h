@@ -41,32 +41,25 @@ public:
     vector<T<F<AAF> >> xp;  // Dependent variables
 
  
-    OdeVar() : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    OdeVar() : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
     }
     
-    OdeVar(OdeFunc f)  : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
-        for (int i=0; i<sysdim_params; i++)
-            control_inputs[i] = params[i];
+        for (int i=0; i<nncontroldim; i++)
+            control_inputs[i] = nncontrol[i];
         f(xp,param_inputs,control_inputs,x); // record DAG at construction:
     }
     
-    OdeVar(OdeFunc f, vector<F<AAF>> control_in)  : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f, vector<F<AAF>> control_in)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
-        for (int i=0; i<sysdim_params; i++)
+        for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = control_in[i].x();
         f(xp,param_inputs,control_inputs,x); // record DAG at construction:
     }
     
- /*   OdeVar(OdeFunc f, vector<T<F<AAF>>> control_in, vector<T<F<AAF> >> x_in)  : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
-    {
-        for (int i=0; i<sysdim_params; i++)
-            control_inputs[i] = control_in[i];
-        for (int i=0; i<sysdim; i++)
-            x[i] = x_in[i];
-        f(xp,param_inputs,control_inputs,x); // record DAG at construction:
-    } */
+ 
     
     void reset()
     {
@@ -89,23 +82,23 @@ public:
     vector< T<AAF>> x; // Independent variables
     vector< T<AAF>> xp;  // Dependent variables
     
-    Ode()  :  param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    Ode()  :  param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         
     }
     
-    Ode(OdeFunc f)  : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
-        for (int i=0; i<sysdim_params; i++)
-            control_inputs[i] = params[i];
+        for (int i=0; i<nncontroldim; i++)
+            control_inputs[i] = nncontrol[i];
         f(xp,param_inputs,control_inputs,x);
     }
     
-    Ode(OdeFunc f, vector<AAF> control_in)  : param_inputs(inputsdim), control_inputs(sysdim_params), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f, vector<AAF> control_in)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
-        for (int i=0; i<sysdim_params; i++)
+        for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = control_in[i];
         f(xp,param_inputs,control_inputs,x);
     }
@@ -291,8 +284,6 @@ public:
     
     void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv);
     
-    void set_controlinput(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, int k);
-    void set_controlinput_regression(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, const vector<AAF> &control_input, const vector<interval> &control_input_uncertainty, vector<vector<interval>> Jac_control_input, int k);
     
     void eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J);
 
