@@ -37,6 +37,8 @@ extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
 extern double control_period;
 
+
+
 extern vector<AAF> params;      // params of the ODE that don't appear in the Jcaobian: either constant params or control given by NN output, is it a problem to have used the same vector or non ? 
 extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 extern vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
@@ -1657,17 +1659,8 @@ public:
               yp[1] = 0.0015*control_inputs[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
              // yp[1] = 0.0015*params[0] - 0.0025*cos(3.*y[0]); // 0.0015*u[0] - 0.0025*cos(3.*y[0]);
           }
-          else if (syschoice == 46 || syschoice == 4601) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat)
+          else if (syschoice == 46) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat)
           {
-              double offset, scaling_factor;
-              if (syschoice == 46) { // tanh
-                  offset = 0.;
-                  scaling_factor = 11;
-              }
-              else { // sigmoid
-                 offset = 0.5;
-                  scaling_factor = 22;
-              }
               static vector<C> u;
               cout << "before eval_network";
               u = NH.eval_network(y);
@@ -1676,46 +1669,19 @@ public:
               yp[0] = y[1];
               yp[1] = - y[0] + 0.1*sin(y[2]);
               yp[2] = y[3];
-              yp[3] = scaling_factor*(u[0]-offset);  // scaling factor found in
-            //  yp[3] = scaling_factor*(nn_outputs[0].x()-offset);  // scaling factor found in https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m ???
-              // and in spec https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/Specifications.txt
+              yp[3] = nn_scaling_factor*(u[0]-nn_offset);
           }
-          else if (syschoice == 461|| syschoice == 4611) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat) - different way to proceed
+          else if (syschoice == 461) // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat) - different way to proceed
           {
-              double offset, scaling_factor;
-              if (syschoice == 461) { // tanh
-                  offset = 0.;
-                  scaling_factor = 11;
-              }
-              else { // sigmoid
-                 offset = 0.5;
-                  scaling_factor = 22;
-              }
               yp[0] = y[1];
               yp[1] = - y[0] + 0.1*sin(y[2]);
               yp[2] = y[3];
-              yp[3] = scaling_factor*(control_inputs[0]-offset);  // offset et scaling factor found in
-              // cout << "params=" << (params[0]*11.0).convert_int() << endl;
-           //   yp[3] = scaling_factor*(params[0]-offset);  // offset et scaling factor found in
-             // yp[3] = scaling_factor*(param_inputs[0]-offset);  // offset et scaling factor found inhttps://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m ou plus exactement dans la fin du fichier .txt correspondant car different de la spec???
-              // and in spec https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/Specifications.txt
-             // cout << yp << endl; 
+              yp[3] = nn_scaling_factor*(control_inputs[0]-nn_offset);
           }
-          else if (syschoice == 471 || syschoice == 4711) // Ex 1 ReachNNstar  (avec nn_1_sigmoid.sfx obtenu a partir du .txt - avant derniere et derniere lignes: offset et scaling factor)
+          else if (syschoice == 471) // Ex 1 ReachNNstar  (avec nn_1_sigmoid.sfx obtenu a partir du .txt - avant derniere et derniere lignes: offset et scaling factor)
           {
-              double offset, scaling_factor;
-              if (syschoice == 471) { // tanh
-                  offset = 0.;
-                  scaling_factor = 4;
-              }
-              else { // sigmoid
-                  offset = 0.5;
-                  scaling_factor = 8;
-              }
               yp[0] = y[1];
-             //  yp[1] = (0.5+8.0*params[0])*y[1]*y[1]-y[0]; // for nn_1_sigmoid.sfx => n'importe nawak, mais ressemble a l'attendu quand on prend offset et scaling du fichier tanh ?
-              yp[1] = (scaling_factor*(control_inputs[0]-offset))*(y[1]*y[1])-y[0]; // for nn_1_tanh.sfx or nn_1_tanh_retrained.sfx => satisfait spec
-           //   yp[1] = (scaling_factor*(params[0]-offset))*(y[1]*y[1])-y[0]; // for nn_1_tanh.sfx or nn_1_tanh_retrained.sfx => satisfait spec
+              yp[1] = (nn_scaling_factor*(control_inputs[0]-nn_offset))*(y[1]*y[1])-y[0];
           }
           else if (syschoice == 1111) // toy example
           {
@@ -1727,70 +1693,27 @@ public:
               yp[0] = y[1];
               yp[1] = y[0]*y[1];
           }
-          else if (syschoice == 481 || syschoice == 4811) // Ex 2 ReachNNstar  (avec nn_2_sigmoid.sfx obtenu a partir du .txt)
+          else if (syschoice == 481) // Ex 2 ReachNNstar  (avec nn_2_sigmoid.sfx obtenu a partir du .txt)
           {
-              double offset, scaling_factor;
-              if (syschoice == 481) { // tanh
-                  offset = 0.;
-                  scaling_factor = 4;
-              }
-              else { // sigmoid
-                  offset = 0.5;
-                  scaling_factor = 8;
-              }
               yp[0] = y[1] - y[0]*y[0]*y[0];
-              yp[1] = (scaling_factor*(control_inputs[0]-offset)); // ok for sigmoid but for nn_2_tanh.sfx  => plante tout de suite sur une division par 0
-          //     yp[1] = (scaling_factor*(params[0]-offset)); // for nn_2_tanh.sfx  => plante tout de suite sur une division par 0
+              yp[1] = (nn_scaling_factor*(control_inputs[0]-nn_offset)); // ok for sigmoid but for nn_2_tanh.sfx  => plante tout de suite sur une division par 0
           }
-          else if (syschoice == 482 || syschoice == 4821) // Ex 3 ReachNNstar  (avec nn_3_sigmoid.sfx obtenu a partir du .txt)
+          else if (syschoice == 482) // Ex 3 ReachNNstar  (avec nn_3_sigmoid.sfx obtenu a partir du .txt)
           {
-              double offset, scaling_factor;
-              if (syschoice == 482) { // tanh
-                  offset = 0.;
-                  scaling_factor = 2;
-              }
-              else { // sigmoid
-                  offset = 0.5;
-                  scaling_factor = 4;
-              }
               yp[0] = -y[0]*(0.1+(y[0]+y[1])*(y[0]+y[1]));
-           //   yp[1] = ((0.5+4.0*params[0])+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])) ; // for nn_3_sigmoid.sfx (plante assez vite)
-              //yp[1] = (scaling_factor*(params[0]-offset)+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])); // for nn_3_tanh.sfx  => satisfait la spec facilement
-              yp[1] = (scaling_factor*(control_inputs[0]-offset)+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1])); // for nn_3_tanh.sfx  => satisfait la spec facilement
+              yp[1] = (nn_scaling_factor*(control_inputs[0]-nn_offset)+y[0])*(0.1+(y[0]+y[1])*(y[0]+y[1]));
           }
-          else if (syschoice == 483 || syschoice == 4831) // Ex 4 ReachNNstar  (avec nn_4_sigmoid.sfx obtenu a partir du .txt)
+          else if (syschoice == 483) // Ex 4 ReachNNstar  (avec nn_4_sigmoid.sfx obtenu a partir du .txt)
           {
-              double offset, scaling_factor;
-              if (syschoice == 483) { // tanh
-                  offset = 0.;
-                  scaling_factor = 10;
-              }
-              else { // sigmoid
-                  offset = 0.5;
-                  scaling_factor = 20;
-              }
               yp[0] = -y[0]+y[1]-y[2];
               yp[1] = -y[0]*(y[2]+1.0)-y[1];
-            //  yp[2] = -y[0] + (0.5+20.0*params[0]); // for nn_4_sigmoid.sfx  => parait tres precis mais ne satisfait pas du tout la spec !
-             //   yp[2] = -y[0] + (scaling_factor*(params[0]-offset)); // for nn_4_tanh.sfx  => quasi dans la spec
-              yp[2] = -y[0] + (scaling_factor*(control_inputs[0]-offset)); // for nn_4_tanh.sfx  => quasi dans la spec
+              yp[2] = -y[0] + (nn_scaling_factor*(control_inputs[0]-nn_offset));
           }
-          else if (syschoice == 484 || syschoice == 4841) // Ex 5 ReachNNstar  (avec nn_5_sigmoid.sfx obtenu a partir du .txt)
+          else if (syschoice == 484) // Ex 5 ReachNNstar  (avec nn_5_sigmoid.sfx obtenu a partir du .txt)
           {
-              double offset, scaling_factor;
-              if (syschoice == 484) { // tanh
-                  offset = 0.;
-                  scaling_factor = 11;
-              }
-              else { // sigmoid
-                  offset = 0.5;
-                  scaling_factor = 22;
-              }
               yp[0] = y[2]*y[2]*y[2]-y[1];
               yp[1] = y[2];
-            //  yp[2] = (0.5+22.0*params[0]); // for nn_5_sigmoid.sfx  => dans les choux
-               // yp[2] = (scaling_factor*(params[0]-offset)); // for nn_5_tanh.sfx  => tres legerement a cote de la spec (§correspond a ce qui est constaté sur le site web si je comprends)
-              yp[2] = (scaling_factor*(control_inputs[0]-offset)); // for nn_5_tanh.sfx  => tres legerement a cote de la spec (§correspond a ce qui est constaté sur le site web si je comprends)
+              yp[2] = (nn_scaling_factor*(control_inputs[0]-nn_offset));
           }
           else if (syschoice == 491) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
           {

@@ -422,7 +422,7 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         }
     }
     
-    //if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388)
+    //if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388)
      //   addJacfzJacfz(J_res,Jac_params);
     
     // pour les premiers termes, Jac^i(x)*J*tau^i
@@ -458,13 +458,13 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
                 cout << "aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl; */
         
         // TODO. Adding term of the jacobian due to NN control.
-        if ((i == 1) && ((syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+        if ((i == 1) && ((syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
             addMiMi(aux,Jac_params);
          //   for (int j=0 ; j<sysdim; j++)
         //            for (int k=0 ; k<jacdim; k++)
 //                        cout << "Jac_params["<<j<<"]["<<k<<"]=" << Jac_params[j][k].convert_int() << endl;
         
-        if ((i == 2) && ((syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+        if ((i == 2) && ((syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
                 addMiMi(aux,Jac_params_order2);
     
         // In fact we should compute this for all orders...
@@ -687,7 +687,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     if (syschoice == 491)
         params = NH.eval_network(syst_to_nn(x));
-    else    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    else    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
     {
         params = NH.eval_network(x);
         cout << "params=" << params[0].convert_int() << " x=" << x[0].convert_int() << endl;
@@ -738,7 +738,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     HybridStep_ode res = HybridStep_ode(bf,TMcenter,TMJac,tn,tau,order);
     
-    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
     {
         vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
         for (int i=0; i<sysdim; i++)
@@ -764,7 +764,7 @@ void HybridStep_ode::init_nextstep(vector<AAF> &param_inputs, double _tau)
     tn = tn + tau;
     tau = _tau;
     
-    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112) {
+    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112) {
        
         eval_valandJacobian_nn(TMJac.xp1,param_inputs,tn,tau,TMJac.J); // J_rough ou J ???
        /* if (control_period > 0) // control update rate is not the same as time step
@@ -840,7 +840,7 @@ void HybridStep_ode::TM_eval()
 // Jac_params_order2 contains d/dt (df/du . du/dx) = d/dx(Jac_order_1).(dx/dt)
 void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J)
 {
-    if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
     {
         
         if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
@@ -1367,7 +1367,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                 
             if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
             {
-                if (syschoice == 461 || syschoice == 4611 ||syschoice == 451 || syschoice == 471 || syschoice == 4711 ||syschoice == 481 || syschoice == 4811 || syschoice == 482 || syschoice == 4821 || syschoice == 483 || syschoice == 4831 || syschoice == 484 || syschoice == 4841 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+                if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
                 {
                     control = NH.eval_network(input[cur_point]);
                     for (int i=0; i < control.size() ; i++)

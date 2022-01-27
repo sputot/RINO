@@ -8,6 +8,9 @@
 std::mutex mtx2;
 network_handler NH;
 
+double nn_offset; // offset and scaling factor of neural network
+double nn_scaling_factor;
+
 network_handler :: network_handler(const char* name)
 {
     build_from_file(name);
@@ -154,12 +157,21 @@ void network_handler :: build_from_file(const char* name){
     actual_weights.push_back(outer_buffer_mat);
     actual_biases.push_back(outer_buffer_vec);
     
-    
+    // either file is finished or we still have offset and scaling factor
     data = -100;
     file >> data;
     if(data != (-100))
     {
-        cout << "Network input file probably has an error ! " << endl;
+        // reading offset and scaling factor
+        nn_offset = data;
+        cout << "nn_offset=" << nn_offset << endl;
+        file >> data;
+        nn_scaling_factor = data;
+        cout << "nn_scaling_factor=" << nn_scaling_factor << endl;
+        data = -100;
+        file >> data;
+        if(data != (-100))
+           cout << "Network input file probably has an error ! " << endl;
     }
     
     file.close();

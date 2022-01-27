@@ -150,7 +150,6 @@ int main(int argc, char* argv[])
     
     
     // parsing neural network
-    cout << "where am i" << endl;
     if (sfx_filename && (sfx_filename[0] != 0)) {// read from config file
         cout << "reading network from" << sfx_filename << endl;
         NH = network_handler(sfx_filename);
@@ -452,6 +451,8 @@ int main(int argc, char* argv[])
         out_summary << YAML::Value << sysdim;
  //       out_summary << YAML::Key << "nb_timesteps";
  //       out_summary << YAML::Value << n_steps;
+        out_summary << YAML::Key << "control_period";
+        out_summary << YAML::Value << control_period;
         out_summary << YAML::Key << "dt";
         out_summary << YAML::Value << tau;
         out_summary << YAML::Key << "nb_subdiv_init";
@@ -497,6 +498,7 @@ int main(int argc, char* argv[])
         summaryfile << "                          Dynamics │ " << syschoice << std::endl;
         summaryfile << "                Initial conditions │ " << initial_values << std::endl;
         summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
+        summaryfile << "                      Control step │ " << control_period << std::endl;
         summaryfile << "                         Time step │ " << tau << std::endl;
         summaryfile << "                  System dimension │ " << sysdim << std::endl;
         summaryfile << "               Taylor Models order │ " << order << std::endl;

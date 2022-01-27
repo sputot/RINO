@@ -25,9 +25,10 @@ using namespace std;
 enum Activation {ACT_RELU, ACT_SIGMOID, ACT_TANH, ACT_LINEAR};
 
 #define max_nb_layers 10
-
 #define testmode false
 
+extern double nn_offset; // offset and scaling factor of neural network
+extern double nn_scaling_factor;
 
 class Layer
 {

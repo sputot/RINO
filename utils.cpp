@@ -52,6 +52,8 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
         sscanf(buff, "syschoice = %d\n", &syschoice);
         sscanf(buff, "nnfile-sfx = %s\n", sfx_filename);
         sscanf(buff, "nnfile-onnx = %s\n", onnx_filename);
+        sscanf(buff, "nn-offset = %lf\n", &nn_offset);
+        sscanf(buff, "nn-scaling = %lf\n", &nn_scaling_factor);
     }
     
     if (str_systype)
@@ -66,8 +68,8 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
             systype = 3;
         // cout << "systype in readfromfile= " << systype << endl;
     }
-    if (sfx_filename)
-        cout << "sfx =" << sfx_filename;
+    if (nn_scaling_factor)
+        cout << "nn_scaling_factor =" << nn_scaling_factor;
     
     fclose(params_file);
 }

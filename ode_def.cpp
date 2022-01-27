@@ -354,16 +354,16 @@ void define_system_dim(const char * params_filename)
             inputsdim = 0;
             sysdim_params = 1;
         }
-        else if (syschoice == 46 || syschoice == 4601) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
+        else if (syschoice == 46) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
             sysdim = 4;
             inputsdim = 0;
         }
-        else if (syschoice == 461|| syschoice == 4611) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
+        else if (syschoice == 461) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
             sysdim = 4;
             inputsdim = 0;
             sysdim_params = 1;
         }
-        else if (syschoice == 471|| syschoice == 4711) {  // // Ex 1 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+        else if (syschoice == 471) {  // // Ex 1 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
             sysdim_params = 1;
@@ -378,17 +378,17 @@ void define_system_dim(const char * params_filename)
             inputsdim = 0;
             sysdim_params = 0;
         }
-        else if (syschoice == 481|| syschoice == 4811) {  // // Ex 2 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+        else if (syschoice == 481) {  // // Ex 2 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
             sysdim_params = 1;
         }
-        else if (syschoice == 482|| syschoice == 4821) {  // // Ex 3 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+        else if (syschoice == 482) {  // // Ex 3 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
             inputsdim = 0;
             sysdim_params = 1;
         }
-        else if (syschoice == 483|| syschoice == 4831) {  // // Ex 4 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
+        else if (syschoice == 483) {  // // Ex 4 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 3;
             inputsdim = 0;
             sysdim_params = 1;
@@ -533,8 +533,8 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         //     sscanf(buff, "system = %s\n", sys_name);
         //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
         sscanf(buff, "time-horizon = %lf\n", &t_end);
-        sscanf(buff, "sampling-time = %lf\n", &tau);
-        sscanf(buff, "control-period = %lf\n", &control_period);
+        sscanf(buff, "integration-step = %lf\n", &tau);
+        sscanf(buff, "control-step = %lf\n", &control_period);
         //      sscanf(buff, "output-variables = %[^\n]\n", output_variables);
         sscanf(buff, "delay = %lf\n", &d0);               // for DDEs
         sscanf(buff, "starting-time = %lf\n", &t_begin);  // for DDEs
@@ -640,41 +640,10 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
                 token = strtok(NULL,space);
             }
         }
-     /*   if (sscanf(buff, "variable = %s\n", initialcondition) == 1)
-        {
-            for (int i=0 ; i<jacdim; i++)
-                is_variable[i] = false;
-                
-            char *token = strtok(buff,space);
-            token = strtok(NULL,space);
-            token = strtok(NULL,space);
-            int i;
-            while( token != NULL ) {
-                sscanf(token,"%d",&i);
-                is_variable[i] = true;
-              //  cout <<"is_variable="<<i<<endl;
-                token = strtok(NULL,space);
-            }
-        } */
-        /*if (sscanf(buff, "initial-condition = %s\n", initialcondition) == 1)
-        {
-            for (int i=0 ; i<jacdim; i++)
-                is_initialcondition[i] = false;
-            
-            char *token = strtok(buff,space);
-            token = strtok(NULL,space);
-            token = strtok(NULL,space);
-            int i;
-            while( token != NULL ) {
-                sscanf(token,"%d",&i);
-                is_initialcondition[i] = true;
-                //  cout <<"is_variable="<<i<<endl;
-                token = strtok(NULL,space);
-            }
-        }*/
+     
     }
     fclose(params_file);
-    
+        
     // cout << "system name = " << sys_name << endl;
       cout << "****** End parameter reading ******" << endl << endl;
 }
@@ -1762,8 +1731,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            //     L[i] = Layer(NH,i);
            control_period = 1.;
        }
-       else if (syschoice == 46 || syschoice == 4601) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
-                                    // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
+       else if (syschoice == 46) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
            tau = 0.1;
            t_end = 5.;
            order = 3;
@@ -1776,7 +1744,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            // reachStep = 0.01; controlPeriod = 0.5;
           // goal = Box([-0.1;-0.9],[0.2;-0.6]);
        }
-       else if (syschoice == 461 || syschoice == 4611) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat), // ReachNN avec version tanh
+       else if (syschoice == 461) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat), // ReachNN avec version tanh
            // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
            tau = 0.05;
            t_end = 5.;
@@ -1793,7 +1761,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            
             control_period = 0.1;
        }
-       else if (syschoice == 471 || syschoice == 4711) {  // Ex 1 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+       else if (syschoice == 471) {  // Ex 1 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
            tau = 0.05; // a bit strange, is more precise with 0.01 or 0.02 this way (and satisfies the spec) than when tau = 0.005
            t_end = 7.;  // 35 control steps
           //  t_end = 6.;
@@ -1825,7 +1793,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            initial_values[1] = interval(0.5,0.6);
            control_period = 0.2; // 0.01; // control_period = 0.2;
        }
-       else if (syschoice == 481 || syschoice == 4811) {  // Ex 2 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+       else if (syschoice == 481) {  // Ex 2 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
            tau = 0.05; //
            t_end = 1.8;  // 9 control steps
            //  t_end = 6.;
@@ -1836,7 +1804,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            // goal [-0.3,0.1],[-0.35,0.5]
            control_period = 0.2;
        }
-       else if (syschoice == 482 || syschoice == 4821) {  // Ex 3 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+       else if (syschoice == 482) {  // Ex 3 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
            tau = 0.05; //
            t_end = 6.0;  // 60 control steps
            //  t_end = 6.;
@@ -1847,7 +1815,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            // goal [0.2,0.3],[-0.3,-0.05]
            control_period = 0.1;
        }
-       else if (syschoice == 483 || syschoice == 4831) {  // Ex 4 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+       else if (syschoice == 483) {  // Ex 4 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
            tau = 0.05; //
            t_end = 1.0;  // 10 control steps
            //  t_end = 6.;
@@ -1859,7 +1827,7 @@ void init_system(const char * params_filename, double &t_begin, double &t_end, d
            // goal [-0.05,0.05],[-0.05,-0.]
            control_period = 0.1;
        }
-       else if (syschoice == 484 || syschoice == 4841) {  // Ex 5 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
+       else if (syschoice == 484) {  // Ex 5 ReachNNstar  (avec RNN format sfx obtenu a partir du .txt)
            tau = 0.05; //
            t_end = 2.0;  // 10 control steps
            //  t_end = 6.;
