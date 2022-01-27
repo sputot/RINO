@@ -4,9 +4,9 @@
 # WARNING (January 22) - Obsolete Documentation, to be updated soon 
 
 
-This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs.
+This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
 
-It relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
+For continuous-time systems, it relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
 
 ## Dependencies
 
@@ -30,7 +30,7 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 
 ### Running existing examples
 
-Hopefully in the future, a parser will allow to read the models of the systems to analyze from input files. For now, they are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
+For now, the models of systems to analyse are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
 Running an existing example is then performed at command line, by 
 ```
 ./main system_type system_id [config_file.txt]
@@ -140,14 +140,7 @@ This package, written by [Sylvie Putot](http://www.lix.polytechnique.fr/Labo/Syl
 
 Please contact me (putot@lix.polytechnique.fr) for suggestions or difficulties with the package.
 
-## Versions
-
-Plans to propose cleaner versions in the future include (contributions and suggestions welcome, naturally) :
-  - cleanly separate aaflib from our modifications
-  - propose a parser for input systems (in SpaceEx's xml format)
-  - better mechanism for specifying and taking into account time-varying inputs and perturbations
-  - improve output format
- We also plan to improve precision and functionalities.
+Versions until 2019 were focused on uncertain continuous-time dynamics. More recent versions include discrete-time dynamics and neural-network controlled systems. Input-output formatting has been updated, please contact me in case of difficulties running older examples. 
 
 ## License
 
