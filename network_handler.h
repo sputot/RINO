@@ -13,8 +13,7 @@
 #if ONNX_active
     #include "sherlock.h"
 #endif
-
-
+    
 
 using namespace std;
 
@@ -53,10 +52,10 @@ public:
         assert(nb_inputs == x.size());
         
         for (int i=0 ; i<nb_outputs; i++) {
-            z[i] = 0;
+            z[i] = 0;
             for (int j=0 ; j<nb_inputs; j++)
-                z[i] += weights[i][j]*x[j];
-            z[i] = eval_activation(activation,z[i]+biases[i]);
+                z[i] += weights[i][j]*x[j];
+            z[i] = eval_activation(activation,z[i]+biases[i]);
         }
         return z;
     }
@@ -66,10 +65,10 @@ public:
         assert(nb_inputs == x.size());
         
         for (int i=0 ; i<nb_outputs; i++) {
-            z[i] = 0;
+            z[i] = 0;
             for (int j=0 ; j<nb_inputs; j++)
-                z[i] += weights[i][j]*x[j];
-            z[i] = z[i]+biases[i]; // eval_activation(activation,z[i]+biases[i]);
+                z[i] += weights[i][j]*x[j];
+            z[i] = z[i]+biases[i]; // eval_activation(activation,z[i]+biases[i]);
         }
         return z;
     }
