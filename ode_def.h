@@ -157,9 +157,9 @@ public:
            double d = 0.45; // drag coefficient
            double m = 14.3; // mass du bullet in g
            yp[0] = - g*sin(y[1])-rho*y[0]*y[0]*a*d/(2.0*m); // velocity v
-           yp[1] = - g*cos(y[1])/y[0]; // angle gamma with respect to the x axis
+           yp[1] = - g*cos(y[1])/y[0]; // angle gamma with respect to the x axis
            yp[2] = y[0]*cos(y[1]); // position x
-           yp[3] = y[0]*sin(y[1]); // position y
+           yp[3] = y[0]*sin(y[1]); // position y
           }
           else if (syschoice == 4)
           /**** ballistic linearise ... *****/
@@ -171,10 +171,10 @@ public:
            double m = 14.3; // mass du bullet in g
          //  yp[0] = - g*(y[1])-rho*y[0]*y[0]*a*d/(2.0*m); // velocity v
               yp[0] = - g*(y[1])-rho*y[0]*y[0]*a*d/(2.0*param_inputs[0]); // velocity v
-           yp[1] = - g*(1-y[1]*y[1]/2)/y[0]; // angle gamma with respect to the x axis
+           yp[1] = - g*(1-y[1]*y[1]/2)/y[0]; // angle gamma with respect to the x axis
            yp[2] = y[0]*(1-y[1]*y[1]/2); // position x
-           yp[3] = y[0]*(y[1]); // position y
-            //  yp[4] = 0;
+           yp[3] = y[0]*(y[1]); // position y
+            //  yp[4] = 0;
           }
           /******************* end ballistic ****************************/
           else if (syschoice == 5)  // self-driving car
@@ -191,7 +191,7 @@ public:
           {
               yp[0] = y[1];
               yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
-              yp[2] = interval(-2.,2.); //AAF(interval(-2.,2.)) + y[4];  // parameter Kp
+              yp[2] = interval(-2.,2.); //AAF(interval(-2.,2.)) + y[4];  // parameter Kp
               yp[3] = interval(-2.,2.); // 0;  // parameter Kd
           }
           else if (syschoice == 8)
@@ -254,24 +254,24 @@ public:
               double v = 5;         // constant velocity
               // param_inputs[0] .. param_inputs[2] : disturbances b1, b2, b3
               // param_inputs[3]  : control input a : angular control
-              yp[0] = -(v*cos(y[2]) + param_inputs[0]);        // px' = v.cos(theta) + b1
+              yp[0] = -(v*cos(y[2]) + param_inputs[0]);        // px' = v.cos(theta) + b1
               yp[1] = -(v*sin(y[2]) + param_inputs[1]);        // py' = v.sin(theta) + b2
               yp[2] = -(param_inputs[3] + param_inputs[2]);    // theta' = a + b3
           }
           else if (syschoice == 12)  // academic example to investigate time-varying parameters
           {
               yp[0] = (param_inputs[0] + param_inputs[1]*y[1])*y[0];
-              yp[1] = 1;
+              yp[1] = 1;
           }
           else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
           {
               yp[0] = 1.4*y[2] - 0.9*y[0];
               yp[1] = 2.5*y[4] - 1.5*y[1];
-              yp[2] = 0.6*y[6] - 0.8*y[1]*y[2];
-              yp[3] = 2 - 1.3*y[2]*y[3];
-              yp[4] = 0.7*y[0] - y[3]*y[4];
-              yp[5] = 0.3*y[0] - 3.1*y[5];
-              yp[6] = 1.8*y[5]-1.5*y[1]*y[6];
+              yp[2] = 0.6*y[6] - 0.8*y[1]*y[2];
+              yp[3] = 2 - 1.3*y[2]*y[3];
+              yp[4] = 0.7*y[0] - y[3]*y[4];
+              yp[5] = 0.3*y[0] - 3.1*y[5];
+              yp[6] = 1.8*y[5]-1.5*y[1]*y[6];
           }
           else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
           {
@@ -864,16 +864,16 @@ public:
              // yp[13] = velZ_sp - y[11];
          }
          else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
+             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
          
          else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
+             yp[0] = 2 + 2*param_inputs[0]*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
          else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
-             yp[0] = 2 + 2*(param_inputs[0]+param_inputs[0]*param_inputs[0])*(1-y[1]) + y[1];
+             yp[0] = 2 + 2*(param_inputs[0]+param_inputs[0]*param_inputs[0])*(1-y[1]) + y[1];
              yp[1] = 1; // time
          }
          else if (syschoice == 23) {   // pursuer-evader example Mitchell
@@ -1791,7 +1791,7 @@ public:
             double a = 2.5;
             yp[0] = 2 + (y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.; // x1' : '2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6',
             yp[1] = y[2]; //  'x2' : 'dx2',
-            yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.-y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
+            yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.-y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
             yp[3] = y[4]; //  'x3' : 'dx3',
             yp[4] = a*(y_prev[2]-y_prev[4]); //   'dx3' : 'a*(dx2(t-tau)-dx3(t-tau))',
             yp[5] = y[6]; //   'x4' : 'dx4',
@@ -1804,7 +1804,7 @@ public:
             double a = 2.5;
             yp[0] = 2 + (y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.; // x1' : '2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6',
             yp[1] = y[2]; //  'x2' : 'dx2',
-            yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.-y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
+            yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6.-y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
             yp[3] = y[4]; //  'x3' : 'dx3',
             yp[4] = a*(y_prev[2]-y_prev[4]); //   'dx3' : 'a*(dx2(t-tau)-dx3(t-tau))',
             yp[5] = y[6]; //   'x4' : 'dx4',
@@ -1971,7 +1971,7 @@ public:
             Jp[1][6] = J[2][6];
             Jp[1][7] = J[2][7];
             Jp[1][8] = J[2][8];
-            //      yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6. - y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
+            //      yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6. - y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
             Jp[2][0] = a*(((x[0]/5-2)*(2*x[0]/5-4) +(x[0]/5-1)*(x[0]/5-3))*J[0][0]/30 - J_prev[2][0]);
             Jp[2][1] = a*(((x[0]/5-2)*(2*x[0]/5-4) +(x[0]/5-1)*(x[0]/5-3))*J[0][1]/30 - J_prev[2][1]);
             Jp[2][2] = a*(((x[0]/5-2)*(2*x[0]/5-4) +(x[0]/5-1)*(x[0]/5-3))*J[0][2]/30 - J_prev[2][2]);
@@ -2052,7 +2052,7 @@ public:
                 Jp[0][j] = ((x[0]/5-2)*(2*x[0]/5-4) +(x[0]/5-1)*(x[0]/5-3))*J[0][j]/30;
              //      yp[1] = y[2]; //  'x2' : 'dx2',
                 Jp[1][j] = J[2][j];
-            //      yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6. - y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
+            //      yp[2] = a*(2+(y[0]/5.-1)*(y[0]/5.-2)*(y[0]/5.-3)/6. - y_prev[2]); // 'dx2' : 'a*(2+(x1/5-1)*(x1/5-2)*(x1/5-3)/6-dx2(t-tau))',
                 Jp[2][j] = a*(((x[0]/5-2)*(2*x[0]/5-4) +(x[0]/5-1)*(x[0]/5-3))*J[0][j]/30 - J_prev[2][j]);
             //      yp[3] = y[4]; //  'x3' : 'dx3',
                 Jp[3][j] = J[4][j];

@@ -184,7 +184,7 @@ void print_init_discrete(vector<interval> &x, bool skew)
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << j;
             
-            temp2d[0] = inf(x[i]); temp2d[1] = sup(x[i]); temp2d[2] = inf(x[j]); temp2d[3] = sup(x[j]);
+            temp2d[0] = inf(x[i]); temp2d[1] = sup(x[i]); temp2d[2] = inf(x[j]); temp2d[3] = sup(x[j]);
             if (!skew) {
                 out_approx << YAML::Key << "maxbox";
                 out_approx << YAML::Value << temp2d;
@@ -204,7 +204,7 @@ void print_init_discrete(vector<interval> &x, bool skew)
                 out_approx << YAML::Value << tempskew;
             }
             
-            /*    if (uncontrolled > 0 || controlled > 0) {
+            /*    if (uncontrolled > 0 || controlled > 0) {
                     out_approx << YAML::Key << "minbox";
                     out_approx << YAML::Value << temp2d;
                 }
@@ -215,7 +215,7 @@ void print_init_discrete(vector<interval> &x, bool skew)
                 */
             
             
-      /*      if (uncontrolled > 0 || controlled > 0) {
+      /*      if (uncontrolled > 0 || controlled > 0) {
                 out_approx << YAML::Key << "minskew";
                 out_approx << YAML::Value << tempskew;
             }
@@ -254,7 +254,7 @@ void print_init_discrete(vector<interval> &x, bool skew)
                 
                 out_approx << YAML::Key << "maxbox";
                 out_approx << YAML::Value << temp3d;
-         //       if (uncontrolled > 0 || controlled > 0)
+         //       if (uncontrolled > 0 || controlled > 0)
          //       {
          //           out_approx << YAML::Key << "minbox";
          //           out_approx << YAML::Value << temp3d;
@@ -375,10 +375,10 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
             out_approx << YAML::Value << j;
             
             out_approx << YAML::Key << "maxbox";
-            temp2d[0] = inf(x[i].convert_int()); temp2d[1] = sup(x[i].convert_int()); temp2d[2] = inf(x[j].convert_int()); temp2d[3] = sup(x[j].convert_int());
+            temp2d[0] = inf(x[i].convert_int()); temp2d[1] = sup(x[i].convert_int()); temp2d[2] = inf(x[j].convert_int()); temp2d[3] = sup(x[j].convert_int());
             out_approx << YAML::Value << temp2d;
             
-            if (uncontrolled > 0 || controlled > 0) {
+            if (uncontrolled > 0 || controlled > 0) {
                 out_approx << YAML::Key << "minbox";
                 out_approx << YAML::Value << temp2d;
             }
@@ -399,7 +399,7 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
             out_approx << YAML::Key << "maxskew";
             out_approx << YAML::Value << tempskew;
             
-            if (uncontrolled > 0 || controlled > 0) {
+            if (uncontrolled > 0 || controlled > 0) {
                 out_approx << YAML::Key << "minskew";
                 out_approx << YAML::Value << tempskew;
             }
@@ -436,7 +436,7 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
                 
                 out_approx << YAML::Key << "maxbox";
                 out_approx << YAML::Value << temp3d;
-                if (uncontrolled > 0 || controlled > 0)
+                if (uncontrolled > 0 || controlled > 0)
                 {
                     out_approx << YAML::Key << "minbox";
                     out_approx << YAML::Value << temp3d;
