@@ -184,9 +184,9 @@ interactive-visualization = 1
 variables-to-display = 1 2
 ```
 
-### Visualizing results
+### Visualizing results (ODEs)
 
-After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files: 
+After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
 - ```sumup.txt```: summary of configuration, running time and ranges at the end of the analysis
 - ```samplesreachset.yaml```: sampled trajectories (used to assess accuracy of reachability results)
 - ```approxreachset.yaml```: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
@@ -201,12 +201,15 @@ When the script is run by analyzer, the options set above in command line can be
 interactive-visualization = 1
 variables-to-display = 1 2
 ```
-In particular, for the i-th variable, the following results files are produced :
-    - the maximal inner and outer-approximations (e.g. x1_max.png)
-    - when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph (e.g. x1_min_max.png)
-    - when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
+In particular, for the k-th variable, the following results files are produced :
+- ```xk_max.png``` and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories (e.g. ```x1_max.png```)
+- ```xk_min_max.png```: when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph
+- ```xk_rob_max.png```, ```xk_rob_min_max.png```: when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
     
-We also provide graphs embedding all variables, as well as some error measures (see the files in the output directory).
+We also provide 
+- ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
+- ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set);
+gamma = (width of under_approx)/(width of over_approx)
 
 These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below)
 
