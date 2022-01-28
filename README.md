@@ -38,20 +38,23 @@ Running an existing example is then performed at command line, by
 where 
 - system_type is either ode (for a system of ODEs - Ordinary Differential Equations) or dde (for a system of DDEs - Delay Differential Equations) or discrete (for a discrete-time dynamical system)
 - system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ode_def.h)
-- optional filename.sfx is the name of a file containing a neural network with the Sherlock inspired sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
+- optional filename.sfx is the name of a file containing a neural network in the Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
 - optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). 
 - configuration files for some examples are available in directory Examples/ConfigFiles. 
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
-In praticular:
-  - the Brusselator example of Reference [HSCC 2017] below is run by "./rino -systype ode -syschoice 2 [Examples/ConfigFiles/cfg_ode_2.txt] "
-  - the self-driving car example of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 6 [examples/config_0_6.txt]"
-  -   - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [examples/config_0_18.txt]" 
-  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [examples/config_1_7.txt]" (here the model is with delays, hence the system_type 1)
-  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [examples/config_1_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [examples/config_1_11.txt]" (10 vehicles) 
+In particular:
+  - the Brusselator example of Reference [HSCC 2017] below is run by 
+  ```./rino -systype ode -syschoice 2```
+  or to modify the parameter and initial conditions, by 
+  ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
+  - the self-driving car example of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 6 [Examples/ConfigFiles/cfg_ode_6.txt]"
+  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" 
+  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)
+  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) 
 
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
-More documentation on how to use these (and better input mechanisms) should come.
+
 
 #### Sample configuration file (ODE)
 
@@ -137,6 +140,8 @@ For now, please take inspiration for the existing examples.
 ## Authors and References
 
 This package, written by [Sylvie Putot](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/), implements the ideas presented in:
+- [ADHS 2021] Tractable higher-order under-approximating AE extensions for non-linear systems, In IFAC Conference on Analysis and Design of Hybrid Systems, ADHS 2021 [ [DOI](https://www.sciencedirect.com/science/article/pii/S2405896321012799) ]
+- [CDC-LCSS 2020]  Robust under-approximations and application to reachability of non-linear control systems with disturbance, In IEEE Conference on Decision and Control, CDC 2020 and IEEE Control Systems Letters (Vol 4, Oct. 2020) [ [DOI](https://ieeexplore.ieee.org/document/9099222) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/csl2020.pdf) ]
 -  [HSCC 2019] Inner and Outer Reachability for the Analysis of Control Systems, by Eric Goubault and Sylvie Putot, Proceedings of the 22th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2019, Montreal [ [DOI](https://dl.acm.org/citation.cfm?id=3311794) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc19.pdf) ]
 -  [CAV 2018] Inner and Outer Approximating Flowpipes for Delay Differential Equations, by Eric Goubault, Sylvie Putot and Lorenz Sahlmann, Proceedings of 30th International Conference on Computer Aided Verification, CAV 2018, Springer LNCS volume 10982 [ [DOI](https://www.springer.com/us/book/9783319961415) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/cav18.pdf) ]  
 -  [HSCC 2017] Forward inner-approximated reachability of non-linear continuous systems, by Eric Goubault and Sylvie Putot, Proceedings of the 20th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2017 [ [DOI](https://dl.acm.org/citation.cfm?id=3049811) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc17.pdf) ]
