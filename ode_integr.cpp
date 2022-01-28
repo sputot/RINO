@@ -1211,7 +1211,9 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
    // int discr = 2;
     int nb_points = discr+1;
     
-    
+    for (int j = 0; j < jacdim-sysdim ; j++)
+        param_inputs[j] = center_fullinputs[j];  // TODO: ajouter le sample aussi sur fullinputs et ne pas juste prendre le centre
+     //    param_inputs[j] = fullinputs[j];
     
     vector<interval> xinit(sysdim);
     for (int i=0 ; i<sysdim ; i++)

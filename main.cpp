@@ -366,6 +366,10 @@ int main(int argc, char* argv[])
         vector<AAF> param_inputs_center(jacdim-sysdim);
         vector<AAF> xcenter(sysdim);
         
+        for (int j = 0; j < jacdim-sysdim ; j++)
+          //  param_inputs[j] = center_fullinputs[j];  // TODO: ajouter le sample aussi sur fullinputs et ne pas juste prendre le centre
+             param_inputs[j] = fullinputs[j];
+        
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
