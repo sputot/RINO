@@ -284,7 +284,7 @@ vector<interval> init_discrete_system() // (char * config_filename)
 
 
 // d0 and t_begin are for DDEs only, rest are common to ODE and DDE
-void read_initialconditions(const char * params_filename, vector<interval> &res)
+void read_parameters_discrete(const char * params_filename, vector<interval> &res, int &nb_steps, int &order, int &AEextension_order, int &iter_method,bool &skew)
 {
     const int LINESZ = 2048;
     char buff[LINESZ];
@@ -292,6 +292,7 @@ void read_initialconditions(const char * params_filename, vector<interval> &res)
     const char space[2] = " ";
     double a, b;
     int c;
+    int skew_int;
     
     cout << "****** Reading initial conditions and parameters from file " <<  params_filename << " ******" << endl;
     FILE *params_file = fopen(params_filename,"r");
@@ -302,6 +303,30 @@ void read_initialconditions(const char * params_filename, vector<interval> &res)
     
     while (fgets(buff,LINESZ,params_file)) {
         sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
+        sscanf(buff, "order = %d\n", &order);
+        sscanf(buff, "nbsteps = %d\n", &nb_steps);
+        sscanf(buff, "AEextension-order = %d\n", &AEextension_order);
+        sscanf(buff, "iter-method = %d\n", &iter_method);
+        sscanf(buff, "skew = %d\n", &skew_int);
+        sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
+        sscanf(buff, "refined-mean-value = %d\n", &refined_mean_value);
+        if (sscanf(buff, "variables-to-display = %s\n", initialcondition) == 1)
+        {
+            for (int i=0; i< sysdim; i++)
+                variables_to_display[i] = false;
+            
+            char *token = strtok(buff,space);
+            token = strtok(NULL,space);
+            token = strtok(NULL,space);
+            int i;
+            while( token != NULL ) {
+                sscanf(token,"%d",&i);
+                variables_to_display[i-1] = true;
+             //   cout <<"input="<<inputs[i].convert_int()<<endl;
+                token = strtok(NULL,space);
+            }
+        }
+        skew = (skew_int == 1);
         //     sscanf(buff, "system = %s\n", sys_name);
         //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
         if (sscanf(buff, "initial-values = %s\n", initialcondition) == 1)

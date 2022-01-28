@@ -231,7 +231,7 @@ int main(int argc, char* argv[])
         
         // reading initial conditions from config file if any
         if (config_filename)
-            read_initialconditions(config_filename,xinit);
+            read_parameters_discrete(config_filename,xinit,nb_steps,order,AEextension_order,iter_method,skew);
         
         
         if (nb_steps == 1) {
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
         xinit = init_discrete_system(); // hard-coded initial condition
         
         if (config_filename)
-            read_initialconditions(config_filename,xinit);  // initial condition from config file
+            read_parameters_discrete(config_filename,xinit,nb_steps,order,AEextension_order,iter_method,skew);  // initial condition from config file
         
         vector<interval> estimated_range = estimate_range(f, xinit, nb_sample_per_dim);
         

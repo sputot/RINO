@@ -198,7 +198,7 @@ public:
     }
 };
 
-void read_initialconditions(const char * params_filename, vector<interval> &res);
+void read_parameters_discrete(const char * params_filename, vector<interval> &res, int &nb_steps, int &order, int &AEextension_order, int &iter_method,bool &skew);
 
 
 //template <class C>
