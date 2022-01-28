@@ -758,7 +758,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             order = 3;
             
             initial_values[0] = interval(0.9,1);
-            params[0] = 1.0;
+            params[0] = 1.0;
          //   nb_subdiv_init = 2;
          //   component_to_subdiv = 0;
         }
@@ -816,7 +816,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[1] = interval(0,0.1);
             //  uncertain parameter 
             params[0] =  interval(1.9,2.1);  // Kp
-            params[1] =  interval(2.9,3.1);    // Kd
+            params[1] =  interval(2.9,3.1);    // Kd
         }
         else if (syschoice == 6) // self-driving car with piecewise constant parameters; sysdim = 4, jacdim = 4
         {
@@ -827,11 +827,11 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
             inputs[0] =  interval(1.9,2.1);  // Kp
-            inputs[1] =  interval(2.9,3.1);    // Kd
+            inputs[1] =  interval(2.9,3.1);    // Kd
             is_uncontrolled[1] = true; // Kd uncontrolled
-         //   is_variable[2] = true;  // piecewise constant
+         //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-          //   is_variable[3] = true; // piecewise constant
+          //   is_variable[3] = true; // piecewise constant
         }
   // REFLECHIR COMMENT GERER CA DIFFEREMMENT
         else if (syschoice == 7) // self-driving car with time varying parameters; sysdim = 4, jacdim = 4
@@ -843,12 +843,12 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
             initial_values[2] =  interval(1.9,2.1);  // Kp
-            initial_values[3] =  interval(2.9,3.1);    // Kd
+            initial_values[3] =  interval(2.9,3.1);    // Kd
          //   is_uncontrolled[3] = true; // Kd uncontrolled
-            // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
-         //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
+            // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
+         //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-          //   is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
+          //   is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
         }
         else if (syschoice == 8)
         {
@@ -1957,7 +1957,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
             params[0] =  interval(1.9,2.1); // 2;  // Kp
-            params[1] =  interval(2.9,3.1);  // 3;   // Kd
+            params[1] =  interval(2.9,3.1);  // 3;   // Kd
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
         {
