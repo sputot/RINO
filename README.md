@@ -56,17 +56,17 @@ In particular:
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
 
 
-#### Sample configuration file (ODE)
+#### Sample configuration file 
 
 ```
-# dimension of the ODE
-system-dimension = 4
-# dimension of the uncertain parameter and inputs
-inputs-dimension = 2
+# system type (ode, dde, discrete)
+systype = ode
+# system ID
+syschoice = 2
 
 time-horizon = 5.
 # time step: only for ODEs
-sampling-time = 0.02
+integration-step = 0.02
 
 # only for DDEs
 delay = 0.3 
