@@ -186,16 +186,13 @@ variables-to-display = 1 2
 
 ### Visualizing results
 
-After running an example, all results are in the subdirectory ‘output’. For the i-th variable, there are basically 6 interesting results files produced:  
-- xiinner.out (maximal inner-approximation function of time)
-- xiinner_robust.out (robust inner-approximation function of time) 
-- xiinner_minimal.out (minimal inner-approximation function of time) 
-- xiouter.out (maximal outer-approximation function of time)
-- xiouter_robust.out (robust outer-approximation function of time)
-- xiouter_minimal.out (minimal outer-approximation function of time)
+After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files: 
+- sumup.txt: summary of configuration, running time and ranges at the end of the analysis
+- samplesreachset.yaml: sampled trajectories (used to assess accuracy of reachability results)
+- approxreachset.yaml: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
 
 A python visualization file Visu_output.py is available in the GUI directory. 
-It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by
+It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by:
 ```
 python3 Visu_output.py --interactive=1 --printvar=-1-2
 ```
@@ -204,10 +201,11 @@ When the script is run by analyzer, the options set above in command line can be
 interactive-visualization = 1
 variables-to-display = 1 2
 ```
-In particular, at least figure per variable is produced, printing the evolution with time of
+In particular, for the i-th variable, the following results files are produced :
     - the maximal inner and outer-approximations (e.g. x1_max.png)
     - when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph (e.g. x1_min_max.png)
     - when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
+    
 We also provide graphs embedding all variables, as well as some error measures (see the files in the output directory).
 
 These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below)
