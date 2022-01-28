@@ -37,10 +37,10 @@ Running an existing example is then performed at command line, by
 ```
 where 
 - system_type is either ode (for a system of ODEs - Ordinary Differential Equations) or dde (for a system of DDEs - Delay Differential Equations) or discrete (for a discrete-time dynamical system)
-- system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ode_def.h)
+- system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ```ode_def.h```)
 - optional filename.sfx is the name of a file containing a neural network in the Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
 - optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). 
-- configuration files for some examples are available in directory Examples/ConfigFiles. 
+- configuration files for some examples are available in directory ```Examples/ConfigFiles```. 
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
 For example:
@@ -52,11 +52,11 @@ For example:
 <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
 <!---  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)-->
 <!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
-- the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25```
+- the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25 [-iter_method 1 -AEextension_order 1 -skew 1]``` or ```./rino -configfile Examples/ConfigFiles/cfg_discrete_15.txt```
 
 The corresponding predefined systems are defined:
-  - for ODEs and DDEs in ode_def.h (system and constant parameters) and ode_def.cpp (parameters, initial conditions and input ranges)
-  - for discrete-time systems in discrete_system.h and discrete_system.cpp 
+  - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
+  - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
 
 
 #### Sample configuration file for ODEs
