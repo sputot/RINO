@@ -187,9 +187,9 @@ variables-to-display = 1 2
 ### Visualizing results
 
 After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files: 
-- sumup.txt: summary of configuration, running time and ranges at the end of the analysis
-- samplesreachset.yaml: sampled trajectories (used to assess accuracy of reachability results)
-- approxreachset.yaml: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
+- ```sumup.txt```: summary of configuration, running time and ranges at the end of the analysis
+- ```samplesreachset.yaml```: sampled trajectories (used to assess accuracy of reachability results)
+- ```approxreachset.yaml```: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
 
 A python visualization file Visu_output.py is available in the GUI directory. 
 It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by:
