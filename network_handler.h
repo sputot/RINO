@@ -5,6 +5,7 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <assert.h>
 
 #include "aa_aaf.h"
 

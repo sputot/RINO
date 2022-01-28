@@ -115,7 +115,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
     for (j=0 ; j<inputsdim ; j++)
         ode_x.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
-    // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
+    // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
     g_rough = fixpoint(_bf,param_inputs,x,tau);
     
     
@@ -921,9 +921,9 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             vector<vector<AAF>> aux = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
             for (int i=0 ; i<sysdim; i++)
                 for (int j=0; j < sysdim ; j++) {
-                    aux[i][j] = 0;
+                    aux[i][j] = 0;
                     for (int k=0; k < nncontroldim ; k++)
-                        aux[i][j] += auxf[i][k]*auxu[k][j];
+                        aux[i][j] += auxf[i][k]*auxu[k][j];
                    // cout << "partial derivatives: " << aux[i][j].convert_int() << endl;
                 }
             
@@ -938,16 +938,16 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             // if J is the 1st order jacobian, evaluate for all i,j in sysdim, \sum_k (partial J_ij / partial z_k) . (dz_k.dt) where dz_k.dt=f_k
                for (int i=0 ; i<sysdim; i++)
                     for (int j=0; j < sysdim ; j++) {
-                        f_order2[i][j] = 0;
+                        f_order2[i][j] = 0;
                         for (int k=0; k < nncontroldim ; k++)
-                            f_order2[i][j] += fftemp[i].d(sysdim+k)*auxu[k][j];
+                            f_order2[i][j] += fftemp[i].d(sysdim+k)*auxu[k][j];
                     }
             
             for (int i=0 ; i<sysdim; i++)
                 for (int j=0; j < sysdim ; j++) {
-                    aux_order2[i][j] = 0;
+                    aux_order2[i][j] = 0;
                     for (int k=0; k < sysdim ; k++)
-                        aux_order2[i][j] += f_order2[i][j].d(k)*fftemp[k].x().x();
+                        aux_order2[i][j] += f_order2[i][j].d(k)*fftemp[k].x().x();
                //     cout << "partial derivatives order2 " << i << " " << j << " new new : " << aux_order2[i][j].convert_int() << endl;
                 }
        
