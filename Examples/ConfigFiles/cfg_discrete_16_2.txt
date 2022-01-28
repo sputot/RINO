@@ -1,10 +1,10 @@
 # Discrete-time Test Model [ADHS 2021]
 
 systype = discrete
-syschoice = 15
-nbsteps = 25
-iter-method = 1
+syschoice = 16
+nbsteps = 60
+iter-method = 2
 skew = 1
 AEextension-order = 1
-initial-values = [0.05,0.1] [0.99,1.0]
+initial-values = [0.79,0.80] [0.19,0.20] [0.,0.]
 interactive-visualization = 0
