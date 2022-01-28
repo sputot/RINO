@@ -48,7 +48,7 @@ In particular:
   ```./rino -systype ode -syschoice 2```
   or to modify the parameter and initial conditions, by 
   ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
-  - the self-driving car example of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 6 [Examples/ConfigFiles/cfg_ode_6.txt]"
+  - the self-driving car example of Reference [HSCC 2019]  is run by ```./rino -systype ode -syschoice 6``` or ```./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt```
   - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" 
   - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)
   - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) 
@@ -239,7 +239,7 @@ In particular, for the k ranging from 1 to system dimension, the following resul
 - ```xk_rob_max.png```, ```xk_rob_min_max.png```: when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
 
 For any couple (k,l) we also print 2-dimensional projections :
-- ```xkxl.png```: maximal under and over approximations of (xk,xl) - box over-approximation in green, skewed box under-approximation in orange
+- ```xkxl.png```:  maximal (and when relevant minimal, robust) under and over approximations of (xk,xl) 
 
 We also provide 
 - ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
