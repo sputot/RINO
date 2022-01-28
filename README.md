@@ -206,8 +206,8 @@ In particular, for the k ranging from 1 to system dimension, the following resul
 - ```xk_min_max.png```: when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph
 - ```xk_rob_max.png```, ```xk_rob_min_max.png```: when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
 
-For any couple (k1,k2) we also print 2-dimensional projections :
-- ```xk1xk2.png```: maximal under and over approximations of (x1,x2) - box over-approximation in green, skewed box under-approximation in orange
+For any couple (k,l) we also print 2-dimensional projections :
+- ```xkxl.png```: maximal under and over approximations of (xk,xl) - box over-approximation in green, skewed box under-approximation in orange
 
 We also provide 
 - ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
