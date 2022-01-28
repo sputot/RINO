@@ -201,11 +201,14 @@ When the script is run by analyzer, the options set above in command line can be
 interactive-visualization = 1
 variables-to-display = 1 2
 ```
-In particular, for the k-th variable, the following results files are produced :
+In particular, for the k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
 - ```xk_max.png``` and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories (e.g. ```x1_max.png```)
 - ```xk_min_max.png```: when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph
 - ```xk_rob_max.png```, ```xk_rob_min_max.png```: when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
-    
+
+For any couple (k1,k2) we also print 2-dimensional projections :
+- ```xk1xk2.png```: maximal under and over approximations of (x1,x2) - box over-approximation in green, skewed box under-approximation in orange
+
 We also provide 
 - ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
 - ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set);
