@@ -240,6 +240,7 @@ In particular, for the k ranging from 1 to system dimension, the following resul
 
 For any couple (k,l) we also print 2-dimensional projections :
 - ```xkxl.png```:  maximal (and when relevant minimal, robust) under and over approximations of (xk,xl) 
+Three-dimensional projections when relevant are also printed, only the corners of boxes are printed for more lisibility.
 
 We also provide 
 - ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
