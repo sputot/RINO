@@ -44,7 +44,10 @@ where
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
 In particular:
-  - the Brusselator example of Reference [HSCC 2017] below is run by "./rino -systype ode -syschoice 2 [Examples/ConfigFiles/cfg_ode_2.txt] "
+  - the Brusselator example of Reference [HSCC 2017] below is run by 
+  ```./rino -systype ode -syschoice 2```
+  or to modify the parameter and initial conditions, by 
+  ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
   - the self-driving car example of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 6 [Examples/ConfigFiles/cfg_ode_6.txt]"
   - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" 
   - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)
