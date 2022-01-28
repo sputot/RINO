@@ -56,7 +56,7 @@ In particular:
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
 
 
-#### Sample configuration file 
+#### Sample configuration file for ODEs
 
 ```
 # system type (ode, dde, discrete)
@@ -68,15 +68,94 @@ time-horizon = 5.
 # time step: only for ODEs
 integration-step = 0.02
 
+# order for Taylor models in time
+order = 3
+
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+
+# ranges for initial conditions
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+# accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
+# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
+
+# ranges for (constant or piecewise constant) inputs
+# if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
+# for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
+inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
+
+# which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
+uncontrolled = 1
+# which dimensions are time-varying inputs or parameters
+variable =
+
+
+# for the visualization: if 0, only .png files are produced
+interactive-visualization = 1
+# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
+# to print all (default value when the option is not set in the config file): set variables-to-display = all
+variables-to-display = 1 2
+```
+
+#### Sample configuration file for DDEs
+
+```
+# system type (ode, dde, discrete)
+systype = dde
+# system ID
+syschoice = 2
+
+time-horizon = 5.
+
 # only for DDEs
 delay = 0.3 
 # only for DDEs (for ODEs, starting-time is set to 0)
 starting-time = -0.3
-# only for DDEs: defines the time step by delay/nb-time-subdivisions
+# defines the time-step by delay/nb-time-subdivisions
 nb-time-subdivisions = 3
 
-# order for Taylor models
+# order for Taylor models in time
 order = 3
+
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+
+# ranges for initial conditions
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+# accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
+# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
+
+# ranges for (constant or piecewise constant) inputs
+# if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
+# for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
+inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
+
+# which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
+uncontrolled = 1
+# which dimensions are time-varying inputs or parameters
+variable =
+
+
+# for the visualization: if 0, only .png files are produced
+interactive-visualization = 1
+# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
+# to print all (default value when the option is not set in the config file): set variables-to-display = all
+variables-to-display = 1 2
+```
+
+#### Sample configuration file for discrete-time systems
+
+```
+# system type (ode, dde, discrete)
+systype = discrete
+# system ID
+syschoice = 2
+
+time-horizon = 5.
+
+
 
 # refined mean-value theorem for inner-approximation (default is 0: classical mean value)
 refined-mean-value = 1
