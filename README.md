@@ -43,15 +43,15 @@ where
 - configuration files for some examples are available in directory Examples/ConfigFiles. 
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
-In particular:
+For example:
   - the Brusselator example of Reference [HSCC 2017] below is run by 
   ```./rino -systype ode -syschoice 2```
   or to modify the parameter and initial conditions, by 
   ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
   - the self-driving car example of Reference [HSCC 2019]  is run by ```./rino -systype ode -syschoice 6``` or ```./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt```
 <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
-  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)
-  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) 
+<!---  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)-->
+<!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
 
 The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
 
@@ -154,7 +154,6 @@ systype = discrete
 syschoice = 2
 
 time-horizon = 5.
-
 
 
 # refined mean-value theorem for inner-approximation (default is 0: classical mean value)
