@@ -52,8 +52,11 @@ For example:
 <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
 <!---  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)-->
 <!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
+- the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25```
 
-The corresponding systems (both for ODEs and DDES) are defined in ode_def.h (system and constant parameters) and ode_def.cpp (dimensions of the system, initial conditions, uncertain control inputs and perturbations, whether they are constant or time-varying, and control inputs or perturbations, and finally the integration settings - order of Taylor models, initial final time, time step etc). 
+The corresponding predefined systems are defined:
+  - for ODEs and DDEs in ode_def.h (system and constant parameters) and ode_def.cpp (parameters, initial conditions and input ranges)
+  - for discrete-time systems in discrete_system.h and discrete_system.cpp 
 
 
 #### Sample configuration file for ODEs
