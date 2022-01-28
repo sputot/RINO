@@ -116,8 +116,8 @@ int main(int argc, char* argv[])
             systype = 1;
         else if (strcmp(str_systype,"discrete")==0)
             systype = 2;
-        else if (strcmp(str_systype,"nn")==0)
-            systype = 3;
+     //   else if (strcmp(str_systype,"nn")==0)
+      //      systype = 3;
    //     cout << "systype= " << systype << endl;
     }
     
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
     if ((!str_systype && !config_filename) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
     {
         cout << "Usage is: " << endl;
-        cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems, nn for neural networks" << endl;
+        cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems" << endl;
         cout << "-nnfile-sfx xxx or -nnfile-onnx xxx: in case systype is nn, then you should enter the name of file that contains the network, either in old sherlock-like format (sfx) or onnx format" << endl;
         cout << "-syschoice x: integer setting the predefined system ID" << endl;
         cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
@@ -207,7 +207,7 @@ int main(int argc, char* argv[])
         else if (syschoice == 17 ||  syschoice == 21 ) {
             iter_method = 2;
             skew = false;
-        }
+        } 
         
         
         char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
@@ -235,6 +235,10 @@ int main(int argc, char* argv[])
         
         
         if (nb_steps == 1) {
+          /*  if (sfx_filename)
+                syschoice = 100;
+            else if (onnx_filename)
+                syschoice = 101; */
             vector<interval> estimated_range = estimate_range(f,xinit, nb_sample_per_dim);
             print_init_discrete(xinit,skew);
             begin = clock();
@@ -254,36 +258,9 @@ int main(int argc, char* argv[])
         }
        
     }
-    else if (systype == 3) {
-        
-        DiscreteFunc f;
-        nb_steps = 1;
-        nb_sample_per_dim = 20;
-        
-        // vector<AAF> u = NH.eval_network(x);
-        
-        if (sfx_filename)
-            syschoice = 100;
-        else if (onnx_filename)
-            syschoice = 101;
-        
-        xinit = init_discrete_system(); // hard-coded initial condition
-        
-        if (config_filename)
-            read_parameters_discrete(config_filename,xinit,nb_steps,order,AEextension_order,iter_method,skew);  // initial condition from config file
-        
-        vector<interval> estimated_range = estimate_range(f, xinit, nb_sample_per_dim);
-        
-        print_init_discrete(xinit,skew);
-
-        begin = clock();
-        
-        function_range(f,xinit,estimated_range);
-    }
+    
     else if (systype == 0 || systype == 1)
     {
-    
-   
     // *************** ODEs or DDEs *******************
     
     
