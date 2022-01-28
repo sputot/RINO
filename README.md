@@ -184,6 +184,38 @@ interactive-visualization = 1
 variables-to-display = 1 2
 ```
 
+#### New: Running neural network controlled dynamical systems
+
+```
+TORA
+./rino -configfile Examples/ConfigFiles/cfg_tora_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_tora_sigmoid.txt
+
+B1
+./rino -configfile Examples/ConfigFiles/cfg_B1_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
+
+B2
+./rino -configfile Examples/ConfigFiles/cfg_B2_sigmoid.txt
+
+B3
+./rino -configfile Examples/ConfigFiles/cfg_B3_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B3_sigmoid.txt
+
+B4:
+./rino -configfile Examples/ConfigFiles/cfg_B4_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B4_sigmoid.txt
+
+B5:
+./rino -configfile Examples/ConfigFiles/cfg_B5_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B5_sigmoid.txt
+  
+ACC:
+./rino -configfile Examples/ConfigFiles/cfg_acc_tanh.txt
+```
+
+
+
 ### Visualizing results (ODEs)
 
 After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
