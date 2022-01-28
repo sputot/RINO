@@ -63,7 +63,7 @@ void network_handler :: build_from_file(const char* name){
         else if(act.compare("Linear") == 0 || act.compare("linear") == 0){
             activations.push_back(ACT_LINEAR);
         }
-        else if(act.compare("Relu") == 0 || act.compare("relu") == 0){
+        else if(act.compare("Relu") == 0 || act.compare("relu") == 0){
             activations.push_back(ACT_RELU);
         }
         else{

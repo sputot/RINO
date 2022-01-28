@@ -89,7 +89,7 @@ extern bool print_debug;
 
 extern bool recompute_control;
 
-void define_system_dim(int argc, char* argv[]);  // define the dimensions of your system (ODE or DDE)
+void define_system_dim();  // define the dimensions of your system (ODE or DDE)
 
 
 
@@ -123,7 +123,7 @@ template <class C> vector<C> nn_to_control(vector<C> nnoutput);
 
 
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
+void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
 
 void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv);
 

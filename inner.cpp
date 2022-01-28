@@ -112,14 +112,14 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
 
         if (uncontrolled > 0)
         {
-            Xinner_robust[i]  = ix0[i] + uncontrolled_pro;
+            Xinner_robust[i]  = ix0[i] + uncontrolled_pro;
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro);
             Xouter_robust[i] = ix0[i] + initialcondition_pro + controlled_pro;
             Xouter_robust[i] = Kaucher_add_pro_impro_resultpro(Xouter_robust[i],uncontrolled_impro);
         }
         if (controlled > 0 || uncontrolled > 0)
         {
-            Xinner_minimal[i] = ix0[i] + uncontrolled_pro + controlled_pro;
+            Xinner_minimal[i] = ix0[i] + uncontrolled_pro + controlled_pro;
             Xinner_minimal[i] = Kaucher_add_pro_impro(Xinner_minimal[i], initialcondition_impro);
             Xouter_minimal[i] = ix0[i] + initialcondition_pro;
             Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro + uncontrolled_impro);
@@ -226,16 +226,16 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 
                 out_approx << YAML::Key << "maxbox";
                 
-                temp[0] = inf(max_i); temp[1] = sup(max_i); temp[2] = inf(max_k); temp[3] = sup(max_k);
+                temp[0] = inf(max_i); temp[1] = sup(max_i); temp[2] = inf(max_k); temp[3] = sup(max_k);
                 out_approx << YAML::Value << temp;
                 
-                if (uncontrolled > 0 || controlled > 0) {
-                    temp[0] = inf(min_i); temp[1] = sup(min_i); temp[2] = inf(min_k); temp[3] = sup(min_k);
+                if (uncontrolled > 0 || controlled > 0) {
+                    temp[0] = inf(min_i); temp[1] = sup(min_i); temp[2] = inf(min_k); temp[3] = sup(min_k);
                     out_approx << YAML::Key << "minbox";
                     out_approx << YAML::Value << temp;
                 }
                 if (uncontrolled > 0) {
-                    temp[0] = inf(robust_i); temp[1] = sup(robust_i); temp[2] = inf(robust_k); temp[3] = sup(robust_k);
+                    temp[0] = inf(robust_i); temp[1] = sup(robust_i); temp[2] = inf(robust_k); temp[3] = sup(robust_k);
                     out_approx << YAML::Key << "robbox";
                     out_approx << YAML::Value << temp;
                 }
@@ -333,7 +333,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 out_approx << YAML::Key << "maxskew";
                 out_approx << YAML::Value << temp2;
                 
-                if (uncontrolled > 0 || controlled > 0) {
+                if (uncontrolled > 0 || controlled > 0) {
                     output_skewbox = compute_skewbox(min_i,min_k,A,i,k);
                     for (int p=0; p<=3; p++) {
                         temp2[2*p] = output_skewbox[p][0];
@@ -481,18 +481,18 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                         
                         out_approx << YAML::Key << "maxbox";
                         
-                        temp3d[0] = inf(max_i); temp3d[1] = sup(max_i); temp3d[2] = inf(max_k); temp3d[3] = sup(max_k); temp3d[4] = inf(max_l); temp3d[5] = sup(max_l);
+                        temp3d[0] = inf(max_i); temp3d[1] = sup(max_i); temp3d[2] = inf(max_k); temp3d[3] = sup(max_k); temp3d[4] = inf(max_l); temp3d[5] = sup(max_l);
                         out_approx << YAML::Value << temp3d;
                         
-                        if (uncontrolled > 0 || controlled > 0)
+                        if (uncontrolled > 0 || controlled > 0)
                         {
-                            temp3d[0] = inf(min_i); temp3d[1] = sup(min_i); temp3d[2] = inf(min_k); temp3d[3] = sup(min_k); temp3d[4] = inf(min_l); temp3d[5] = sup(min_l);
+                            temp3d[0] = inf(min_i); temp3d[1] = sup(min_i); temp3d[2] = inf(min_k); temp3d[3] = sup(min_k); temp3d[4] = inf(min_l); temp3d[5] = sup(min_l);
                             out_approx << YAML::Key << "minbox";
                             out_approx << YAML::Value << temp3d;
                         }
                         
                         if (uncontrolled > 0) {
-                            temp3d[0] = inf(robust_i); temp3d[1] = sup(robust_i); temp3d[2] = inf(robust_k); temp3d[3] = sup(robust_k); temp3d[4] = inf(robust_l); temp3d[5] = sup(robust_l);
+                            temp3d[0] = inf(robust_i); temp3d[1] = sup(robust_i); temp3d[2] = inf(robust_k); temp3d[3] = sup(robust_k); temp3d[4] = inf(robust_l); temp3d[5] = sup(robust_l);
                             out_approx << YAML::Key << "robbox";
                             out_approx << YAML::Value << temp3d;
                         }
@@ -646,14 +646,14 @@ void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_ro
         
         if (uncontrolled > 0)
         {
-            Xinner_robust[i]  = ix0[i] + uncontrolled_pro[i];
+            Xinner_robust[i]  = ix0[i] + uncontrolled_pro[i];
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro[i]);
             Xouter_robust[i] = ix0[i] + initialcondition_pro[i] + controlled_pro[i];
             Xouter_robust[i] = Kaucher_add_pro_impro_resultpro(Xouter_robust[i],uncontrolled_impro[i]);
         }
         if (controlled > 0 || uncontrolled > 0)
         {
-            Xinner_minimal[i] = ix0[i] + uncontrolled_pro[i] + controlled_pro[i];
+            Xinner_minimal[i] = ix0[i] + uncontrolled_pro[i] + controlled_pro[i];
             Xinner_minimal[i] = Kaucher_add_pro_impro(Xinner_minimal[i], initialcondition_impro[i]);
             Xouter_minimal[i] = ix0[i] + initialcondition_pro[i];
             Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro[i] + uncontrolled_impro[i]);

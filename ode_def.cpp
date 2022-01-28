@@ -10,6 +10,7 @@ The place to define initial conditions and parameters the systems of ODEs or DDE
 
 #include <assert.h>
 #include <math.h>
+#include <cstring>
 #include <gsl/gsl_math.h>
 #include <gsl/gsl_sf_gamma.h>
 
@@ -85,7 +86,7 @@ bool print_debug = true;
 bool recompute_control = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
-void define_system_dim(const char * params_filename)
+void define_system_dim()
 {
     /*************************************************************************** ODE ************************************************************/
     
@@ -467,8 +468,8 @@ void define_system_dim(const char * params_filename)
         }
     }
     
-    if (params_filename) // called with configuration file: we overwrite the initialization of init_system
-        readfromfile_nbsubdiv(params_filename, nb_subdiv_init);
+   // if (params_filename) // called with configuration file: we overwrite the initialization of init_system
+   //     readfromfile_nbsubdiv(params_filename, nb_subdiv_init);
     
 }
 
@@ -714,10 +715,8 @@ template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
 
 // the main function to define the system
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(const char * params_filename, double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
-{
-    define_system_dim(params_filename); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
-    
+void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
+{    
     // inputs
     cout << "inputsdim=" << inputsdim << "sysdim=" << sysdim << endl;
     

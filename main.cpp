@@ -227,7 +227,6 @@ int main(int argc, char* argv[])
             skew = atoi(str_skew); //
                 
   
-        
         xinit = init_discrete_system(); // reading hard-coded initial condition and reading config file
         
         // reading initial conditions from config file if any
@@ -245,16 +244,13 @@ int main(int argc, char* argv[])
         {
             
             vector<vector<interval>> estimated_range = estimate_reachset(f, nb_steps, xinit, nb_sample_per_dim);
-            
             print_init_discrete(xinit,skew);
 
             begin = clock();
-            
             if (iter_method == 1)
                     discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
             else // (iter_method == 2)
                     discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
-            
         }
        
     }
@@ -291,9 +287,10 @@ int main(int argc, char* argv[])
     // *************** ODEs or DDEs *******************
     
     
-
-    init_system(config_filename, t_begin,t_end,tau,d0,nb_subdiv,order); // reads from file if input at command-line
-    
+    define_system_dim(); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
+    if (config_filename) // called with configuration file: we overwrite the initialization of init_system
+           readfromfile_nbsubdiv(config_filename, nb_subdiv_init);
+    init_system(t_begin,t_end,tau,d0,nb_subdiv,order); // initializes param from hard-coded values
     if (config_filename) // called with configuration file: we overwrite the initialization of init_system
         read_parameters(config_filename, tau, t_end, d0, t_begin, order, nb_subdiv);
     
