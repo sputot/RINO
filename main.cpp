@@ -29,6 +29,7 @@
 #include <fstream>
 #include <ctime>
 #include <array>
+#include <cstring>
 
 #include <stdlib.h>
 #include <algorithm>
