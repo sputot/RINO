@@ -206,7 +206,7 @@ void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
     t = t0; // -d0; // -d0 + k.tau
     for (int j=0; j<p+1 ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
-        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
+        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
         dde_x[j].x = Initfunc(t,ix,inputs);    // InitByFunc(dde_x[j].x,t); // marche po :(
       
         for (int i=0 ; i<sysdim ; i++)
@@ -226,7 +226,7 @@ void  Dde_TM_val::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
     t = interval(t0,t0+tau); // interval(-d0,-d0+tau); // -d0 + k.tau
     for (int j=0; j<p ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
-        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
+        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
         dde_g[j].x = Initfunc(t,ix,inputs);
         for (int i=0 ; i<sysdim ; i++)
             dde_g[j].x[i].eval(order);
@@ -262,7 +262,7 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
     t = t0; // -d0; // -d0 + k.tau
     for (int j=0; j<p+1 ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
-        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
+        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
  
          // specify the variables to differentiate
         for (int i=0 ; i<sysdim ; i++)
@@ -314,7 +314,7 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
     t = interval(t0,t0+tau); // interval(-d0,-d0+tau); // -d0 + k.tau
     for (int j=0; j<p ; j++) // extended all vectors to size p+1 to be able to store these initial conditions - think again
     {
-        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
+        t[1] = 1; // Taylor-expand wrt. t (dt/dt=1)
     //    for (int i=0 ; i<jacdim ; i++)
     //        beta[i][0].diff(i,jacdim);
          g_init[j].x  = Initfunc(t,beta_initial,beta_inputs); //  ddeVAR_g[j].x = Initfunc(t,beta);
@@ -416,7 +416,7 @@ void Dde_TM_val::build(DdeFunc bf, vector<AAF> &param_inputs, int s, double d0, 
     
  //   cout << "building AD : dde_x[s].x=" << dde_x[s].x[0][0].convert_int() <<  endl;
    
-    // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
+    // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
     // x-tau should eb the enclosure on the interval step
     // evaluate the Lie derivatives on this enclosure: we will use the last coefficients as remainder terms of Taylor model
   //  dde_g[s].reset();
@@ -827,7 +827,7 @@ void Dde_TM_val::init_nextsmallstep(int s)
 void Dde_TM_Jac::init_nextsmallstep(int s)
 {
     x[s+1]= xp1[s];
-    J[s+1] = Jp1[s];
+    J[s+1] = Jp1[s];
  //   for (int i=0 ; i<sysdim ; i++)
   //      for (int j=0 ; j<sysdim ; j++)
    //         J[s+1][i][j] = Jp1[s][i][j];
