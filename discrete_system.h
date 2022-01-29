@@ -98,7 +98,7 @@ public:
             double beta = 0.34;
             double Delta = 0.5;
             double gamma = 0.05;
-            z[0] = x[0] * (1.0 - beta*x[1]*Delta);
+            z[0] = x[0] * (1.0 - beta*x[1]*Delta);
             z[1] = x[1] * (1.0 + (beta*x[0]-gamma)*Delta);
             z[2] = x[2] + gamma*x[1]*Delta;
         }
@@ -119,7 +119,7 @@ public:
             double beta = 0.34;       // identical to 16 except parameters - gamma is now uncertain (x[3])
             double h = 1.0;
             //            double gamma : x[3] = interval(0.05,0.0675);
-            z[0] = x[0] * (1.0 - beta*x[1]*h);
+            z[0] = x[0] * (1.0 - beta*x[1]*h);
             z[1] = x[1] * (1.0 + (beta*x[0]-x[3])*h);
             z[2] = x[2] + x[3]*x[1]*h;
         }
@@ -127,21 +127,21 @@ public:
             double beta = 0.34;
             double Delta = 0.5;
             double gamma = 0.05;
-            z[0] = x[0] * (1.0 - beta*x[1]*Delta);
+            z[0] = x[0] * (1.0 - beta*x[1]*Delta);
             z[1] = x[1] * (1.0 + (beta*x[0]-gamma)*Delta);
         }
         else if (syschoice == 20) {  // SIR epidemic model  - first 2 dimensions  - Parameter Synthesis for Polynomial Biological Models HSCC 2014 p 239
             double beta = 0.34;       // identical to 16 except parameters - gamma is now uncertain (x[3])
             double h = 1.0;
             //            double gamma : x[2] = interval(0.05,0.0675);
-            z[0] = x[0] * (1.0 - beta*x[1]*h);
+            z[0] = x[0] * (1.0 - beta*x[1]*h);
             z[1] = x[1] * (1.0 + (beta*x[0]-x[2])*h); // (beta*x[0]-x[2])*h);
         }
         else if (syschoice == 21) {  // essai avec param
             double beta = 0.34;       //
             double h = 1.0;
             //            double gamma : x[2] = interval(0.05,0.0675);
-            z[0] = x[0]; // * (1.0 - beta*x[1]*h);
+            z[0] = x[0]; // * (1.0 - beta*x[1]*h);
             z[1] = x[1] + x[0]+ x[2]; // (beta*x[0]-x[2])*h);
             z[2] = x[2];
         }

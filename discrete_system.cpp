@@ -17,6 +17,7 @@
 #include <fstream>
 #include <ctime>
 #include <assert.h>
+#include <cstring>
 using namespace std;
 
 
@@ -299,8 +300,6 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
     if (params_file == NULL)
         cout << "Error reading " << params_filename << ": file not found" << endl;
     
-    
-    
     while (fgets(buff,LINESZ,params_file)) {
         sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
         sscanf(buff, "order = %d\n", &order);
@@ -326,7 +325,6 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
                 token = strtok(NULL,space);
             }
         }
-        skew = (skew_int == 1);
         //     sscanf(buff, "system = %s\n", sys_name);
         //      sscanf(buff, "initially = %[^\n]\n", initial_condition);   // tell separator is newline, otherwise by default it is white space
         if (sscanf(buff, "initial-values = %s\n", initialcondition) == 1)
@@ -362,6 +360,7 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
             }
         }
     }
+    skew = (skew_int == 1);
     fclose(params_file);
     
 //    cout << "interactive-visualization=" << interactive_visualization << endl;
@@ -1255,7 +1254,7 @@ void function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &
                  JacAff_nn[i][j] = net_outputs[k+1][i].d(j); // x[i].d[j]
                  Jacf_nn[i][j] = JacAff_nn[i][j].x().convert_int();
              }
-             net_outputs[k+1][i] = eval_activation(NH.L[k].activation,net_outputs[k+1][i]);
+             net_outputs[k+1][i] = eval_activation(NH.L[k].activation,net_outputs[k+1][i]);
          }
          cout << "Jacf_nn evaluated on [x]" << endl;
          cout << Jacf_nn;
@@ -2296,7 +2295,7 @@ vector<interval> evaluate_innerrange_discretize_simultaneous(vector<interval> &z
         for (int i=0 ; i<sysdim ; i++)
         {
             for (int j=0; j < jacdim ; j++) {
-                if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
+                if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
                     z_impro[i] +=  Kaucher_multeps(Jac_m[i][j],loc_eps[j]);
                 else
                     z_inner[i] += Jac_m[i][j] * loc_eps[j];
@@ -2334,7 +2333,7 @@ vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<inter
         z_impro[i] = 0;
         z_pro[i] = z0[i]; // + z_temp[i]; // 2nd order term is adversariam
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 z_impro[i] += Kaucher_multeps(dfdx0[i][j],loc_eps[j]);
             else
                 z_pro[i] += dfdx0[i][j]*loc_eps[j];
@@ -2355,7 +2354,7 @@ vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<inter
         for (int i=0 ; i<sysdim ; i++)
         {
             for (int j=0; j < jacdim ; j++) {
-                if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
+                if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
                     z_impro[i] +=  Kaucher_multeps(Jac_m[i][j],loc_eps[j]);
                 else
                     z_pro[i] += Jac_m[i][j] * loc_eps[j];
@@ -2417,7 +2416,7 @@ vector<interval> evaluate_innerrange_order2_discretize_simultaneous(vector<inter
         inner_impro = 0;
         inner_pro = z0[i] + z_temp[i]; // 2nd order term is adversariam
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],radx[j]);
             else
                 inner_pro += Jacf[i][j]*radx[j];
@@ -2440,7 +2439,7 @@ vector<interval> evaluate_innerrange(vector<interval> &z0, vector<interval> &rad
         inner_impro = 0;
         inner_pro = z0[i];
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],radx[j]);
             else
                 inner_pro += Jacf[i][j]*radx[j];
@@ -2461,7 +2460,7 @@ vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interva
         inner_impro = 0;
         inner_pro = z0[i];
         for (int j=0; j < sysdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],radx[j]);
             else
                 inner_pro += Jacf[i][j]*radx[j];
@@ -2496,7 +2495,7 @@ vector<interval> evaluate_precond_innerrange(vector<interval> &z0, vector<interv
         inner_impro = 0;
         inner_pro = f0[i];
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(CJacf[i][j],radx[j]);
             else
                 inner_pro += CJacf[i][j]*radx[j];
@@ -2541,7 +2540,7 @@ vector<interval> evaluate_innerrange_order2(vector<interval> &z0, vector<interva
         inner_impro = 0;
         inner_pro = z0[i] + z_temp[i]; // 2nd order term is adversariam
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],radx[j]);
             else
                 inner_pro += Jacf[i][j]*radx[j];
@@ -2585,7 +2584,7 @@ vector<interval> evaluate_innerrange_order2_robust(vector<interval> &z0, vector<
         inner_impro = 0;
         inner_pro = z0[i] + z_temp[i]; // 2nd order term is adversariam
         for (int j=0; j < sysdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
+            if (maximal || (exist_quantified[j] == i)) // output component i the one where j is existentially quantified
                 inner_impro += Kaucher_multeps(Jacf[i][j],radx[j]);
             else
                 inner_pro += Jacf[i][j]*radx[j];
@@ -2614,7 +2613,7 @@ interval evaluate_innerrange_x_subdiv(vector<interval> &z0, vector<interval> &ra
     inner_impro = 0;
     inner_pro = z0[i];
     for (int j=0; j < jacdim ; j++) {
-        if (maximal || (exist_quantified[j] == i)) {// output component i the one where j is existentially quantified {
+        if (maximal || (exist_quantified[j] == i)) {// output component i the one where j is existentially quantified {
             inner_impro += Kaucher_multeps(JacAff[i][j].convert_int(constr_eps[index1][index2],jacdim),eps_loc[index1][index2][j]);
         }
         else {
@@ -2638,7 +2637,7 @@ interval evaluate_innerrange_x_subdiv(vector<interval> &z0, vector<interval> &ra
     for (int m=0 ; m<nb_discr; m++)
     {
         for (int j=0; j < jacdim ; j++) {
-            if (maximal || (exist_quantified[j] == i)) {// output component i the one where j is existentially quantified {
+            if (maximal || (exist_quantified[j] == i)) {// output component i the one where j is existentially quantified {
                 if (m>0)
                     inner_impro += Kaucher_multeps(JacAff[i][j].convert_int(constr_eps_discr[index1][index2][m],jacdim),(eps_loc_discr[index1][index2][m][j]-extremity_eps_loc_discr[index1][index2][m-1][j]));
                 else
@@ -2707,7 +2706,7 @@ interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<in
     for (int j=0; j < jacdim ; j++) {
         loc_eps = radx[j].mid() + radx[j].rad() * c_eps[j];
         extremity_loc_eps_min = extremity_eps_min(radx,index1,index2,m1,m2,j); // always 0 ?
-        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
+        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
             inner_impro += Kaucher_multeps(JacAff[i][j].convert_int(c_eps,jacdim),loc_eps - extremity_loc_eps_min);
         else
             inner_pro += JacAff[i][j].convert_int(c_eps,jacdim) * (loc_eps - extremity_loc_eps_min);
@@ -2721,7 +2720,7 @@ interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<in
         loc_eps = radx[j].mid() + radx[j].rad() * c_eps[j];
         // extremity_loc_eps_max = extremity_eps_max(i1,i2,m1,m2,j);
         extremity_loc_eps_min = extremity_eps_min(radx,index1,index2,m1,m2,j);
-        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
+        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
             inner_impro += Kaucher_multeps(JacAff[i][j].convert_int(c_eps,jacdim),loc_eps - extremity_loc_eps_min);
         else
             inner_pro += JacAff[i][j].convert_int(c_eps,jacdim) * (loc_eps - extremity_loc_eps_min);
@@ -2736,7 +2735,7 @@ interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<in
         loc_eps = radx[j].mid() + radx[j].rad() * c_eps[j];
         // extremity_loc_eps_max = extremity_eps_max(i1,i2,m1,m2,j);
         extremity_loc_eps_min = extremity_eps_min(radx,index1,index2,m1,m2,j);
-        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
+        if (maximal || (exist_quantified[j] == i))  // output component i the one where j is existentially quantified {
             inner_impro += Kaucher_multeps(JacAff[i][j].convert_int(c_eps,jacdim),loc_eps - extremity_loc_eps_min);
         else
             inner_pro += JacAff[i][j].convert_int(c_eps,jacdim) * (loc_eps - extremity_loc_eps_min);
@@ -4294,7 +4293,7 @@ void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int 
     vector<double> temp(4);
     
     out_approx << YAML::Key << "maxbox";
-    temp[0] = inf(inner[varx]); temp[1] = sup(inner[varx]); temp[2] = inf(inner[vary]); temp[3] = sup(inner[vary]) ;
+    temp[0] = inf(inner[varx]); temp[1] = sup(inner[varx]); temp[2] = inf(inner[vary]); temp[3] = sup(inner[vary]) ;
     out_approx << YAML::Value << temp;
     
     print_pi(exist_quantified);
