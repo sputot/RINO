@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
     
     vector<interval> Xouter(sysdim);
-//    vector<interval> Xinner(sysdim);
+    vector<interval> Xinner(sysdim);
    
 /*    essai_sherlock();
     syschoice = 101;
@@ -234,9 +234,9 @@ int main(int argc, char* argv[])
 
             begin = clock();
             if (iter_method == 1)
-                    discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
+                    Xouter = discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
             else // (iter_method == 2)
-                    discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
+                    Xouter = discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
         }
        
     }
@@ -400,12 +400,52 @@ int main(int argc, char* argv[])
     }
     }
     
+    // printing final summary
+    ofstream summaryyamlfile;
+    summaryyamlfile.open("output/sumup.yaml");
+    YAML::Emitter out_summary;
+    
+    if (systype == 2) {
+    out_summary << YAML::BeginMap;
+    
+    out_summary << YAML::Key << "systype";
+    out_summary << YAML::Value << systype;
+    out_summary << YAML::Key << "sysdim";
+    out_summary << YAML::Value << sysdim;
+    out_summary << YAML::Key << "nb_steps";
+    out_summary << YAML::Value << nb_steps;
+//out_summary << YAML::Key << "nb_sample_per_dim";
+//out_summary << YAML::Value << nb_sample_per_dim;
+    out_summary << YAML::Key << "skew";
+    out_summary << YAML::Value << skew;
+//    out_summary << YAML::Key << "iter_method";
+//    out_summary << YAML::Value << iter_method;
+    
+    out_summary << YAML::Key << "zouter";
+    
+    vector<double> aff_zouter(sysdim*2);
+    for (int i=0; i<sysdim ; i++) {
+        aff_zouter[2*i] = Xouter[i].inf();
+        aff_zouter[2*i+1] = Xouter[i].sup();
+    }
+    out_summary << YAML::Value << aff_zouter;
+    
+/*    out_summary << YAML::Key << "zinner";
+    
+    vector<double> aff_zinner(sysdim*2);
+    for (int i=0; i<sysdim ; i++) {
+        aff_zinner[2*i] = Xinner[i].inf();
+        aff_zinner[2*i+1] = Xinner[i].sup();
+    }
+    out_summary << YAML::Value << aff_zinner;
+  */
+    
+    }
+    
 
     // for discrete systems, sumup is in function called
     if (systype == 0 || systype == 1) {
-        ofstream summaryyamlfile;
-        summaryyamlfile.open("output/sumup.yaml");
-        YAML::Emitter out_summary;
+        
         
         out_summary << YAML::BeginMap;
         out_summary << YAML::Key << "systype";
@@ -421,11 +461,13 @@ int main(int argc, char* argv[])
         out_summary << YAML::Key << "nb_subdiv_init";
         out_summary << YAML::Value << nb_subdiv_init;
         
-        out_summary << YAML::EndMap;
-        summaryyamlfile << out_summary.c_str();
-        summaryyamlfile.close();
+        
         
     }
+    
+    out_summary << YAML::EndMap;
+    summaryyamlfile << out_summary.c_str();
+    summaryyamlfile.close();
     
     
     

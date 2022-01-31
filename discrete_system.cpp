@@ -403,7 +403,7 @@ void print_outer_range(vector<interval> &z_o, vector<interval> &range) {
 
 
 // same as discrete_dynamical but with skew box for joint range
-void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew) {
+vector<interval> discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew) {
     
     vector<interval> res(jacdim);
     
@@ -933,56 +933,15 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
             out_approx << YAML::EndMap;
     }
     
-    // printing final summary
-    ofstream summaryyamlfile;
-    summaryyamlfile.open("output/sumup.yaml");
-    YAML::Emitter out_summary;
-    
-    out_summary << YAML::BeginMap;
-    
-    out_summary << YAML::Key << "systype";
-    out_summary << YAML::Value << systype;
-    out_summary << YAML::Key << "sysdim";
-    out_summary << YAML::Value << sysdim;
-    out_summary << YAML::Key << "nb_steps";
-    out_summary << YAML::Value << nb_steps;
-//out_summary << YAML::Key << "nb_sample_per_dim";
-//out_summary << YAML::Value << nb_sample_per_dim;
-    out_summary << YAML::Key << "skew";
-    out_summary << YAML::Value << skew;
-//    out_summary << YAML::Key << "iter_method";
-//    out_summary << YAML::Value << iter_method;
-    
-    out_summary << YAML::Key << "zouter";
-    
-    vector<double> aff_zouter(sysdim*2);
-    for (int i=0; i<sysdim ; i++) {
-        aff_zouter[2*i] = z_outer[i].inf();
-        aff_zouter[2*i+1] = z_outer[i].sup();
-    }
-    out_summary << YAML::Value << aff_zouter;
-    
-    out_summary << YAML::Key << "zinner";
-    
-    vector<double> aff_zinner(sysdim*2);
-    for (int i=0; i<sysdim ; i++) {
-        aff_zinner[2*i] = z_inner[i].inf();
-        aff_zinner[2*i+1] = z_inner[i].sup();
-    }
-    out_summary << YAML::Value << aff_zouter;
-    
-    
-    
-    out_summary << YAML::EndMap;
-    summaryyamlfile << out_summary.c_str();
-    summaryyamlfile.close();
+    return z_outer;
+  
 }
 
 
 
 // computing at each step the sensitivity with respect to initial values
 // same method as discrete_dynamical_method2 but using preconditioning uniquely for printing
-void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew) {
+vector<interval> discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew) {
     
     vector<interval> res(jacdim);
     
@@ -1235,6 +1194,8 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
         if (step % printing_period == 0)
                 out_approx << YAML::EndMap;
     }
+    
+    return z_outer;
     
  //   outFile_skewedinner.close();
  //   outFile_skewedouter.close();

@@ -62,7 +62,7 @@ examples_discrete=(cfg_discrete_15.txt cfg_discrete_16_1.txt cfg_discrete_16_2.t
 
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
-compare_to_ref=true
+compare_to_ref=false
 
 if [ "$test_discrete" == true ]
 then
