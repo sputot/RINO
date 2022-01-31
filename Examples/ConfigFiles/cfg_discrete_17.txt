@@ -1,0 +1,10 @@
+# Honeybees Site Choice Model [ADHS 2021]
+
+systype = discrete
+syschoice = 17
+nbsteps = 1500
+iter-method = 2
+skew = 1
+AEextension-order = 1
+initial-values = [500.0,500.0] [390.0,400.0] [90.0,100.0] [0.,0.] [0.,0.]
+interactive-visualization = 0

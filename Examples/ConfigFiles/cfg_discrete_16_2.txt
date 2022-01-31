@@ -1,4 +1,4 @@
-# Discrete-time Test Model [ADHS 2021]
+# SIR Epidemic Model [ADHS 2021]
 
 systype = discrete
 syschoice = 16
