@@ -31,8 +31,13 @@ int systype; // 0 is ODE, 1 is DDE
 int syschoice; // choice of system to analyze
 
 
+int points_per_graph = 50;
+
 int interactive_visualization = 0; // 0 or 1
 vector<bool> variables_to_display;
+
+int printing_period;
+
 
 using namespace std;
 
@@ -56,6 +61,7 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
         sscanf(buff, "nn-offset = %lf\n", &nn_offset);
         sscanf(buff, "nn-scaling = %lf\n", &nn_scaling_factor);
         sscanf(buff, "samples-per-dim = %d\n", &nb_sample_per_dim);
+        sscanf(buff, "points-per-graph = %d\n", &points_per_graph);
     }
     
     if (str_systype)

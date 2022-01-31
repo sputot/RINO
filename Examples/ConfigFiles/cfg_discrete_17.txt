@@ -3,6 +3,7 @@
 systype = discrete
 syschoice = 17
 samples-per-dim = 3
+points-per-graph = 50
 nbsteps = 1500
 iter-method = 2
 skew = 1

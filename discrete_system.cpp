@@ -30,6 +30,7 @@ vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 
 int nb_discr, nb_discr1, nb_discr2;
 
+
 vector<interval> init_discrete_system() // (char * config_filename)
 {
     
@@ -361,6 +362,12 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
         }
     }
     skew = (skew_int == 1);
+    
+    // we don't want to save and print too many points
+    printing_period = 1;
+    if (nb_steps >= points_per_graph)
+        printing_period = nb_steps / points_per_graph;
+    
     fclose(params_file);
     
 //    cout << "interactive-visualization=" << interactive_visualization << endl;
@@ -445,11 +452,6 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
         A_o[i][i] = 1.0;
     }
     
-    // initial state
-   // print_projections(z_inner,z_inner,z_outer,0,xinit);
-    //   print_innerbox(z_inner, exist_quantified, varx, vary, 0);
-   // output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
-  //  output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
     
     F<AAF> temp, temp1, temp2; // order 1
     F<interval> tempf, tempf1, tempf2; // order 2
@@ -466,9 +468,11 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
     
     for (int step = 1; step <= nb_steps ; step++)
     {
-        out_approx << YAML::BeginMap;
-        out_approx << YAML::Key << "tn";
-        out_approx << YAML::Value << step;
+        if (step % printing_period == 0) {
+            out_approx << YAML::BeginMap;
+            out_approx << YAML::Key << "tn";
+            out_approx << YAML::Value << step;
+        }
         
         for (int i=0; i < jacdim ; i++)
             x_i[i].diff(i,jacdim);
@@ -677,7 +681,8 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
+        if (step % printing_period == 0)
+            print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
         
         if (sysdim >= 2) {
@@ -863,6 +868,15 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
             else  if (order == 2)
                 temp_outer = evaluate_outerrange_order2(f0_o, radx_o, Cdfdx0_o, CHessf_o);
             
+            
+            
+            vector<interval> temp_inner;
+            if (order == 1)
+                temp_inner = evaluate_innerrange(f0_i,radx_i,CJacf_i,false,exist_quantified);
+            else if (order == 2)
+                temp_inner = evaluate_innerrange_order2(f0_i, radx_i, Cdfdx0_i, CHessf_i,false,exist_quantified);
+            
+            if (step % printing_period == 0) {
             if (skew)
             {
             out_approx << YAML::Key << "outer2d";
@@ -879,11 +893,7 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
             out_approx << YAML::EndSeq;
             }
             
-            vector<interval> temp_inner;
-            if (order == 1)
-                temp_inner = evaluate_innerrange(f0_i,radx_i,CJacf_i,false,exist_quantified);
-            else if (order == 2)
-                temp_inner = evaluate_innerrange_order2(f0_i, radx_i, Cdfdx0_i, CHessf_i,false,exist_quantified);
+            
             out_approx << YAML::Key << "inner2d";
             out_approx << YAML::Value;
             out_approx << YAML::BeginSeq;
@@ -902,6 +912,7 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
                 print_innerbox(temp_inner, exist_quantified, varx, vary, step);
             out_approx << YAML::EndMap;
             out_approx << YAML::EndSeq;
+            }
             
             z_inner = temp_inner;
             z_outer = temp_outer;
@@ -918,7 +929,8 @@ void discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<
             x0_o[i] =  mid(z_outer[i]); // f0_i[i]; //
             radx_o[i] = z_outer[i] - x0_o[i];
         }
-        out_approx << YAML::EndMap;
+        if (step % printing_period == 0)
+            out_approx << YAML::EndMap;
     }
 }
 
@@ -965,11 +977,7 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
     for (int i=0 ; i<sysdim; i++)
         A_o[i][i] = 1.0;
     
-    // initial state
-    //print_projections(xinit,xinit,xinit,0,xinit);
-    
-    //output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedouter);
-    //output_skewedbox = print_skewbox(xinit[varx], xinit[vary], A_o,  varx,  vary, 0, outFile_skewedinner);
+   
     
     for (int i=0; i < jacdim ; i++) {
         x_o[i] = z_outer[i];
@@ -986,9 +994,12 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
     
     for (int step = 1; step <= nb_steps ; step++)
     {
-        out_approx << YAML::BeginMap;
-        out_approx << YAML::Key << "tn";
-        out_approx << YAML::Value << step;
+        if (step % printing_period == 0)
+        {
+            out_approx << YAML::BeginMap;
+            out_approx << YAML::Key << "tn";
+            out_approx << YAML::Value << step;
+        }
         
         z_o = f(x_o);
         
@@ -1014,7 +1025,8 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
-        print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
+        if (step % printing_period == 0)
+            print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
         
         if (sysdim >= 2) {
@@ -1044,12 +1056,16 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
             
             int varx = 0, vary = 1, varz = 2; // joint range we want to print/compute
             
+            if (step % printing_period == 0)
+            {
             // SKEWED OUTER-APPROX
             if (skew)
             {
+                
                 out_approx << YAML::Key << "outer2d";
                 out_approx << YAML::Value;
                 out_approx << YAML::BeginSeq;
+                
                 
                 for (varx=0; varx<sysdim; varx++)
                     for (vary=varx+1;vary<sysdim;vary++)
@@ -1059,7 +1075,6 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
                             A_o[i][i] = 1.0;
                             C_o[i][i] = 1.0;
                         }
-             //   if (sysdim == 2) {
                     // 2D preconditioner - just on components varx and vary
                     A_o[varx][varx] = mid(Jacf_o[varx][varx]);
                     A_o[vary][vary] = mid(Jacf_o[vary][vary]);
@@ -1078,24 +1093,7 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
                         
                     f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary];
                     f0_o[vary] = C_o[vary][vary]*z0_o[vary] + C_o[vary][varx]*z0_o[varx];
-              /*  }
-                else if (sysdim >=3) {
-                    // 3D preconditioner -  supposing for now that varx, vary, varz = 0, 1, 2
-                    for (int i = 0; i < 3; i++)
-                        for (int j = 0; j < 3; j++)
-                                A_o[i][j] = mid(Jacf_o[i][j]);
-                    double determinant = 0;
-                    for (int i = 0; i < 3; i++)
-                        determinant = determinant + (A_o[0][i] * (A_o[1][(i+1)%3] * A_o[2][(i+2)%3] - A_o[1][(i+2)%3] * A_o[2][(i+1)%3]));
-                    for (int i = 0; i < 3; i++)
-                        for (int j = 0; j < 3; j++)
-                            C_o[i][j] = ((A_o[(j+1)%3][(i+1)%3] * A_o[(j+2)%3][(i+2)%3]) - (A_o[(j+1)%3][(i+2)%3] * A_o[(j+2)%3][(i+1)%3]))/ determinant;
-                    
-                    f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary] + C_o[varx][varz]*z0_o[varz];
-                    f0_o[vary] = C_o[vary][varx]*z0_o[varx] + C_o[vary][vary]*z0_o[vary] + C_o[vary][varz]*z0_o[varz];
-                    f0_o[varz] = C_o[varz][varx]*z0_o[varx] + C_o[varz][vary]*z0_o[vary] + C_o[varz][varz]*z0_o[varz];
-                }
-                */
+              
                 
                 // CJacf = C * Jacf
                 multMiMi(CJacf_o,C_o,Jacf_o);
@@ -1177,6 +1175,7 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
             out_approx << YAML::EndSeq;
         }
         
+        } // end if (step % printing_period == 0)
         
         
         // initialize next iteration: z0 = f^n(x0)
@@ -1189,8 +1188,8 @@ void discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector
             //   x0_o[i] = mid(z_o[i].x().convert_int()); //+(eps[i].sup()-mid(eps[i]))/2.0;
             //       radx_o[i] = z_o[i].x().convert_int() - z0_o[i];
         }
-        
-        out_approx << YAML::EndMap;
+        if (step % printing_period == 0)
+                out_approx << YAML::EndMap;
     }
     
  //   outFile_skewedinner.close();
@@ -4171,6 +4170,7 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
     out_samples << YAML::Key << "samples";
     out_samples << YAML::Value << YAML::BeginSeq;
     
+    
     for (int iter=1 ; iter <=n ; iter++)
     {
         for (int i=0; i < sysdim ; i++) {
@@ -4182,13 +4182,15 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
         {
             output[cur_point] = f(input[cur_point]);
             
-            out_samples << YAML::BeginMap;
-            out_samples << YAML::Key << "tn";
-            out_samples << YAML::Value << iter;
-            out_samples << YAML::Key << "sample";
-            out_samples << YAML::Value << output[cur_point];
-            out_samples << YAML::EndMap;
-            
+            if (iter % printing_period == 0)
+            {
+                out_samples << YAML::BeginMap;
+                out_samples << YAML::Key << "tn";
+                out_samples << YAML::Value << iter;
+                out_samples << YAML::Key << "sample";
+                out_samples << YAML::Value << output[cur_point];
+                out_samples << YAML::EndMap;
+            }
         
             for (int i=0; i < sysdim ; i++) {
                 if (output[cur_point][i] < min_output[iter][i])
@@ -4201,12 +4203,14 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
                 input[cur_point][i] = output[cur_point][i];
         }
         
-        cout << "Estimated reachable set f^n(x) at step " << iter << " is: ";
-        for (int i=0; i < sysdim ; i++) {
-            cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
-            
+        if (iter % printing_period == 0)
+        {
+            cout << "Estimated reachable set f^n(x) at step " << iter << " is: ";
+            for (int i=0; i < sysdim ; i++) {
+                cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
+            }
+            cout << endl;
         }
-        cout << endl;
         for (int i=0; i < sysdim ; i++)
             range[iter][i] = interval(min_output[iter][i],max_output[iter][i]);
     }

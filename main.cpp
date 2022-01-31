@@ -191,26 +191,7 @@ int main(int argc, char* argv[])
         DiscreteFunc f;
        // nb_sample_per_dim = 20;
     
-        // default parameter values
-        if (syschoice == 23)
-        {
-            iter_method = 1;
-            skew = false;
-        } else if (syschoice == 231 || syschoice == 18 || syschoice == 20)
-        {
-            iter_method = 2;
-            skew = true;
-        }
-        else if (syschoice == 15 || syschoice == 19 || syschoice == 16) {
-            iter_method = 1;
-            skew = true; // 3D prec for 16
-        }
-        else if (syschoice == 17 ||  syschoice == 21 ) {
-            iter_method = 2;
-            skew = false;
-        } 
-        
-        
+       
         char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
         if (str_nbsteps)
             nb_steps = atoi(str_nbsteps);

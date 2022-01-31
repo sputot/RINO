@@ -24,6 +24,8 @@ void open_outputfiles();
 extern ofstream approxreachsetfile;
 extern YAML::Emitter out_approx;
 
+extern int points_per_graph; // number of steps in time printed on each graphs (and in yaml files)
+extern int printing_period; // deduced from nb of steps and points per graph
 
 #define tol_noise 0.00001
 
