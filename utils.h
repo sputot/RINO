@@ -17,7 +17,7 @@
 
 //#include "ode_def.h"
 
-void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename);
+void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename, int &nb_sample_per_dim);
 
 void open_outputfiles();
 

@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
     
     if (config_filename)
-        readfromfile_syschoice(config_filename,sfx_filename,onnx_filename);
+        readfromfile_syschoice(config_filename,sfx_filename,onnx_filename,nb_sample_per_dim);
     
     if ((!str_systype && !config_filename) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
     {
@@ -189,7 +189,7 @@ int main(int argc, char* argv[])
     if (systype == 2) {
         
         DiscreteFunc f;
-        nb_sample_per_dim = 20;
+       // nb_sample_per_dim = 20;
     
         // default parameter values
         if (syschoice == 23)

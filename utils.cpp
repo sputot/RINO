@@ -38,7 +38,7 @@ using namespace std;
 
 
 // reading system choice and neural network from file
-void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename)
+void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename, int &nb_sample_per_dim)
 {
     const int LINESZ = 2048;
     char buff[LINESZ];
@@ -55,6 +55,7 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
         sscanf(buff, "nnfile-onnx = %s\n", onnx_filename);
         sscanf(buff, "nn-offset = %lf\n", &nn_offset);
         sscanf(buff, "nn-scaling = %lf\n", &nn_scaling_factor);
+        sscanf(buff, "samples-per-dim = %d\n", &nb_sample_per_dim);
     }
     
     if (str_systype)
