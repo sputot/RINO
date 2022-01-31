@@ -400,11 +400,14 @@ int main(int argc, char* argv[])
     }
     }
     
-    ofstream summaryyamlfile;
-    summaryyamlfile.open("output/sumup.yaml");
-    YAML::Emitter out_summary;
-    out_summary << YAML::BeginMap;
+
+    // for discrete systems, sumup is in function called
     if (systype == 0 || systype == 1) {
+        ofstream summaryyamlfile;
+        summaryyamlfile.open("output/sumup.yaml");
+        YAML::Emitter out_summary;
+        
+        out_summary << YAML::BeginMap;
         out_summary << YAML::Key << "systype";
         out_summary << YAML::Value << systype;
         out_summary << YAML::Key << "sysdim";
@@ -417,24 +420,13 @@ int main(int argc, char* argv[])
         out_summary << YAML::Value << tau;
         out_summary << YAML::Key << "nb_subdiv_init";
         out_summary << YAML::Value << nb_subdiv_init;
+        
+        out_summary << YAML::EndMap;
+        summaryyamlfile << out_summary.c_str();
+        summaryyamlfile.close();
+        
     }
-    else if (systype == 2 || systype == 3) { // discrete
-        out_summary << YAML::Key << "systype";
-        out_summary << YAML::Value << systype;
-        out_summary << YAML::Key << "sysdim";
-        out_summary << YAML::Value << sysdim;
-        out_summary << YAML::Key << "nb_steps";
-        out_summary << YAML::Value << nb_steps;
-        out_summary << YAML::Key << "nb_sample_per_dim";
-        out_summary << YAML::Value << nb_sample_per_dim;
-        out_summary << YAML::Key << "skew";
-        out_summary << YAML::Value << skew;
-        out_summary << YAML::Key << "iter_method";
-        out_summary << YAML::Value << iter_method;
-    }
-    out_summary << YAML::EndMap;
-    summaryyamlfile << out_summary.c_str();
-    summaryyamlfile.close();
+    
     
     
     clock_t end = clock();
