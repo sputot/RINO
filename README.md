@@ -54,6 +54,7 @@ For example:
 <!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
 - the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25 [-iter_method 1 -AEextension_order 1 -skew 1]``` or ```./rino -configfile Examples/ConfigFiles/cfg_discrete_15.txt```
 - the SIR epidemic model of [ADHS 2021] with Algorithm 1 (Fig. 3) is run by ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_1.txt``` and the same model with slightly modified initial conditions and Algorithm 2 (Fig. 4) is run by  ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_2.txt```.
+- the Honeybees Site Choice Model [ADHS 2021] with Algorithm 2 is run by ```./rino -configfile Examples/ConfigFiles/cfg_discrete_17.txt```
 
 The corresponding predefined systems are defined:
   - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
@@ -156,6 +157,9 @@ variables-to-display = 1 2
 systype = discrete
 # system ID
 syschoice = 15
+
+# number of samples in each dimension taken for reachset estimation by trajectory samples
+samples-per-dim = 20
 
 # number of discrete time steps
 nbsteps = 25
