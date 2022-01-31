@@ -8,7 +8,15 @@ This is a library to compute guaranteed inner and outer approximations of reacha
 
 For continuous-time systems, it relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
 
-## Dependencies
+## Dependencies and Installation
+
+### Using docker
+
+Get the RINO directory and run ```docker build .```.
+An image ```shaxxx...``` is built which you can run by ```docker run -it --name rino shaxxx...```.
+You can then execute RINO as indicated below.
+
+### Building from sources
 
 You need g++, LAPACK and BLAS installed.
 
@@ -18,8 +26,6 @@ Get and unzip the FADBAD++ automatic diffentiation package, available from http:
 
 A modified of the third party package for Affine Arithmetic aaflib-0.1 (http://aaflib.sourceforge.net) has been included in the current directory, because some modifications were needed (additional functions and modifications of trigonometric functions). 
 Future plans include separating more cleanly the initial version and our modifications...
-
-## Installing
 
 Go to directory aaflib-0.1 within the current package and compile by "make static". 
 
@@ -160,6 +166,9 @@ syschoice = 15
 
 # number of samples in each dimension taken for reachset estimation by trajectory samples
 samples-per-dim = 20
+
+# number of (time) points saved and printed on graphs 
+points-per-graph = 50
 
 # number of discrete time steps
 nbsteps = 25
