@@ -1193,7 +1193,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 out_approx << YAML::EndMap;
     }
     
-    ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_inner);
+    ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_inner_proj);
     return res;
     
 }
