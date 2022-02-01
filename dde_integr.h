@@ -280,7 +280,7 @@ public:
     // eval TM at tn+tau and store in xp1
     void TM_eval(int s);
   
-    void TM_evalandprint_solutionstep(int s, vector<interval> &eps);
+    ReachSet TM_evalandprint_solutionstep(int s, vector<interval> &eps);
     
     void init_nextsmallstep(int s);
     HybridStep_dde init_nextbigstep(double tau);

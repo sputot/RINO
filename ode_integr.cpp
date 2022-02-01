@@ -5,7 +5,7 @@
  Part of the RINO package for Inner and Outer Reachability Analysis.
  
  This file builds the Taylor models and defines the main reachability analysis functions for ODEs
- - compute Taylor model coefficients by automatic differentiation from the ODE systems
+ - compute Taylor model coTM_evalandprint_solutionstepefficients by automatic differentiation from the ODE systems
  - compute a priori rough enclosures of the flow and its Jacobian (fixpoint functions)
  - compute refined tubes of the flow and its jacobian using the rough enclosure and the Taylor models
  ============================================================================ */
@@ -1137,7 +1137,7 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
 
 
 
-vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv)
+ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv)
 {
     assert (tn <= tnp1);
     assert (tnp1 <= tn+tau);
@@ -1197,7 +1197,8 @@ vector<interval> HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &
     }
     out_approx << YAML::EndMap;
     
-    return Xouter;
+    ReachSet res = ReachSet(sampled_reachset,Xouter,Xinner);
+    return res;
 }
 
 

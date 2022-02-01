@@ -405,6 +405,7 @@ void print_outer_range(vector<interval> &z_o, vector<interval> &range) {
 // same as discrete_dynamical but with skew box for joint range
 ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew)
 {
+    ReachSet res;
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
     vector<vector<AAF>> JacAff_o(sysdim,vector<AAF>(jacdim)), JacAff_i(sysdim,vector<AAF>(jacdim));
     vector<vector<interval>> Jacf_o(sysdim,vector<interval>(jacdim)), Jacf_i(sysdim,vector<interval>(jacdim));
@@ -682,6 +683,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
         if (step % printing_period == 0)
             print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
+        res = ReachSet(estimated_range[nb_steps],z_outer,z_inner_proj);
         
         if (sysdim >= 2) {
             
@@ -920,10 +922,10 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             z_inner = z_inner_proj;
         
         for (int i=0; i < sysdim ; i++) {
-            x_i[i] = z_inner[i];
+            x_i[i] = z_inner[i]; // beware here are not the projections but the skewed one
             x0_i[i] =  mid(z_inner[i]); // f0_i[i]; //
             radx_i[i] = z_inner[i] - x0_i[i];
-            x_o[i] = z_outer[i];
+            x_o[i] = z_outer[i];  // beware here are not the projections but the skewed one
             x0_o[i] =  mid(z_outer[i]); // f0_i[i]; //
             radx_o[i] = z_outer[i] - x0_o[i];
         }
@@ -931,8 +933,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             out_approx << YAML::EndMap;
     }
     
-    ReachSet res = ReachSet(z_outer,z_inner);
-    return res;
+    // ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_inner); ==> attention les z_outer et z_inner ne sont pas les bons ici
+    return res; // ReachSet
 }
 
 
@@ -1191,7 +1193,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 out_approx << YAML::EndMap;
     }
     
-    ReachSet res = ReachSet(z_outer,z_inner);
+    ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_inner);
     return res;
     
 }
@@ -4138,6 +4140,7 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
                                     if (xinit[4].inf() != xinit[4].sup())
                                         printf("warning, case not fully implemented");
                                     input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
+                                    
                                 }
                         //        cur_point++; // AJOUT
                             }

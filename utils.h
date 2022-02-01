@@ -30,11 +30,12 @@ extern int nncontroldim;  // dimension of the neural network control - does not 
 class ReachSet
 {
 public:
+    vector<interval> Xsampled;
     vector<interval> Xouter;
     vector<interval> Xinner;
     
-    ReachSet() : Xouter(sysdim), Xinner(sysdim) {}
-    ReachSet(vector<interval> &Xo, vector<interval> &Xi) : Xouter(Xo), Xinner(Xi) {}  // ou recopie ?
+    ReachSet() : Xsampled(sysdim), Xouter(sysdim), Xinner(sysdim) {}
+    ReachSet(vector<interval> &Xs, vector<interval> &Xo, vector<interval> &Xi) : Xsampled(Xs), Xouter(Xo), Xinner(Xi) {}  // ou recopie ?
 };
 
 

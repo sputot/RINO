@@ -17,7 +17,8 @@
 #include "fadiff.h"
 #include "network_handler.h"
 #include "fadbad_aa.h"
-#include "ode_def.h"
+#include "utils.h"
+//#include "ode_def.h"
 
 class DiscreteFunc {
 public:

@@ -769,9 +769,10 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
 
 // print solution at time cur_step.tn+(j+1)*tau/nb_subdiv
 //  A completer pour la sous-approx
-void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
+ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
 {
     vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
+    ReachSet res;
     
     TM_eval(s);
     
@@ -814,7 +815,10 @@ void HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps)
         cout << "with intersection with direct solution: ";
         print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
     }
-   
+    vector<interval> Xsampled(sysdim);
+    for (int i=0; i<sysdim; i++)
+        Xsampled[i] = interval::EMPTY();
+    res = ReachSet(Xsampled,Xouter,Xinner);
 //    print_solutionstep(Xouter,Xinner,Xcenter);
 }
 

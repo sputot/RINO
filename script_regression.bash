@@ -111,8 +111,9 @@ then
     
     zouter_rino=$(yaml $file_rino "['zouter']")
     zouter_ref=$(yaml $file_ref "['zouter']")
-    #echo $zouter_rino
-    #echo $zouter_ref
+    zinner_rino=$(yaml $file_rino "['zinner']")
+    zinner_ref=$(yaml $file_ref "['zinner']")
+    
     
     diff ${rino_output}/sumup.yaml ${ref_output}/sumup.yaml > /dev/null 2>&1
     error=$?
@@ -126,6 +127,8 @@ then
         echo "$file_rino and $file_ref differ"
         echo "zouter_rino is" $zouter_rino
         echo "zouter_ref is" $zouter_ref
+        echo "zinner_rino is" $zinner_rino
+        echo "zinner_ref is" $zinner_ref
     else
         results_changed=true
         echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "

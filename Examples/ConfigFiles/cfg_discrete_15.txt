@@ -3,6 +3,8 @@
 systype = discrete
 syschoice = 15
 nbsteps = 25
+samples-per-dim = 20
+points-per-graph = 50
 iter-method = 1
 skew = 1
 AEextension-order = 1

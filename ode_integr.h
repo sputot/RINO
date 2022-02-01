@@ -278,7 +278,7 @@ public:
     void TM_evalJac();
     void TM_eval();
     
-    vector<interval> TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv);
+    ReachSet TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv);
     void init_nextstep(vector<AAF> &param_inputs, double _tau);
     
     
