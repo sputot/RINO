@@ -289,7 +289,6 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
 void twodim_discretization_by_quadrant(vector<interval> &radx);
 
 // estimation of exact image by sampling
-vector<interval> estimate_range(DiscreteFunc &f, vector<interval> &xinit, int discr);
 vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit, int discr);
 
 
