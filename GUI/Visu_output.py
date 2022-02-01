@@ -6,7 +6,7 @@
 
 # ## Reading result files
 
-# In[343]:
+# In[58]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -56,23 +56,26 @@ if (nb_arguments > 1):
 if (path.isfile('sumup.yaml')):
     with open('sumup.yaml','r') as data_loaded:
         summary = yaml.safe_load(data_loaded)
-        #sysdim = summary["sysdim"]
-        #systype = summary["systype"]
+        sysdim = summary["sysdim"]
+        systype = summary["systype"]
         #print(summary)
         #print(sysdim)
         
 # reading sample file
+samples_absent = False;
 if (path.isfile('samplesreachset.yaml')):
     with open('samplesreachset.yaml','r') as samples:
         data_loaded = yaml.safe_load(samples)
-        sysdim = data_loaded["sysdim"]
-        systype = data_loaded["systype"]
+        #sysdim = data_loaded["sysdim"]
+        #systype = data_loaded["systype"]
         samples = data_loaded["samples"]
         sample_tn = [sample["tn"] for sample in samples]
         sample_z = []
         for i in range(sysdim):
             sample_z.append([sample["sample"][i] for sample in samples])
         # plt.scatter(z[0],z[1],c='purple',alpha=1.,s=1.,label='estimated reachable states')
+else:
+    samples_absent = True;
         
 # reading approx file
 # make sure this works also when several subdivision (the subdivisions are seperated by a whaite line I believe, see how t behaves?)
@@ -111,9 +114,14 @@ if (path.isfile('approxreachset.yaml')):
             zmax_outer.append([app["outer"][2*i+1] for app in approx])
             zmin_inner.append([app["inner"][2*i] for app in approx])
             zmax_inner.append([app["inner"][2*i+1] for app in approx])
-            etaouter.append([app["etaouter"][i] for app in approx])
-            etainner.append([app["etainner"][i] for app in approx])
-            gamma.append([app["gamma"][i] for app in approx])
+            
+        if 'etaouter' in approx[0]:
+            for i in range(sysdim):
+                etaouter.append([app["etaouter"][i] for app in approx])
+                etainner.append([app["etainner"][i] for app in approx])
+        if 'gamma' in approx[0]:
+            for i in range(sysdim):
+                gamma.append([app["gamma"][i] for app in approx])
         
         if 'center' in approx[0]:
             for i in range(sysdim):
@@ -149,43 +157,44 @@ if (path.isfile('approxreachset.yaml')):
             for i in range(sysdim):
                 meanerrordiff.append([app["meanerrordiff"][2*i+1] for app in approx])
                 relmeanerrordiff.append([app["relmeanerrordiff"][2*i+1] for app in approx])
+        
+        if (int(sysdim) > 1 and 'inner2d' in approx[0]):
+            inner2d_maxbox = []
+            inner2d_maxskew = []
+            outer2d_maxskew = []
+            inner2d_minbox = []
+            inner2d_robbox = []
+            inner2d = [app['inner2d'] for app in approx]
+            if 'maxbox' in inner2d[0][0]:
+                inner2d_maxbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
+            if 'maxskew' in inner2d[0][0]:
+                inner2d_maxskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
+            if 'minbox' in inner2d[0][0]:
+                inner2d_minbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
+            if 'minskew' in inner2d[0][0]:
+                inner2d_minskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
+            if 'robbox'  in inner2d[0][0]:
+                inner2d_robbox  = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
+            if 'robskew'  in inner2d[0][0]:
+                inner2d_robskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float) 
             
-        inner2d_maxbox = []
-        inner2d_maxskew = []
-        outer2d_maxskew = []
-        inner2d_minbox = []
-        inner2d_robbox = []
-        inner2d = [app['inner2d'] for app in approx]
-        if 'maxbox' in inner2d[0][0]:
-            inner2d_maxbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
-        if 'maxskew' in inner2d[0][0]:
-            inner2d_maxskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
-        if 'minbox' in inner2d[0][0]:
-            inner2d_minbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
-        if 'minskew' in inner2d[0][0]:
-            inner2d_minskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
-        if 'robbox'  in inner2d[0][0]:
-            inner2d_robbox  = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
-        if 'robskew'  in inner2d[0][0]:
-            inner2d_robskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float) 
-            
-        no_iter = 0
-        for iter in inner2d:
-            for tuple in iter:
-                x1 = int(tuple['x1'])
-                x2 = int(tuple['x2'])
-                if 'maxbox' in tuple:
-                    inner2d_maxbox[no_iter][x1][x2]=tuple['maxbox']
-                # plutot changer le test ci-dessous pour recuperer l'info de skew ou pas
-                if 'maxskew' in tuple:
-                    inner2d_maxskew[no_iter][x1][x2]=tuple['maxskew']
-                if 'minbox' in tuple:
-                    inner2d_minbox[no_iter][x1][x2]=tuple['minbox']
-                    inner2d_minskew[no_iter][x1][x2]=tuple['minskew']
-                if 'robbox' in tuple:
-                    inner2d_robbox[no_iter][x1][x2]=tuple['robbox']
-                    inner2d_robskew[no_iter][x1][x2]=tuple['robskew']
-            no_iter = no_iter+1
+            no_iter = 0
+            for iter in inner2d:
+                for tuple in iter:
+                    x1 = int(tuple['x1'])
+                    x2 = int(tuple['x2'])
+                    if 'maxbox' in tuple:
+                        inner2d_maxbox[no_iter][x1][x2]=tuple['maxbox']
+                    # plutot changer le test ci-dessous pour recuperer l'info de skew ou pas
+                    if 'maxskew' in tuple:
+                        inner2d_maxskew[no_iter][x1][x2]=tuple['maxskew']
+                    if 'minbox' in tuple:
+                        inner2d_minbox[no_iter][x1][x2]=tuple['minbox']
+                        inner2d_minskew[no_iter][x1][x2]=tuple['minskew']
+                    if 'robbox' in tuple:
+                        inner2d_robbox[no_iter][x1][x2]=tuple['robbox']
+                        inner2d_robskew[no_iter][x1][x2]=tuple['robskew']
+                no_iter = no_iter+1
         
         if (int(sysdim) > 2 and 'inner3d' in approx[0]):
             inner3d = [app['inner3d'] for app in approx]
@@ -211,7 +220,7 @@ if (path.isfile('approxreachset.yaml')):
                 no_iter = no_iter+1
 
 
-# In[344]:
+# In[59]:
 
 
 width_in_inches = 12
@@ -288,7 +297,7 @@ def print_xy(no_varx,no_vary,sample,approx):
         plt.close()
 
 
-# In[345]:
+# In[60]:
 
 
 def print_discrete_xy(no_varx,no_vary,sample,approx):
@@ -384,7 +393,7 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
     plt.close()
 
 
-# In[346]:
+# In[61]:
 
 
 # print joint ranges and sampled joint range of variables to display
@@ -402,7 +411,7 @@ for vary in range(sysdim):
                 print_xy(varx,vary,True,True)  # sample and approx
 
 
-# In[347]:
+# In[62]:
 
 
 # 3D printing in continuous case  (ODEs)
@@ -532,7 +541,7 @@ def print_xyz(no_varx,no_vary,no_varz):
     plt.close()
 
 
-# In[348]:
+# In[63]:
 
 
 # print joint outer and inner 3D ranges in continuous case (ODEs)
@@ -547,7 +556,7 @@ if (systype == 0):  # ODEs
                     print_xyz(varx,vary,varz)
 
 
-# In[349]:
+# In[64]:
 
 
 # 3D printing in case of discrete-time systems - different from continuous case, x,y as a function of time...
@@ -619,7 +628,7 @@ def print3d_discrete_xyt(no_varx,no_vary):
     plt.close()
 
 
-# In[350]:
+# In[65]:
 
 
 # 3D printing in discrete time systems - different from continuous case, x,y as a function of time...
@@ -633,7 +642,7 @@ if (systype == 2):
                   print3d_discrete_xyt(varx,vary)
 
 
-# In[351]:
+# In[66]:
 
 
 # if print_robust = True: print robust approx
@@ -761,7 +770,7 @@ def print_projections(print_robust,print_minimal,print_maximal,print_sample,only
         plt.close()
 
 
-# In[352]:
+# In[67]:
 
 
 print_robust = False
@@ -774,7 +783,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[353]:
+# In[68]:
 
 
 print_robust = False
@@ -787,19 +796,20 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[354]:
+# In[69]:
 
 
-print_robust = False
-print_minimal = False
-print_sample = True
-only_one_graph = False
-subplots = False
+if (not samples_absent):
+    print_robust = False
+    print_minimal = False
+    print_sample = True
+    only_one_graph = False
+    subplots = False
 
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+    print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[355]:
+# In[70]:
 
 
 print_robust = True
@@ -811,7 +821,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[356]:
+# In[71]:
 
 
 print_robust = False
@@ -823,7 +833,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[357]:
+# In[72]:
 
 
 print_robust = True
@@ -835,7 +845,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[358]:
+# In[73]:
 
 
 print_robust = False
@@ -845,7 +855,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[359]:
+# In[74]:
 
 
 print_robust = False
@@ -855,33 +865,35 @@ subplots = True
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[360]:
+# In[75]:
 
 
-fig = plt.figure()
-for k in range(sysdim):
-    plt.plot(approx_tn , etaouter[k], label='eta_o(x'+str(k+1)+')')
-for k in range(sysdim):    
-    plt.plot(approx_tn , etainner[k], label='eta_i(x'+str(k+1)+')', linestyle='dashed')
-plt.legend() # add the legend specified by the above labels
-plt.title("Accuracy measures eta_o (outer) and eta_i (inner) for each component")
-plt.savefig("eta.png") # save to file
-if (print_interactive):
-    plt.show() # print
-plt.close()
+if 'etaouter' in approx[0]:
+    fig = plt.figure()
+    for k in range(sysdim):
+        plt.plot(approx_tn , etaouter[k], label='eta_o(x'+str(k+1)+')')
+    for k in range(sysdim):    
+        plt.plot(approx_tn , etainner[k], label='eta_i(x'+str(k+1)+')', linestyle='dashed')
+    plt.legend() # add the legend specified by the above labels
+    plt.title("Accuracy measures eta_o (outer) and eta_i (inner) for each component")
+    plt.savefig("eta.png") # save to file
+    if (print_interactive):
+        plt.show() # print
+    plt.close()
 
-fig = plt.figure()
-for k in range(sysdim):
-    plt.plot(approx_tn , gamma[k], label='gamma(x'+str(k+1)+')')
-plt.legend() # add the legend specified by the above labels
-plt.title("Accuracy measure gamma for each component")
-plt.savefig("gamma.png") # save to file
-if (print_interactive):
-    plt.show() # print
-plt.close()
+if 'gamma' in approx[0]:
+    fig = plt.figure()
+    for k in range(sysdim):
+        plt.plot(approx_tn , gamma[k], label='gamma(x'+str(k+1)+')')
+    plt.legend() # add the legend specified by the above labels
+    plt.title("Accuracy measure gamma for each component")
+    plt.savefig("gamma.png") # save to file
+    if (print_interactive):
+        plt.show() # print
+    plt.close()
 
 
-# In[361]:
+# In[76]:
 
 
 print_interactive = False
@@ -899,7 +911,7 @@ if (len(meanerrorinner) > 0):
     plt.close()
 
 
-# In[ ]:
+# In[77]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any

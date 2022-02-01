@@ -103,6 +103,7 @@ void open_outputfiles()
    
 }
 
+/*
 // print after the end of the analysis
 void print_finalstats(clock_t begin)
 {
@@ -118,6 +119,8 @@ void print_finalstats(clock_t begin)
     
     
 }
+ 
+ */
 
 
 // print initial conditions and init XML in the discrete systems case

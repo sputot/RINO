@@ -57,7 +57,7 @@ extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
 
 // close XML and print final time: common to ODEs / discrete systems
-void print_finalstats(clock_t begin);
+//void print_finalstats(clock_t begin);
 
 // print initial conditions and init XML in the discrete systems case
 void print_init_discrete(vector<interval> &x, bool skew);

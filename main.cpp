@@ -93,8 +93,7 @@ int main(int argc, char* argv[])
     
     int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
     
-    vector<interval> Xouter(sysdim);
-    vector<interval> Xinner(sysdim);
+    
     
     ReachSet RS;
    
@@ -304,7 +303,8 @@ int main(int argc, char* argv[])
             // removed when passed to yaml but not tested since => check
         }
         
-        print_finalsolution(ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
+        if (nb_subdiv_init > 1)
+            print_finalsolution(ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
     }
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
@@ -389,18 +389,7 @@ int main(int argc, char* argv[])
     double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
     cout << "elapsed time (sec) =" << elapsed_secs << endl;
     
-    //begin = clock();
-    if (print_debug)
-    {
-        if (systype == 0 || systype == 1 || (systype == 2 && nb_steps>1))
-            run_pythonscript_visualization();
-        else if (systype == 2) // nb_steps = 1
-            system("cd GUI; python3 Visu_function.py; cd ..");
-    }
-    //end = clock();
-    //double elapsed_printing = double(end - begin) / CLOCKS_PER_SEC;
     
-    // printing final summary
     ofstream summaryyamlfile;
     summaryyamlfile.open("output/sumup.yaml");
     YAML::Emitter out_summary;
@@ -567,7 +556,18 @@ int main(int argc, char* argv[])
     } */
     summaryfile.close();
     
+    //begin = clock();
+    if (print_debug)
+    {
+        if (systype == 0 || systype == 1 || (systype == 2 && nb_steps>1))
+            run_pythonscript_visualization();
+        else if (systype == 2) // nb_steps = 1
+            system("cd GUI; python3 Visu_function.py; cd ..");
+    }
+    //end = clock();
+    //double elapsed_printing = double(end - begin) / CLOCKS_PER_SEC;
     
+    // printing final summary
  //   print_finalstats(begin);
     
     

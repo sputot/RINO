@@ -38,7 +38,7 @@ using namespace std;
 // defualt starting index for deviations
 unsigned AAF::last = 0;
 // default approximation type
-tApproximationType AAF::approximationType = CHEBYSHEV; // MINRANGE; //CHEBYSHEV;
+tApproximationType AAF::approximationType =  CHEBYSHEV; // MINRANGE; //CHEBYSHEV;
 
 #ifdef CLEANUP
 list <AAF*> AAF::allAAF;
