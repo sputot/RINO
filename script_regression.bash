@@ -99,12 +99,12 @@ compare_to_ref=false
     zinner_ref=$(yaml $file_ref "['zinner']")
     elapsed_rino=$(yaml $file_rino "['elapsed-secs']")
     elapsed_ref=$(yaml $file_ref "['elapsed-secs']")
-    
-    if ($zouter_rino != $zouter_ref) || ($zinner_rino != $zinner_ref)
+
+    if [[ "$zouter_rino" != "$zouter_ref" ]] || [[ "$zinner_rino" != "$zinner_ref" ]]
     then
         results_changed=true
         echo "Reachability results in $file_rino and $file_ref differ"
-        if ($zouter_rino != $zouter_ref)
+        if [[ $zouter_rino != $zouter_ref ]]
         then
             echo "zouter_rino is" $zouter_rino
             echo "zouter_ref is" $zouter_ref
