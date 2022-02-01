@@ -95,6 +95,8 @@ int main(int argc, char* argv[])
     
     vector<interval> Xouter(sysdim);
     vector<interval> Xinner(sysdim);
+    
+    ReachSet RS;
    
 /*    essai_sherlock();
     syschoice = 101;
@@ -234,9 +236,9 @@ int main(int argc, char* argv[])
 
             begin = clock();
             if (iter_method == 1)
-                    Xouter = discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
+                RS = discrete_dynamical(f,xinit,estimated_range,nb_steps,AEextension_order,skew);
             else // (iter_method == 2)
-                    Xouter = discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
+                RS = discrete_dynamical_method2(f,xinit,estimated_range,nb_steps,skew);
         }
        
     }
@@ -358,21 +360,10 @@ int main(int argc, char* argv[])
             vector<F<AAF>> temp(sysdim);
             for (int j=0 ; j<sysdim; j++)
                 temp[j] = x[j];
-            //nn_outputs = NH.eval_network(temp);
-            
-            
            
-            
-            
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
-            
-          //  vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
-          //  for (int i=0; i<sysdim; i++)
-           //     J[i][i] = 1.0;
-         //   cur_step.eval_valandJacobian_nn(initial_values,param_inputs,0,tau,J);
-            
-            
+           
             int iter = 1;
             while (cur_step.tn < t_end-0.0001*t_end)
             {
@@ -405,6 +396,7 @@ int main(int argc, char* argv[])
     summaryyamlfile.open("output/sumup.yaml");
     YAML::Emitter out_summary;
     
+    // discrete systems
     if (systype == 2) {
     out_summary << YAML::BeginMap;
     
@@ -414,19 +406,19 @@ int main(int argc, char* argv[])
     out_summary << YAML::Value << sysdim;
     out_summary << YAML::Key << "nb_steps";
     out_summary << YAML::Value << nb_steps;
-//out_summary << YAML::Key << "nb_sample_per_dim";
-//out_summary << YAML::Value << nb_sample_per_dim;
+    out_summary << YAML::Key << "nb_sample_per_dim";
+    out_summary << YAML::Value << nb_sample_per_dim;
     out_summary << YAML::Key << "skew";
     out_summary << YAML::Value << skew;
-//    out_summary << YAML::Key << "iter_method";
-//    out_summary << YAML::Value << iter_method;
+    out_summary << YAML::Key << "iter_method";
+    out_summary << YAML::Value << iter_method;
     
     out_summary << YAML::Key << "zouter";
     
     vector<double> aff_zouter(sysdim*2);
     for (int i=0; i<sysdim ; i++) {
-        aff_zouter[2*i] = Xouter[i].inf();
-        aff_zouter[2*i+1] = Xouter[i].sup();
+        aff_zouter[2*i] = RS.Xouter[i].inf();
+        aff_zouter[2*i+1] = RS.Xouter[i].sup();
     }
     out_summary << YAML::Value << aff_zouter;
     

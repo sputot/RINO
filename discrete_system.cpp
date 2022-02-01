@@ -403,10 +403,8 @@ void print_outer_range(vector<interval> &z_o, vector<interval> &range) {
 
 
 // same as discrete_dynamical but with skew box for joint range
-vector<interval> discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew) {
-    
-    vector<interval> res(jacdim);
-    
+ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew)
+{
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
     vector<vector<AAF>> JacAff_o(sysdim,vector<AAF>(jacdim)), JacAff_i(sysdim,vector<AAF>(jacdim));
     vector<vector<interval>> Jacf_o(sysdim,vector<interval>(jacdim)), Jacf_i(sysdim,vector<interval>(jacdim));
@@ -933,18 +931,16 @@ vector<interval> discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, ve
             out_approx << YAML::EndMap;
     }
     
-    return z_outer;
-  
+    ReachSet res = ReachSet(z_outer,z_inner);
+    return res;
 }
 
 
 
 // computing at each step the sensitivity with respect to initial values
 // same method as discrete_dynamical_method2 but using preconditioning uniquely for printing
-vector<interval> discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew) {
-    
-    vector<interval> res(jacdim);
-    
+ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew)
+{
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
     vector<vector<AAF>> JacAff_o(sysdim,vector<AAF>(jacdim)), JacAff_i(sysdim,vector<AAF>(jacdim));
     vector<vector<interval>> Jacf_o(sysdim,vector<interval>(jacdim)), Jacf_i(sysdim,vector<interval>(jacdim));
@@ -1195,13 +1191,9 @@ vector<interval> discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &x
                 out_approx << YAML::EndMap;
     }
     
-    return z_outer;
+    ReachSet res = ReachSet(z_outer,z_inner);
+    return res;
     
- //   outFile_skewedinner.close();
- //   outFile_skewedouter.close();
-    
- //   print_finalstats(begin);
- //   system("cd GUI; python3 Visu_discrete.py; cd ..");
 }
 
 

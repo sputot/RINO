@@ -17,6 +17,27 @@
 
 //#include "ode_def.h"
 
+extern int systype;    // systype = 0 (ODE) or 1 (DDE) -- initialized in main.cpp / command line
+extern int syschoice;  // to choose among the predefined systems of ODE or DDE -- initialized in main.cpp / command line
+
+extern int sysdim; // dimension of the system of ODE/DDE to analyze
+extern int inputsdim; // dimension of the uncertain inputs and parameters of the system
+extern int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
+extern int jacdim; // Jacobian will be dimension jacdim = sysdim + fullinputsdim
+extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
+extern int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
+
+class ReachSet
+{
+public:
+    vector<interval> Xouter;
+    vector<interval> Xinner;
+    
+    ReachSet() : Xouter(sysdim), Xinner(sysdim) {}
+    ReachSet(vector<interval> &Xo, vector<interval> &Xi) : Xouter(Xo), Xinner(Xi) {}  // ou recopie ?
+};
+
+
 void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename, int &nb_sample_per_dim);
 
 void open_outputfiles();

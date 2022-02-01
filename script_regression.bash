@@ -105,16 +105,14 @@ then
 
     results_changed=false
     
-    #echo "parsing $(parse_yaml ${rino_output}/sumup.yaml)"
-    #eval $(parse_yaml ${rino_output}/sumup.yaml)
-    #eval $(parse_yaml ${ref_output}/sumup.yaml) "ref_"
+
     file_rino=${rino_output}/sumup.yaml
     file_ref=${ref_output}/sumup.yaml
     
     zouter_rino=$(yaml $file_rino "['zouter']")
     zouter_ref=$(yaml $file_ref "['zouter']")
-    echo $zouter_rino
-    echo $zouter_ref
+    #echo $zouter_rino
+    #echo $zouter_ref
     
     diff ${rino_output}/sumup.yaml ${ref_output}/sumup.yaml > /dev/null 2>&1
     error=$?
@@ -125,11 +123,9 @@ then
 #       if [ $error -eq 1 ]
     then
         results_changed=true
-        tail -1 $file_rino  # print last line of file
-        echo""
-        tail -1 $file_ref
-        echo""
         echo "$file_rino and $file_ref differ"
+        echo "zouter_rino is" $zouter_rino
+        echo "zouter_ref is" $zouter_ref
     else
         results_changed=true
         echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "

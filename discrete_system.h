@@ -236,8 +236,8 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 extern int nb_discr, nb_discr1, nb_discr2;
 
 vector<interval> init_discrete_system(); // (char * config_filename);
-vector<interval> discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew);
-vector<interval> discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew);
+ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew);
+ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew);
 void function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range);
 void nn_range(char * config_filename);
 
