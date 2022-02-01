@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[242]:
+# # Visualization: common to discrete-time and continuous-time systems
+#     - read results in yaml files (sumup.yaml for summary of analysis parameters, samplesreachset.yaml for sample trajectories and approxreachset.yaml for reachability results)
+
+# ## Reading result files
+
+# In[343]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -51,8 +56,8 @@ if (nb_arguments > 1):
 if (path.isfile('sumup.yaml')):
     with open('sumup.yaml','r') as data_loaded:
         summary = yaml.safe_load(data_loaded)
-        sysdim = summary["sysdim"]
-        systype = summary["systype"]
+        #sysdim = summary["sysdim"]
+        #systype = summary["systype"]
         #print(summary)
         #print(sysdim)
         
@@ -60,6 +65,8 @@ if (path.isfile('sumup.yaml')):
 if (path.isfile('samplesreachset.yaml')):
     with open('samplesreachset.yaml','r') as samples:
         data_loaded = yaml.safe_load(samples)
+        sysdim = data_loaded["sysdim"]
+        systype = data_loaded["systype"]
         samples = data_loaded["samples"]
         sample_tn = [sample["tn"] for sample in samples]
         sample_z = []
@@ -204,7 +211,7 @@ if (path.isfile('approxreachset.yaml')):
                 no_iter = no_iter+1
 
 
-# In[243]:
+# In[344]:
 
 
 width_in_inches = 12
@@ -281,7 +288,7 @@ def print_xy(no_varx,no_vary,sample,approx):
         plt.close()
 
 
-# In[244]:
+# In[345]:
 
 
 def print_discrete_xy(no_varx,no_vary,sample,approx):
@@ -377,7 +384,7 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
     plt.close()
 
 
-# In[245]:
+# In[346]:
 
 
 # print joint ranges and sampled joint range of variables to display
@@ -395,7 +402,7 @@ for vary in range(sysdim):
                 print_xy(varx,vary,True,True)  # sample and approx
 
 
-# In[246]:
+# In[347]:
 
 
 # 3D printing in continuous case  (ODEs)
@@ -525,7 +532,7 @@ def print_xyz(no_varx,no_vary,no_varz):
     plt.close()
 
 
-# In[247]:
+# In[348]:
 
 
 # print joint outer and inner 3D ranges in continuous case (ODEs)
@@ -540,7 +547,7 @@ if (systype == 0):  # ODEs
                     print_xyz(varx,vary,varz)
 
 
-# In[248]:
+# In[349]:
 
 
 # 3D printing in case of discrete-time systems - different from continuous case, x,y as a function of time...
@@ -612,7 +619,7 @@ def print3d_discrete_xyt(no_varx,no_vary):
     plt.close()
 
 
-# In[249]:
+# In[350]:
 
 
 # 3D printing in discrete time systems - different from continuous case, x,y as a function of time...
@@ -626,7 +633,7 @@ if (systype == 2):
                   print3d_discrete_xyt(varx,vary)
 
 
-# In[250]:
+# In[351]:
 
 
 # if print_robust = True: print robust approx
@@ -754,7 +761,7 @@ def print_projections(print_robust,print_minimal,print_maximal,print_sample,only
         plt.close()
 
 
-# In[251]:
+# In[352]:
 
 
 print_robust = False
@@ -767,7 +774,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[252]:
+# In[353]:
 
 
 print_robust = False
@@ -780,7 +787,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[253]:
+# In[354]:
 
 
 print_robust = False
@@ -792,7 +799,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[254]:
+# In[355]:
 
 
 print_robust = True
@@ -804,7 +811,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[255]:
+# In[356]:
 
 
 print_robust = False
@@ -816,7 +823,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[256]:
+# In[357]:
 
 
 print_robust = True
@@ -828,7 +835,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[257]:
+# In[358]:
 
 
 print_robust = False
@@ -838,7 +845,7 @@ subplots = False
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[258]:
+# In[359]:
 
 
 print_robust = False
@@ -848,7 +855,7 @@ subplots = True
 print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[259]:
+# In[360]:
 
 
 fig = plt.figure()
@@ -874,7 +881,7 @@ if (print_interactive):
 plt.close()
 
 
-# In[260]:
+# In[361]:
 
 
 print_interactive = False
@@ -892,7 +899,7 @@ if (len(meanerrorinner) > 0):
     plt.close()
 
 
-# In[261]:
+# In[ ]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any

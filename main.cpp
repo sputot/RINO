@@ -98,6 +98,8 @@ int main(int argc, char* argv[])
     
     ReachSet RS;
    
+    double elapsed_secs_sampling;
+    
 /*    essai_sherlock();
     syschoice = 101;
     function_range(NULL);
@@ -186,7 +188,8 @@ int main(int argc, char* argv[])
     
     
     open_outputfiles();
-    clock_t begin; //  = clock();
+    clock_t begin, end; //  = clock();
+    begin = clock();
     
     /*******************************************************************************************/
    /************* Discrete Systems ************/
@@ -214,6 +217,9 @@ int main(int argc, char* argv[])
             read_parameters_discrete(config_filename,xinit,nb_steps,order,AEextension_order,iter_method,skew);
 
         sampled_reachset = estimate_reachset(f, nb_steps, xinit, nb_sample_per_dim);
+        end = clock();
+        
+        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
         
         begin = clock();
 
@@ -260,7 +266,6 @@ int main(int argc, char* argv[])
         // printing exact solution if any for comparison
       //  print_exactsolutiondde(t_begin, d0, tau, t_end, nb_subdiv/*, ip*/);
         
-        begin = clock();
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
@@ -318,7 +323,9 @@ int main(int argc, char* argv[])
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
         sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau, nb_sample_per_dim);
-        cout << "End estimate reachset:" << endl;
+        
+        end = clock();
+        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
         begin = clock();
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
@@ -373,9 +380,25 @@ int main(int argc, char* argv[])
     }
     }
     
-    clock_t end = clock();
-    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    out_approx << YAML::EndSeq;
+    out_approx << YAML::EndMap;
+    approxreachsetfile << out_approx.c_str();
+    approxreachsetfile.close();
     
+    end = clock();
+    double elapsed_secs = double(end - begin) / CLOCKS_PER_SEC;
+    cout << "elapsed time (sec) =" << elapsed_secs << endl;
+    
+    //begin = clock();
+    if (print_debug)
+    {
+        if (systype == 0 || systype == 1 || (systype == 2 && nb_steps>1))
+            run_pythonscript_visualization();
+        else if (systype == 2) // nb_steps = 1
+            system("cd GUI; python3 Visu_function.py; cd ..");
+    }
+    //end = clock();
+    //double elapsed_printing = double(end - begin) / CLOCKS_PER_SEC;
     
     // printing final summary
     ofstream summaryyamlfile;
@@ -431,9 +454,12 @@ int main(int argc, char* argv[])
     }
     out_summary << YAML::Value << aff_zinner;
     
-    //out_summary << YAML::Key << "elapsed-secs";
-    //out_summary << YAML::Value << elapsed_secs;
-    
+    out_summary << YAML::Key << "elapsed-secs";
+    out_summary << YAML::Value << elapsed_secs;
+    out_summary << YAML::Key << "elapsed-secs-sampling";
+    out_summary << YAML::Value << elapsed_secs_sampling;
+    //out_summary << YAML::Key << "elapsed-printing";
+    //out_summary << YAML::Value << elapsed_printing;
     
     out_summary << YAML::EndMap;
     summaryyamlfile << out_summary.c_str();
@@ -515,7 +541,8 @@ int main(int argc, char* argv[])
     summaryfile << "               Under-approximation │ " << RS.Xinner;
     
     summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
-    summaryfile << "                Elapsed time (sec) │ " << elapsed_secs << endl;
+    summaryfile << "       Elapsed analysis time (sec) │ " << elapsed_secs << endl;
+    summaryfile << "       Elapsed sampling time (sec) │ " << elapsed_secs_sampling << endl;
   /*              << "                           Network │ " << argv[2] << std::endl
                 << "                            Method │ " << method << std::endl
                 << "                        # of steps │ " << n_steps << std::endl
@@ -541,24 +568,9 @@ int main(int argc, char* argv[])
     summaryfile.close();
     
     
-    print_finalstats(begin);
+ //   print_finalstats(begin);
     
-    if (print_debug)
-    {
-        if (systype == 0 || systype == 1 || systype == 2)
-            run_pythonscript_visualization();
-        else if (systype == 2) {
-            // system("cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
-            char command_line[1000];
-            sprintf(command_line,"cd GUI; python3 Visu_discrete.py --interactive=%d; cd ..",interactive_visualization);
-            cout << command_line << endl;
-            system(command_line);
-          //  system("cd GUI; python3 Visu_discrete.py; cd ..");
-        }
-        else if (systype == 3)
-            system("cd GUI; python3 Visu_function.py; cd ..");
-        
-    }
+    
 }
 
 

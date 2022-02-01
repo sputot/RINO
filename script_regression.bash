@@ -97,27 +97,43 @@ compare_to_ref=false
     zouter_ref=$(yaml $file_ref "['zouter']")
     zinner_rino=$(yaml $file_rino "['zinner']")
     zinner_ref=$(yaml $file_ref "['zinner']")
+    elapsed_rino=$(yaml $file_rino "['elapsed-secs']")
+    elapsed_ref=$(yaml $file_ref "['elapsed-secs']")
     
-    
-    diff ${rino_output}/sumup.yaml ${ref_output}/sumup.yaml > /dev/null 2>&1
-    error=$?
-    if [ $error -eq 0 ]
-    then
-        : # empty command instead of echo "$file_rino and $file_ref are the same file"
-    elif [ $error -eq 1 ]
-#       if [ $error -eq 1 ]
+    if ($zouter_rino != $zouter_ref) || ($zinner_rino != $zinner_ref)
     then
         results_changed=true
-        echo "$file_rino and $file_ref differ"
-        echo "zouter_rino is" $zouter_rino
-        echo "zouter_ref is" $zouter_ref
-        echo "zinner_rino is" $zinner_rino
-        echo "zinner_ref is" $zinner_ref
-    else
-        results_changed=true
-        echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "
+        echo "Reachability results in $file_rino and $file_ref differ"
+        if ($zouter_rino != $zouter_ref)
+        then
+            echo "zouter_rino is" $zouter_rino
+            echo "zouter_ref is" $zouter_ref
+        else
+            echo "zinner_rino is" $zinner_rino
+            echo "zinner_ref is" $zinner_ref
+        fi
     fi
-
+    
+    echo "Execution time (sec) for analysis phase: rino=$elapsed_rino ref=$elapsed_ref"
+    
+    #diff ${rino_output}/sumup.yaml ${ref_output}/sumup.yaml > /dev/null 2>&1
+    #error=$?
+    #if [ $error -eq 0 ]
+    #then
+    #    : # empty command instead of echo "$file_rino and $file_ref are the same file"
+    #elif [ $error -eq 1 ]
+#       if [ $error -eq 1 ]
+    #then
+    #    results_changed=true
+    #    echo "$file_rino and $file_ref differ"
+    #    echo "zouter_rino is" $zouter_rino
+    #    echo "zouter_ref is" $zouter_ref
+    #    echo "zinner_rino is" $zinner_rino
+    #    echo "zinner_ref is" $zinner_ref
+    #else
+    #    results_changed=true
+    #    echo "Error: there was something wrong with the diff command between $file_rino and $file_ref "
+    #fi
 
     if [ "$results_changed" = true ]
     then

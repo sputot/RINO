@@ -27,6 +27,8 @@ extern int jacdim; // Jacobian will be dimension jacdim = sysdim + fullinputsdim
 extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
 extern int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
 
+extern bool create_png; // whether or not the python script is called to create the .png result files
+
 class ReachSet
 {
 public:

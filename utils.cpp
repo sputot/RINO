@@ -36,6 +36,8 @@ int points_per_graph = 50;
 int interactive_visualization = 0; // 0 or 1
 vector<bool> variables_to_display;
 
+bool create_png = 0;
+
 int printing_period;
 
 
@@ -48,6 +50,8 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
     const int LINESZ = 2048;
     char buff[LINESZ];
     char str_systype[LINESZ];
+    
+    int int_create_png;
     
     cout << "****** Reading system choice from file " <<  params_filename << " ******" << endl;
     FILE *params_file = fopen(params_filename,"r");
@@ -62,6 +66,7 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
         sscanf(buff, "nn-scaling = %lf\n", &nn_scaling_factor);
         sscanf(buff, "samples-per-dim = %d\n", &nb_sample_per_dim);
         sscanf(buff, "points-per-graph = %d\n", &points_per_graph);
+        sscanf(buff, "create-png = %d\n", &int_create_png);
     }
     
     if (str_systype)
@@ -78,6 +83,7 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
     }
     if (nn_scaling_factor)
         cout << "nn_scaling_factor =" << nn_scaling_factor;
+    create_png = (int_create_png == 1);
     
     fclose(params_file);
 }
@@ -94,11 +100,7 @@ void open_outputfiles()
     out_approx << YAML::BeginMap;
     out_approx << YAML::Key << "approx";
     out_approx << YAML::Value << YAML::BeginSeq;
- 
-    char file_name[1028];
-    
-    
-
+   
 }
 
 // print after the end of the analysis
@@ -484,7 +486,7 @@ void run_pythonscript_visualization()
     char command_line[1000];
     cout << "......" << endl;
     cout << "Result files are in the output directory" << endl;
-    cout << "Visualize them with by : cd GUI; python3 Visu_output.py ; cd .." << endl;
+    cout << "Visualize them with by : cd GUI; python3 Visu_output.py --interactive=0 --printvar=all; cd .." << endl;
     cout << "The python script will save files as png files (in same directory output)" << endl;
     char displayed_variables[100];
     bool init=true;
@@ -511,7 +513,9 @@ void run_pythonscript_visualization()
     }
     sprintf(command_line,"cd GUI; python3 Visu_output.py --interactive=%d --printvar=%s; cd ..",interactive_visualization,displayed_variables);
     cout << command_line << endl;
-    system(command_line);
+    system("pwd");
+    if (create_png)
+        system(command_line);
 }
 
 

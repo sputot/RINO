@@ -4046,6 +4046,11 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
     
     YAML::Emitter out_samples;
     out_samples << YAML::BeginMap;
+        
+        out_samples << YAML::Key << "systype";
+        out_samples << YAML::Value << systype;
+        out_samples << YAML::Key << "sysdim";
+        out_samples << YAML::Value << sysdim;
     
     out_samples << YAML::Key << "samples";
     out_samples << YAML::Value << YAML::BeginSeq;
