@@ -67,7 +67,7 @@ The corresponding predefined systems are defined:
   - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
 
 
-#### Sample configuration file for ODEs
+#### Sample configuration file: parameters common to all system types
 
 ```
 # system type (ode, dde, discrete)
@@ -101,30 +101,30 @@ uncontrolled = 1
 # which dimensions are time-varying inputs or parameters
 variable =
 
+# number of samples in each dimension taken for reachset estimation by trajectory samples
+samples-per-dim = 20
 
-# for the visualization: if 0, only .png files are produced
+# for the visualization: if 0, the visualization script is not called
+create-png = 0
+
+# for the visualization: if 0, only .png files are produced (if create-png is 1), if 1 figures are plot on screen 
 interactive-visualization = 1
+
+# number of (time) points saved and printed on graphs 
+points-per-graph = 50
+
 # the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
 # to print all (default value when the option is not set in the config file): set variables-to-display = all
 variables-to-display = 1 2
 ```
 
-#### Sample configuration file for DDEs
+#### Sample configuration file: parameters specific to ODEs (when systype is ode)
 
 ```
-# system type (ode, dde, discrete)
-systype = dde
-# system ID
-syschoice = 2
-
 time-horizon = 5.
 
-# only for DDEs
-delay = 0.3 
-# only for DDEs (for ODEs, starting-time is set to 0)
-starting-time = -0.3
-# defines the time-step by delay/nb-time-subdivisions
-nb-time-subdivisions = 3
+# time step
+integration-step = 0.02
 
 # order for Taylor models in time
 order = 3
@@ -132,11 +132,6 @@ order = 3
 # refined mean-value theorem for inner-approximation (default is 0: classical mean value)
 refined-mean-value = 1
 
-# ranges for initial conditions
-initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
-# accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
-# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
-initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
 
 # ranges for (constant or piecewise constant) inputs
 # if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
@@ -148,28 +143,39 @@ uncontrolled = 1
 # which dimensions are time-varying inputs or parameters
 variable =
 
-
-# for the visualization: if 0, only .png files are produced
+# for the visualization: if 0, the visualization script is not called
+create-png = 0
+# for the visualization: if 0, only .png files are produced (if create-png is 1), if 1 figures are plot on screen 
 interactive-visualization = 1
 # the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
 # to print all (default value when the option is not set in the config file): set variables-to-display = all
 variables-to-display = 1 2
 ```
 
+#### Sample configuration file for DDEs
+
+```
+time-horizon = 5.
+
+# only for DDEs (for ODEs, starting-time is set to 0)
+starting-time = -0.3
+
+# only for DDEs
+delay = 0.3 
+
+# defines the time-step by delay/nb-time-subdivisions
+nb-time-subdivisions = 3
+
+# order for Taylor models in time
+order = 3
+
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+```
+
 #### Sample configuration file for discrete-time systems
 
 ```
-# system type (ode, dde, discrete)
-systype = discrete
-# system ID
-syschoice = 15
-
-# number of samples in each dimension taken for reachset estimation by trajectory samples
-samples-per-dim = 20
-
-# number of (time) points saved and printed on graphs 
-points-per-graph = 50
-
 # number of discrete time steps
 nbsteps = 25
 
@@ -181,22 +187,6 @@ skew = 1
 
 # Order of the AE extension (1 for mean-value, 2 for Taylor-based higher-order extension)
 AEextension-order = 1
-
-# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
-refined-mean-value = 1
-
-# ranges for initial conditions
-initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
-# accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
-# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
-initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
-
-
-# for the visualization: if 0, only .png files are produced
-interactive-visualization = 1
-# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
-# to print all (default value when the option is not set in the config file): set variables-to-display = all
-variables-to-display = 1 2
 ```
 
 #### New: Running neural network controlled dynamical systems
