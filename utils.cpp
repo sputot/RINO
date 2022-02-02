@@ -572,7 +572,7 @@ void print_finalsolution(int max_it, double d0)
         out_approx << YAML::Value << 0; // to indicate union of all subdivisions
         
         
-        print_ErrorMeasures(current_iteration,d0);
+    //    print_ErrorMeasures(current_iteration,d0);
         
         out_approx << YAML::EndMap;
     }
@@ -581,80 +581,7 @@ void print_finalsolution(int max_it, double d0)
         cout << "NO HOLE when joining the inner-approx tubes";
 }
 
-void print_ErrorMeasures(int current_iteration, double d0)
-{
-    double aux, sum, rel_sum;
-    //  vector<interval> Xexact(sysdim);
 
-    out_approx << YAML::Key << "tn";
-    out_approx << YAML::Value << t_print[current_iteration];
-    
-    // fills Xexact_print with analytical solution
-    AnalyticalSol(current_iteration, d0);
-    // cout << "before testing x_exact, current_iteration=" << current_iteration << "t_print[current_iteration] " << t_print[current_iteration]  << endl;
-    if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
-    {
-        out_approx << YAML::Key << "exact";
-        vector<double> temp(2*sysdim);
-        for (int i=0 ; i<sysdim ; i++) {
-            temp[2*i] = Xexact_print[0][current_iteration][i].inf();
-            temp[2*i+1] = Xexact_print[0][current_iteration][i].sup();
-        }
-        out_approx << YAML::Value << temp;
-        
-        // mean over the xi of the error between over-approx and exact solution
-        sum = 0;
-        rel_sum = 0;;
-        for (int i=0 ; i<sysdim ; i++)
-        {
-            aux = max(sup(Xouter_print[0][current_iteration][i])-sup(Xexact_print[0][current_iteration][i]),inf(Xexact_print[0][current_iteration][i])-inf(Xouter_print[0][current_iteration][i]));
-            sum += aux;
-            rel_sum += aux / (sup(Xexact_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
-        }
-        sum = sum/sysdim;
-        rel_sum = rel_sum/sysdim;
-        out_approx << YAML::Key << "meanerrorouter"; // mean on xi of error between outer-approx and analytical solution if any
-        out_approx << YAML::Value << sum;
-        out_approx << YAML::Key << "relmeanerrorouter"; // mean on xi of error between outer-approx and analytical solution if any, over width of exact tube
-        out_approx << YAML::Value << rel_sum;
-        
-        
-        // mean over the xi of the error between inner-approx and exact solution
-        sum = 0;
-        rel_sum = 0;
-        for (int i=0 ; i<sysdim ; i++)
-        {
-            aux = max(sup(Xexact_print[0][current_iteration][i])-sup(Xinner_print[0][current_iteration][i]),inf(Xinner_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
-            sum += aux;
-            rel_sum += aux / (sup(Xexact_print[0][current_iteration][i])-inf(Xexact_print[0][current_iteration][i]));
-        }
-        sum = sum/sysdim;
-        rel_sum = rel_sum/sysdim;
-        out_approx << YAML::Key << "meanerrorinner";  // mean on xi of error between inner-approx and analytical solution if any
-        out_approx << YAML::Value << sum;
-        out_approx << YAML::Key << "relmeanerrorinner"; // mean on xi of error between inner-approx and analytical solution if any, over width of exact tube
-        out_approx << YAML::Value << rel_sum;
-    }
-    
-    
-    // mean over the xi of the error between over-approx and inner-approx
-    sum = 0;
-    rel_sum = 0;
-    for (int i=0 ; i<sysdim ; i++)
-    {
-        aux = max(sup(Xouter_print[0][current_iteration][i])-sup(Xinner_print[0][current_iteration][i]),inf(Xinner_print[0][current_iteration][i])-inf(Xouter_print[0][current_iteration][i]));
-        sum += aux;
-        rel_sum += aux / (sup(Xouter_print[0][current_iteration][i])-inf(Xouter_print[0][current_iteration][i]));
-    }
-    sum = sum/sysdim;
-    rel_sum = rel_sum/sysdim;
-    
-    out_approx << YAML::Key << "meanerrordiff";  // mean on xi of error between outer-approx and inner-approx
-    out_approx << YAML::Value << sum;
-    out_approx << YAML::Key << "relmeanerrordiff"; // mean on xi of error between outer-approx and inner-approx, over width of over-approx tube
-    out_approx << YAML::Value << rel_sum;
-    
-}
 
 
 std::ostream& operator<<(std::ostream& os, const std::vector<double> &input)

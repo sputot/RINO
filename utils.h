@@ -56,8 +56,6 @@ extern int printing_period; // deduced from nb of steps and points per graph
 extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
 
-// close XML and print final time: common to ODEs / discrete systems
-//void print_finalstats(clock_t begin);
 
 // print initial conditions and init XML in the discrete systems case
 void print_init_discrete(vector<interval> &x, bool skew);
@@ -66,7 +64,6 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
 
 void run_pythonscript_visualization();
 
-void print_ErrorMeasures(int current_iteration, double d0);
 void print_finalsolution(int max_it, double d0);
 
 std::ostream& operator<<(std::ostream& os, const std::vector<double> &input);

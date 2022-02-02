@@ -263,7 +263,17 @@ int main(int argc, char* argv[])
     if (systype == 1) // DDE
     {
         // printing exact solution if any for comparison
-      //  print_exactsolutiondde(t_begin, d0, tau, t_end, nb_subdiv/*, ip*/);
+        
+//        cout << "params=" << params;
+  //      cout << "Estimate reachset:" << endl;
+   //     nb_sample_per_dim = 2;
+   //     sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        
+        // ecrire ici un estimate_reachset_dde qui retourne soit sampled_reachset soit exact set quand il existe et qui afffiche les samples + la solution exacte en XML.
+        
+        end = clock();
+        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
+        begin = clock();
         
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
@@ -277,12 +287,12 @@ int main(int argc, char* argv[])
             tn = t_begin;
             
             HybridStep_dde prev_step = HybridStep_dde(bf,bbf,order,tn,tau,d0,nb_subdiv);
-            prev_step.init_dde();
+            prev_step.init_dde(sampled_reachset[0]);
             
             HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
             
             //******** Integration loop ************************
-            
+            int iter = 1;
             while (cur_step.tn+d0 <= t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
@@ -290,11 +300,12 @@ int main(int argc, char* argv[])
                 {
                     cur_step.TM_build(j);  // j-th Taylor model valid on [tn+j*d0,tn+(j+1)*d0]
                     // eval at tn+tau
-                    RS = cur_step.TM_evalandprint_solutionstep(j,eps); // cur_step.tn+(j+1)*tau/nb_subdiv);
+                    RS = cur_step.TM_evalandprint_solutionstep(j,eps,sampled_reachset[iter]); // cur_step.tn+(j+1)*tau/nb_subdiv);
                     cout << endl;
                     
                     if (j < nb_subdiv-1)
                         cur_step.init_nextsmallstep(j);
+                    iter++;
                 }
                 cur_step = cur_step.init_nextbigstep(tau);
                 

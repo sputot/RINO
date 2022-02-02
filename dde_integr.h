@@ -273,23 +273,21 @@ public:
  
     
     // compute Taylor models corresponding to initial conditions
-    void init_dde(/*vector<AAF> &x,  vector<AAF> &x0, vector<interval> &eps*/);
+    void init_dde(vector<interval> &sampled_reachset);
     
     // builds ode_x, ode_g
     void TM_build(int s);
     // eval TM at tn+tau and store in xp1
     void TM_eval(int s);
   
-    ReachSet TM_evalandprint_solutionstep(int s, vector<interval> &eps);
+    ReachSet TM_evalandprint_solutionstep(int s, vector<interval> &eps, vector<interval> &sampled_reachset);
     
     void init_nextsmallstep(int s);
     HybridStep_dde init_nextbigstep(double tau);
     
-    void print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter);
+    void print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset);
     
 };
-
-//void print_exactsolutiondde(double t0, double d0, double tau, double t_end, double nb_subdiv/*, vector<AAF> &ix*/);
 
 
 #endif
