@@ -98,6 +98,9 @@ initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2)
 # for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
 inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
 
+# ranges for uncertain but constant parameters
+params = [2,2] [3,4]
+
 # which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
 uncontrolled = 1
 # which dimensions are time-varying inputs or parameters
