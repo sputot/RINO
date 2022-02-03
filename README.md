@@ -236,7 +236,7 @@ After running an example, all results are in the subdirectory ‘output’. The 
 A python visualization file Visu_output.py is available in the GUI directory. 
 It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by:
 ```
-python3 Visu_output.py --interactive=1 --printvar=-1-2
+cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
 ```
 When the script is run by analyzer, the options set above in command line can be set in the configuration file by: 
 ```
@@ -257,7 +257,9 @@ We also provide
 - ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set);
 gamma = (width of under_approx)/(width of over_approx)
 
-These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below)
+These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below).
+
+Note that the files produced can slightly vary depending on the system type (ode, dde, discrete-time)
 
 ### Modifying / adding one's own example
 
