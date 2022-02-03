@@ -1,0 +1,13 @@
+# Running DDE example [CAV 2018]
+
+systype = dde
+syschoice = 1
+time-horizon = 2.
+delay = 1.
+starting-time = -1.
+nb-time-subdivisions = 20
+order = 2
+initial-values = [0.33,1.0]
+#initial-values = ([0.33,1.0],5)
+uncontrolled = 
+variable =
