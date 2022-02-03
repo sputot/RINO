@@ -1,0 +1,13 @@
+# DDE example 9 (self-driving car with uncertain PID coefficients) in [CAV 2018]
+
+systype = dde
+syschoice = 6
+time-horizon = 10.
+delay = 0.35
+starting-time = -0.35
+nb-time-subdivisions = 10
+order = 3
+initial-values = [-0.1,0.1] [0,0.1]
+params = [2,2] [3,3]
+uncontrolled = 
+variable =
