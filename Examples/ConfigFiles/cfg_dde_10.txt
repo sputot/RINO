@@ -1,0 +1,12 @@
+# DDE example 11 (platoon with 5 vehicles) in [CAV 2018]
+
+systype = dde
+syschoice = 10
+time-horizon = 10.
+delay = 0.3
+starting-time = -0.3
+nb-time-subdivisions = 3
+order = 3
+initial-values = [-0.01,0.01] [-1.2,-0.8] [1.99,2.01] [-2.2,-1.8] [1.99,2.01] [-3.2,-2.8] [1.99,2.01] [-4.2,-3.8] [1.99,2.01]
+uncontrolled =
+variable =
