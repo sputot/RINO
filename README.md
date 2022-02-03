@@ -55,7 +55,8 @@ For example:
   or to modify the parameter and initial conditions, by 
   ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
   - the self-driving car example of Reference [HSCC 2019]  is run by ```./rino -systype ode -syschoice 6``` or ```./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt```
-  - the running example of [CAV 2018] is run  by ```./rino -systype dde -syschoice 1```
+  - the running example of [CAV 2018] is run  by ```./rino -systype dde -syschoice 1``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_1.txt```
+  - Example 10 of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 3``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_3.txt```
 <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
 <!---  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)-->
 <!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
