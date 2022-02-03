@@ -47,7 +47,7 @@ fi
 
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
-compare_to_ref=false
+compare_to_ref=true
 
 
  echo "******* Running RINO regression on ${examples[@]} **************"
@@ -82,7 +82,7 @@ compare_to_ref=false
     
     if [ "$compare_to_ref" = false ]
     then
-        rm -r $ref"output_"${examples_discrete[i]}; cp -r $ref"output" $ref"output_"${examples[i]}
+        rm -r $ref"output_"${examples[i]}; cp -r $ref"output" $ref"output_"${examples[i]}
     else
         rm -r $ref"output"; cp -r $ref"output_"${examples[i]} $ref"output"
     fi

@@ -1225,6 +1225,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
         nb_points = nb_points * (discr+1);
     
     
+    // TODO. Should rather be jacdim for inputs ? See later
     vector<vector<double>> input(nb_points,vector<double>(sysdim));  //  the iterates f^n(x_j)
     vector<vector<double>> output(nb_points,vector<double>(sysdim));
     
@@ -1259,17 +1260,22 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                                 input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
                                 input[cur_point][3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/discr;
                                 
+                                
                                 // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
                                 if (jacdim > 4) {
-                                    if (xinit[4].inf() != xinit[4].sup())
-                                        printf("warning, case not fully implemented");
-                                    input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
+                                    for (int j=4;j<sysdim;j++) // should rather be jacdim (but adapt xinit then)
+                                    {
+                                        if (xinit[j].inf() != xinit[j].sup())
+                                            printf("warning, case not fully implemented");
+                                        input[cur_point][j] = (xinit[j].inf()+xinit[j].sup())/2.0;
+                                    }
                                 }
-                        //        cur_point++; // AJOUT
+                                cur_point++; // AJOUT
                             }
                             
                         }
-                        cur_point++;
+                        else
+                          cur_point++;
                     }
                 }
                 else
@@ -1370,13 +1376,12 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                 
             iter++;
         }
-        
     }
     
     iter = 1;
-    for (tn=t_begin ; tn <=t_end ; tn = tn+tau)
+    for (tn=t_begin ; tn <t_end-0.00001*t_end ; tn = tn+tau)
     {
-        cout << "Estimated reachable set at tn = " << tn << " is: ";
+        cout << "Estimated reachable set at tn = " << tn+tau << " is: ";
         for (int i=0; i < sysdim ; i++) {
             cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
             
