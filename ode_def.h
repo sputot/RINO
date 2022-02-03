@@ -90,6 +90,8 @@ void set_initialconditions(vector<AAF> &params_inputs, vector<AAF> &param_inputs
 vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta_initial, vector<AAF> &beta_inputs);
 vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial, vector<T<F<AAF>>> &beta_inputs);
 
+vector<interval> AnalyticalSol(vector<interval> &initial_values, double d0, double t);
+// Obsolete version but kept in case we want to pust subdivisions back
 // defining analytical solution if any for comparison
 void AnalyticalSol(int current_iteration, double d0);
 
@@ -1730,7 +1732,7 @@ public:
 };
 
 
-// define here  your DEE system yp = \dot y = f(y, y_prev, params)
+// define here  your DEE system yp = \dot y = f(y, y_prev, params)Analy
 class DdeFunc {
 public:
     template <class C>

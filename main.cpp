@@ -264,10 +264,10 @@ int main(int argc, char* argv[])
     {
         // printing exact solution if any for comparison
         
-//        cout << "params=" << params;
-  //      cout << "Estimate reachset:" << endl;
-   //     nb_sample_per_dim = 2;
-   //     sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        cout << "params=" << params;
+        cout << "Estimate reachset:" << endl;
+        nb_sample_per_dim = 2;
+        sampled_reachset = estimate_reachset_dde(bf,initial_values,t_begin,t_end,d0, nb_subdiv, nb_sample_per_dim);
         
         // ecrire ici un estimate_reachset_dde qui retourne soit sampled_reachset soit exact set quand il existe et qui afffiche les samples + la solution exacte en XML.
         
@@ -292,7 +292,7 @@ int main(int argc, char* argv[])
             HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
             
             //******** Integration loop ************************
-            int iter = 1;
+            int iter = nb_subdiv+1;
             while (cur_step.tn+d0 <= t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
@@ -310,6 +310,7 @@ int main(int argc, char* argv[])
                 cur_step = cur_step.init_nextbigstep(tau);
                 
             }
+            
             // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
             // removed when passed to yaml but not tested since => check
         }

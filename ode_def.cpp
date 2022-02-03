@@ -2233,7 +2233,75 @@ vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial
 
 
 // analytical solution if any (for comparison purpose)
-void AnalyticalSol(int current_iteration, double d0)
+vector<interval> AnalyticalSol(vector<interval> &initial_values, double d0, double t)
+{
+  //  vector<interval> res(sysdim);
+    vector<interval> Xouter_min(sysdim), Xouter_max(sysdim), Xouter_res(sysdim);
+    
+ //   double t = t_print[current_iteration];
+    double beta_inf = initial_values[0].inf();
+    double beta_sup = initial_values[0].sup();
+    
+   
+    
+    if (systype == 1)
+    {
+    if ((syschoice == 1) && beta_sup <= 1)  // running example
+    {
+        if (t <= 0)   // on [-d0,0], solution is defined by init function
+        {
+            Xouter_min[0] = ((1.+beta_inf*t)*(1.+beta_inf*t));
+            Xouter_max[0] = ((1.+beta_sup*t)*(1.+beta_sup*t));
+            Xouter_res[0] = hull(Xouter_min[0],Xouter_max[0]);
+        }
+        else if (t >= 0 && t <= d0)
+        {
+            Xouter_min[0] = exp((-1./(3.*beta_inf)*(pow(1.+(t-1.)*beta_inf,3)-pow(1.-beta_inf,3))));
+            Xouter_max[0] = exp((-1./(3.*beta_sup)*(pow(1.+(t-1.)*beta_sup,3)-pow(1.-beta_sup,3))));
+            Xouter_res[0] = hull(Xouter_min[0],Xouter_max[0]);
+            
+        }
+        else if (t >= d0 && t <= 2*d0+0.00001)
+        {
+            double aux, temp1, temp2;
+            aux = exp((-1./(3.*beta_inf)*(pow(1.+(d0-1.)*beta_inf,3)-pow(1.-beta_inf,3))));
+            temp1 = pow(1+(t-2)*beta_inf,3)/(3*beta_inf);
+            temp2 = pow(1-beta_inf,3)/(3*beta_inf);
+            Xouter_min[0] =  aux * exp(-exp(temp2)*pow(3*beta_inf,-2/3.0)*2.6789385347077476337*(gsl_sf_gamma_inc_P(1/3.0,temp1)-gsl_sf_gamma_inc_P(1/3.0,temp2)));
+            aux = exp((-1./(3.*beta_sup)*(pow(1.+(d0-1.)*beta_inf,3)-pow(1.-beta_sup,3))));
+            temp1 = pow(1+(t-2)*beta_sup,3)/(3*beta_sup);
+            temp2 = pow(1-beta_sup,3)/(3*beta_sup);
+            Xouter_max[0] =  aux * exp(-exp(temp2)*pow(3*beta_sup,-2/3.0)*2.6789385347077476337*(gsl_sf_gamma_inc_P(1/3.0,temp1)-gsl_sf_gamma_inc_P(1/3.0,temp2)));
+            Xouter_res[0] = hull(Xouter_min[0],Xouter_max[0]);
+        }
+        else
+        {
+            Xouter_res[0] = interval::EMPTY(); // no analytical solution : bot
+        }
+        
+    }
+    else if (syschoice == 2) //  example 5.15
+    {
+        // example 5.15
+        if (t <0)
+        {
+            Xouter_res[0] = initial_values[0]*exp(t);
+            Xouter_res[1] = initial_values[1]*(1-exp(-1.));
+        }
+        else
+        {
+            Xouter_res[0] = initial_values[0]*exp(t);
+            Xouter_res[1] = initial_values[1]*(exp(t)-exp(t-1.));
+        }
+    }
+    }
+    return Xouter_res;
+}
+
+
+// Old version - kept in case for subdivisions...
+// analytical solution if any (for comparison purpose)
+void AnalyticalSol(vector<AAF> &initial_values, double d0, int current_iteration)
 {
   //  vector<interval> res(sysdim);
     vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);

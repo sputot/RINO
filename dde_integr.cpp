@@ -28,18 +28,40 @@ using namespace std;
 
 
 // TODO. A REPRENDRE COMPLETEMENT SUR LE MODELE DES EDO
-void estimate_reachset_dde(double d0)
+vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, vector<AAF> &initial_values, double t_begin, double t_end, double d0, int nb_subdiv, int discr)
 {
     double aux, sum, rel_sum;
+    double tn;
+    int n = (t_end - t_begin)/d0 * nb_subdiv+1;
+    
+    vector<vector<interval>> range(n+1,vector<interval>(sysdim));
+    
+    vector<interval> val(sysdim);
+    for (int i= 0 ; i<sysdim ; i++)
+        val[i] = initial_values[i].convert_int();
     //  vector<interval> Xexact(sysdim);
 
-    out_approx << YAML::Key << "tn";
-    out_approx << YAML::Value << t_print[current_iteration];
+ //   out_approx << YAML::Key << "tn";
+ //   out_approx << YAML::Value << t_print[current_iteration];
+    tn = t_begin;
+    int iter = 0;
+    while (tn <= t_end)
+    {
+      //  cout << "tn=" << tn;
+        range[iter] = AnalyticalSol(val, d0, tn);
+       // cout << "range=" << range[iter];
+        tn += (t_end - t_begin)/n;
+        iter++;
+    }
+    range[iter] = AnalyticalSol(val, d0, tn);
+   // cout << "tn=" << tn;
+   // cout << "range=" << range[iter];
+   // cout << "iter=" << iter;
     
     // fills Xexact_print with analytical solution
-    AnalyticalSol(current_iteration, d0);
+    //AnalyticalSol(initial_values, d0, current_iteration);
     // cout << "before testing x_exact, current_iteration=" << current_iteration << "t_print[current_iteration] " << t_print[current_iteration]  << endl;
-    if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
+  /*  if (sup(Xexact_print[0][current_iteration][0]) >= inf(Xexact_print[0][current_iteration][0])) // an analytical solution exists
     {
         out_approx << YAML::Key << "exact";
         vector<double> temp(2*sysdim);
@@ -50,8 +72,8 @@ void estimate_reachset_dde(double d0)
         out_approx << YAML::Value << temp;
         
        
-    }
-    
+    } */
+    return range;
 }
 
 
@@ -798,14 +820,14 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
         
         // error measures
         vector<double> temp2(sysdim);
-        /*for (int i=0 ; i<sysdim ; i++)
+        for (int i=0 ; i<sysdim ; i++)
             temp2[i] = (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf());
         out_approx << YAML::Key << "etaouter";
         out_approx << YAML::Value << temp2;
         for (int i=0 ; i<sysdim ; i++)
             temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf());
         out_approx << YAML::Key << "etainner";
-        out_approx << YAML::Value << temp2;*/
+        out_approx << YAML::Value << temp2;
         for (int i=0 ; i<sysdim ; i++)
             temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
         out_approx << YAML::Key << "gamma";
@@ -884,7 +906,7 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
     
     vector<interval> Xsampled(sysdim);
     for (int i=0; i<sysdim; i++)
-        Xsampled[i] = interval::EMPTY();
+        Xsampled[i] = sampled_reachset[i]; // interval::EMPTY();
     res = ReachSet(Xsampled,Xouter,Xinner);
     return res;
 //    print_solutionstep(Xouter,Xinner,Xcenter);
