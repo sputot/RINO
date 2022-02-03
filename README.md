@@ -57,8 +57,8 @@ For example:
   - the self-driving car example of Reference [HSCC 2019]  is run by ```./rino -systype ode -syschoice 6``` or ```./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt```
   - the running example of [CAV 2018] is run  by ```./rino -systype dde -syschoice 1``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_1.txt```
   - Example 10 of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 3``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_3.txt```
+  - Example 9 (self-driving car with uncertain PID coefficients) of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 8``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_8.txt```
 <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
-<!---  - the self-driving car example of Reference [CAV 2018]  is run by "./rino -systype dde -syschoice 7 [Examples/ConfigFiles/cfg_dde_7.txt]" (here the model is with delays, hence the system_type 1)-->
 <!---  - the platoon examples  of Reference [CAV 2018] are run  by "./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]" (5 vehicles) or "./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]" (10 vehicles) -->
 - the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25 [-iter_method 1 -AEextension_order 1 -skew 1]``` or ```./rino -configfile Examples/ConfigFiles/cfg_discrete_15.txt```
 - the SIR epidemic model of [ADHS 2021] with Algorithm 1 (Fig. 3) is run by ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_1.txt``` and the same model with slightly modified initial conditions and Algorithm 2 (Fig. 4) is run by  ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_2.txt```.
