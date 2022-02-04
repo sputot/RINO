@@ -145,8 +145,6 @@ inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
 
 # which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
 uncontrolled = 1
-# which dimensions are time-varying inputs or parameters
-variable =
 
 # for the visualization: if 0, the visualization script is not called
 create-png = 0
