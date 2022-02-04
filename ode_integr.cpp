@@ -1215,6 +1215,9 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     for (int j = 0; j < jacdim-sysdim ; j++)
         param_inputs[j] = center_fullinputs[j];  // TODO: ajouter le sample aussi sur fullinputs et ne pas juste prendre le centre
      //    param_inputs[j] = fullinputs[j];
+    //for (int j = inputsdim; j < jacdim-sysdim ; j++)
+    //    param_inputs[j] = 0; // test pour voir influecne => nulle comme imaginé !
+    
     
     vector<interval> xinit(sysdim);
     for (int i=0 ; i<sysdim ; i++)
@@ -1225,7 +1228,6 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
         nb_points = nb_points * (discr+1);
     
     
-    // TODO. Should rather be jacdim for inputs ? See later
     vector<vector<double>> input(nb_points,vector<double>(sysdim));  //  the iterates f^n(x_j)
     vector<vector<double>> output(nb_points,vector<double>(sysdim));
     
@@ -1238,13 +1240,13 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     for (int i1=0; i1 <= discr ; i1++)
     {
         input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
-        if (jacdim > 1)
+        if (sysdim > 1)
         {
             for (int i2=0; i2 <= discr ; i2++)
             {
                 input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
                 input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
-                if (jacdim > 2)
+                if (sysdim > 2)
                 {
                     for (int i3=0; i3 <= discr ; i3++)
                     {
@@ -1252,7 +1254,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                         input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/discr;
                         input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/discr;
                         // to limit the number of sampled points
-                        if (jacdim > 3) {
+                        if (sysdim > 3) {
                             for (int i4=0; i4 <= discr ; i4++)
                             {
                                 input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/discr;
@@ -1262,7 +1264,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                                 
                                 
                                 // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
-                                if (jacdim > 4) {
+                                if (sysdim > 4) {
                                     for (int j=4;j<sysdim;j++) // should rather be jacdim (but adapt xinit then)
                                     {
                                         if (xinit[j].inf() != xinit[j].sup())
@@ -1348,6 +1350,13 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                         nncontrol[i] = control[i];
                 }
             }
+            
+            // taking a new value for time-varying inputs
+            for (int j = 0; j < inputsdim ; j++) {
+                if (iter % (n/nb_inputs[j]) == 0)
+                    param_inputs[j] = inputs[j].convert_int().inf() + (inputs[j].convert_int().sup()-inputs[j].convert_int().sup())*((double) rand() / (RAND_MAX));
+            }
+            cout << "param_inputs=" << param_inputs << endl;
             
             // param_inputs ?
             output[cur_point] = RK(obf,input[cur_point],param_inputs,nncontrol,tau);

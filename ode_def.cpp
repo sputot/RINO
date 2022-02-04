@@ -1890,7 +1890,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            order = 3;
            initial_values[0] = interval(-0.5,0.5); // x1_0
            initial_values[1] = interval(-0.5,0.5); // x2_0
-           initial_values[1] = interval(-0.5,0.5); // x3_0
+           initial_values[2] = interval(-0.5,0.5); // x3_0
            inputs[0] = interval(-0.25,0);  // w1
            inputs[1] = interval(0,0.25);   // w2
            is_uncontrolled[0] = true;
