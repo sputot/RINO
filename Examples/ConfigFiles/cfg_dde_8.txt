@@ -10,4 +10,3 @@ order = 3
 initial-values = [-0.1,0.1] [0,0.1]
 inputs = [1.9,2.1] [2.9,3.1]
 uncontrolled = 2
-variable =

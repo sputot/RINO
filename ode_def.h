@@ -1728,6 +1728,12 @@ public:
               yp[4] = -9.81*params[1];
               yp[5] = params[2] - 9.81;
           }
+          else if (syschoice == 50) // Ex mixed monotonicity
+          {
+              yp[0] = param_inputs[0]*y[1]*y[1] - y[1] + param_inputs[1];
+              yp[1] = y[2] + 2;
+              yp[2] = y[0] - y[1] - param_inputs[0]*param_inputs[0];
+          }
     }
 };
 

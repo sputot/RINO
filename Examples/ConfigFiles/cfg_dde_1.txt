@@ -10,4 +10,3 @@ order = 2
 initial-values = [0.33,1.0]
 #initial-values = ([0.33,1.0],5)
 uncontrolled = 
-variable =

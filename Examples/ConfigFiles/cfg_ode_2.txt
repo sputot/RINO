@@ -8,6 +8,5 @@ order = 4
 initial-values = [0.9,1] [0,0.1]
 params = [1.0,1.0] [1.5,1.5]
 uncontrolled = 
-variable =
 interactive-visualization = 0
 refined-mean-value = 0

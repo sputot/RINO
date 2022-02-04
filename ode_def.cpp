@@ -415,6 +415,11 @@ void define_system_dim()
             inputsdim = 0;
             nncontroldim = 3;
         }
+        else if (syschoice == 50) // Ex mixed monotonicity
+        {
+            sysdim = 3;
+            inputsdim = 2;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -1877,6 +1882,23 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
          //  cout << params;
          //  params= NH.eval_network(initial_values);
            control_period = 0.1; // ?  a verifier
+       }
+       else if (syschoice == 50) // Ex mixed monotonicity
+       {
+           tau = 0.1;
+           t_end = 0.5;
+           order = 3;
+           initial_values[0] = interval(-0.5,0.5); // x1_0
+           initial_values[1] = interval(-0.5,0.5); // x2_0
+           initial_values[1] = interval(-0.5,0.5); // x3_0
+           inputs[0] = interval(-0.25,0);  // w1
+           inputs[1] = interval(0,0.25);   // w2
+           is_uncontrolled[0] = true;
+           is_uncontrolled[1] = true;
+           nb_inputs[0] = 5;
+           nb_inputs[1] = 5;
+      //     is_variable[0] = true; // piecewise constant
+      //     is_variable[1] = true; // piecewise constant
        }
 //        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
  //       for (int i=0; i<sysdim; i++)
