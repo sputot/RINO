@@ -35,28 +35,29 @@ using namespace std;
 class OdeVar
 {
 public:
+    vector<T<F<AAF>>> params;
     vector<T<F<AAF>>> param_inputs; // params of the ODE that do appear in the Jacobian
     vector<T<F<AAF>>> control_inputs; // params of the ODE that don't appear in the Jacobian such as control given by NN output
     vector<T<F<AAF> >> x; // Independent variables
     vector<T<F<AAF> >> xp;  // Dependent variables
 
  
-    OdeVar() : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    OdeVar() : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
     }
     
-    OdeVar(OdeFunc f)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f)  : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = nncontrol[i];
-        f(xp,param_inputs,control_inputs,x); // record DAG at construction:
+        f(xp,params,param_inputs,control_inputs,x); // record DAG at construction:
     }
     
-    OdeVar(OdeFunc f, vector<F<AAF>> control_in)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    OdeVar(OdeFunc f, vector<F<AAF>> control_in)  : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = control_in[i].x();
-        f(xp,param_inputs,control_inputs,x); // record DAG at construction:
+        f(xp,params,param_inputs,control_inputs,x); // record DAG at construction:
     }
     
  
@@ -77,30 +78,31 @@ class Ode
 {
 public:
     //  T<AAF> x[sysdim];
+    vector<T<AAF>> params;
     vector<T<AAF>> param_inputs;
     vector<T<AAF>> control_inputs;
     vector< T<AAF>> x; // Independent variables
     vector< T<AAF>> xp;  // Dependent variables
     
-    Ode()  :  param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    Ode()  : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         
     }
     
-    Ode(OdeFunc f)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f)  : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
         for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = nncontrol[i];
-        f(xp,param_inputs,control_inputs,x);
+        f(xp,params,param_inputs,control_inputs,x);
     }
     
-    Ode(OdeFunc f, vector<AAF> control_in)  : param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
+    Ode(OdeFunc f, vector<AAF> control_in)  : params(sysdim_params), param_inputs(inputsdim), control_inputs(nncontroldim), x(sysdim), xp(sysdim)
     {
         // record DAG at construction:
         for (int i=0; i<nncontroldim; i++)
             control_inputs[i] = control_in[i];
-        f(xp,param_inputs,control_inputs,x);
+        f(xp,params,param_inputs,control_inputs,x);
     }
     
     void reset()
@@ -138,7 +140,7 @@ public:
     TM_val(Ode &o_x, Ode &o_g, int o, vector<AAF> &_x, double t, double h) :  ode_x(o_x), ode_g(o_g), order(o), x(_x),  tn(t), tau(h), xp1(sysdim)  {}
     
     // builds ode_x, ode_g
-    void build(OdeFunc _bf, vector<AAF> &param_inputs /*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
+    void build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs /*DiscreteTrans &prev_trans, bool active_discrete_trans*/);
   
     // eval TM at time tn+h and return value in res
     void eval(vector<AAF> &res, double h);
@@ -184,7 +186,7 @@ public:
        // assign(J,_J);
     }
     
-    void build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_inputs_center);
+    void build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, vector<AAF> &param_inputs_center);
    
     // eval TM at time tn+h and return value
     void eval_val(vector<AAF> &res, double h);
@@ -207,7 +209,7 @@ public:
 // printing the Taylor coefficients and Jacobians of orders between min and max
 
 // compute an a priori rough enclosure of flow (affine forms)
-vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, double tau);
+vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &params, vector<AAF> &param_inputs, vector<AAF> &x0, double tau);
 
 // compute an a priori  rough enclosure of Jacobian of flow
 //iMatrix fixpoint(iMatrix &Jac1_g_rough, iMatrix &J0, double tau);
@@ -268,7 +270,7 @@ public:
    // void TM_buildval();
     //void TM_buildJac();
     // build from TMcenter and TMJac Taylor Model for outer-approximation of guard expression from mode to dest on [tn;tn+1] and store in gamma[dest]
-    void TM_build(vector<AAF> &param_inputs,vector<AAF> &param_inputs_center);
+    void TM_build(vector<AAF> &params, vector<AAF> &param_inputs,vector<AAF> &param_inputs_center);
    // void TM_build();
     
     void TMval_eval(vector<AAF> &res, double h);
@@ -279,7 +281,7 @@ public:
     void TM_eval();
     
     ReachSet TM_evalandprint_solutionstep(vector<interval> &eps, double tnp1, vector<interval> &sampled_reachset, int current_subdiv);
-    void init_nextstep(vector<AAF> &param_inputs, double _tau);
+    void init_nextstep(vector<AAF> &params, vector<AAF> &param_inputs, double _tau);
     
     
     void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv);
@@ -292,7 +294,7 @@ public:
 HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &x0,  vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
-vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr);
-vector<double> RK(OdeFunc &obf, vector<double> &yn, vector<AAF> &param_inputs, vector<AAF> &control_inputs, double h);
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &params, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr);
+vector<double> RK(OdeFunc &obf, vector<double> &yn, vector<double> &params, vector<double> &param_inputs, vector<double> &control_inputs, double h);
 
 #endif

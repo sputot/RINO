@@ -129,7 +129,7 @@ void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF
 class OdeFunc {
 public:
     template <class C>
-      void operator()(vector<C> &yp, vector<C> param_inputs, vector<C> control_inputs, vector<C> y) {
+      void operator()(vector<C> &yp, vector<C> params, vector<C> param_inputs, vector<C> control_inputs, vector<C> y) {
           
           
           if (syschoice == 1) // running example
@@ -180,11 +180,11 @@ public:
               yp[1] = -param_inputs[0] *(y[0] - 1.0) - param_inputs[1]*y[1];   // pr = 1 is the reference position
           }
           else if (syschoice == 7)  // self-driving car with time-varying parameters
-          {
+          {  // attention ici j'ai remplace intervalle par params (pour pouvoir notamment appeler avec un double), mais verifier que je traite correctement pour le time-varying et n'exploite pas de relations indues
               yp[0] = y[1];
               yp[1] = -y[2] *(y[0] - 1.0) - y[3]*y[1];   // pr = 1 is the reference position
-              yp[2] = interval(-2.,2.); //AAF(interval(-2.,2.)) + y[4];  // parameter Kp
-              yp[3] = interval(-2.,2.); // 0;  // parameter Kd
+              yp[2] = params[0]; // interval(-2.,2.); //AAF(interval(-2.,2.)) + y[4];  // parameter Kp
+              yp[3] = params[1]; // interval(-2.,2.); // 0;  // parameter Kd
           }
           else if (syschoice == 8)
           {
@@ -323,8 +323,8 @@ public:
               static const double Iyy = 1.6655602e-5;
               static const double Izz = 2.9261652e-5;
               
-              static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-              static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+              static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+              static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
               
               static const double Kp_Z = 2.0;
               static const double Kp_VZ = 25.0;
@@ -339,13 +339,13 @@ public:
               static const double Ki_yr = 16.7;
               
               /* Crazyflie trajectory tracking article*/
-              static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-              static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-              static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+              static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+              static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+              static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
               
-              static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-              static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-              static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+              static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+              static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+              static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
               
               static const double g = 9.8;
               static const double m = 0.028;
@@ -355,9 +355,6 @@ public:
               
               auto cosPitch = cos(y[1]);
               auto sinPitch = sin(y[1]);
-              
-              auto cosYaw = cos(y[2]);
-              auto sinYaw = sin(y[2]);
               
               auto tanPitch = tan(y[1]);
               
@@ -430,8 +427,8 @@ public:
              static const double Iyy = 1.6655602e-5;
              static const double Izz = 2.9261652e-5;
              
-             static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-             static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+             static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+             static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
              
              static const double Kp_Z = 2.0;
              static const double Kp_VZ = 25.0;
@@ -446,13 +443,13 @@ public:
              static const double Ki_yr = 16.7;
              
              /* Crazyflie trajectory tracking article*/
-             static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-             static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-             static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+             static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+             static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+             static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
              
-             static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-             static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-             static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+             static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+             static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+             static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
              
              static const double g = 9.8;
              static const double m = 0.028;
@@ -540,8 +537,8 @@ public:
              static const double Iyy = 1.6655602e-5;
              static const double Izz = 2.9261652e-5;
              
-             static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-             static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+             static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+             static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
              
              //static const double Kp_Z = 2.0;
              //static const double Kp_VZ = 25.0;
@@ -559,13 +556,13 @@ public:
              static const double Ki_yr = 16.7;
              
              /* Crazyflie trajectory tracking article*/
-             static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-             static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-             static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+             static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+             static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+             static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
              
-             static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-             static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-             static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+             static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+             static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+             static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
              
              static const double g = 9.8;
              static const double m = 0.028;
@@ -679,8 +676,8 @@ public:
              static const double Iyy = 1.6655602e-5;
              static const double Izz = 2.9261652e-5;
              
-             static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-             static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+             static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+             static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
              
              //static const double Kp_Z = 2.0;
              //static const double Kp_VZ = 25.0;
@@ -698,13 +695,13 @@ public:
              static const double Ki_yr = 16.7;
              
              /* Crazyflie trajectory tracking article*/
-             static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-             static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-             static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+             static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+             static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+             static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
              
-             static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-             static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-             static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+             static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+             static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+             static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
              
              static const double g = 9.8;
              static const double m = 0.028;
@@ -919,7 +916,7 @@ public:
              yp[0] = y[3]*cos(y[2]);
              yp[1] = y[3]*sin(y[2]);
              yp[2] = param_inputs[0];
-             yp[3] = param_inputs[1] + interval(-0.0001,0.0001);
+             yp[3] = param_inputs[1]; //+ interval(-0.0001,0.0001);
          }
         else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             yp[0] = y[1]-y[0]*y[0]*y[0];
@@ -1097,8 +1094,8 @@ public:
               static const double Iyy = 1.6655602e-5;
               static const double Izz = 2.9261652e-5;
               
-              static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-              static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+              static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+              static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
               
               static const double Kp_Z = 2.0;
               static const double Kp_VZ = 25.0;
@@ -1139,13 +1136,13 @@ public:
 	      static const double K33 = -10.311e-7;
 	      
               /* Crazyflie trajectory tracking article*/
-              static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-              static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-              static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+              static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+              static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+              static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
               
-              static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-              static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-              static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+              static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+              static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+              static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
               
               static const double g = 9.8;
               static const double m = 0.028;
@@ -1307,8 +1304,8 @@ public:
               static const double Iyy = 1.6655602e-5;
               static const double Izz = 2.9261652e-5;
               
-              static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-              static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+              static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+              static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
               
               //static const double Kp_Z = 2.0;
               //static const double Kp_VZ = 25.0;
@@ -1330,13 +1327,13 @@ public:
               static const double Kd_yr = 100.0; // HOP
 	      
               /* Crazyflie trajectory tracking article*/
-              static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-              static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-              static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+              static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+              static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+              static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
               
-              static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-              static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-              static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+              static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+              static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+              static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
               
               static const double g = 9.8;
               static const double m = 0.028;
@@ -1346,9 +1343,7 @@ public:
               
               auto cosPitch = cos(y[1]); // cos theta
               auto sinPitch = sin(y[1]); // sin theta
-              
-              auto cosYaw = cos(y[2]); // cos psi
-              auto sinYaw = sin(y[2]); // sin psi
+            
               
               auto tanPitch = tan(y[1]);
               
@@ -1423,8 +1418,8 @@ public:
               static const double Iyy = 1.6655602e-5;
               static const double Izz = 2.9261652e-5;
               
-              static const AAF Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
-              static const AAF Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
+              static const double Ct = 1.285e-8;//interval(1.28e-8 , 1.29e-8);
+              static const double Cd = 7.645e-11;//interval(7.64e-11 , 7.65e-11);
               
               //static const double Kp_Z = 2.0;
               //static const double Kp_VZ = 25.0;
@@ -1472,13 +1467,13 @@ public:
 	      static const double K33 = -10.311e-7;
 	      
               /* Crazyflie trajectory tracking article*/
-              static const AAF Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
-              static const AAF Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
-              static const AAF Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
+              static const double Ip_qr = (Iyy-Izz)/Ixx;//interval(-1.04880447793, -1.03580464787);
+              static const double Iq_pr = (Izz-Ixx)/Iyy;//interval(1.03470095927, 1.04749270535);
+              static const double Ir_pq = (Ixx-Iyy)/Izz;//interval(-0.0162919189567, -0.0120891632629);
               
-              static const AAF Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
-              static const AAF Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
-              static const AAF Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
+              static const double Im_xx = 1.0/Ixx;//interval(71484.0524534, 71885.7226787);
+              static const double Im_yy = 1.0/Iyy;//interval(69441.6509547, 69834.7034512);
+              static const double Im_zz = 1.0/Izz;//interval(34492.4780616, 34712.0265858);
               
               static const double g = 9.8;
               static const double m = 0.028;
@@ -1732,7 +1727,7 @@ public:
           {
               yp[0] = param_inputs[0]*y[1]*y[1] - y[1] + param_inputs[1];
               yp[1] = y[2] + 2;
-              yp[2] = y[0] - y[1] - param_inputs[0]*param_inputs[0];
+              yp[2] = y[0] - y[1] - param_inputs[0]*param_inputs[0]*param_inputs[0];
           }
     }
 };

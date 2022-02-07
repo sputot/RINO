@@ -128,10 +128,10 @@ void define_system_dim()
             inputsdim = 2;
             //     sysdim_params = 2;
         }
-        else if (syschoice == 7)  //  self-driving car
+        else if (syschoice == 7)  //  self-driving car with time-varying parameters
         {
             sysdim = 4;
-            //     sysdim_params = 2;
+            sysdim_params = 2;
         }
         else if (syschoice == 8)
         {
@@ -849,6 +849,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[1] = interval(0,0.1);
             initial_values[2] =  interval(1.9,2.1);  // Kp
             initial_values[3] =  interval(2.9,3.1);    // Kd
+            params[0] =  interval(-2,2);
+            params[1] =  interval(-2,2);
          //   is_uncontrolled[3] = true; // Kd uncontrolled
             // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
          //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h

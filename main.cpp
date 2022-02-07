@@ -328,12 +328,12 @@ int main(int argc, char* argv[])
         vector<AAF> xcenter(sysdim);
         
         for (int j = 0; j < jacdim-sysdim ; j++)
-             param_inputs[j] = fullinputs[j];   // TODO: ajouter le sample aussi sur fullinputs et ne pas juste prendre le centre
+             param_inputs[j] = fullinputs[j];
         
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset(obf,initial_values,param_inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset(obf,initial_values,params,inputs,t_begin,t_end,tau, nb_sample_per_dim);
         
         end = clock();
         elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
@@ -370,9 +370,9 @@ int main(int argc, char* argv[])
             while (cur_step.tn < t_end-0.0001*t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                cur_step.TM_build(param_inputs,param_inputs_center);
+                cur_step.TM_build(params,param_inputs,param_inputs_center);
                 RS = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
-                cur_step.init_nextstep(param_inputs,tau);
+                cur_step.init_nextstep(params,param_inputs,tau);
                 
                 if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
                     printf("Terminated due to too large overestimation.\n");
@@ -486,6 +486,10 @@ int main(int argc, char* argv[])
         summaryfile << "                           Systype │ " << "ode"  << std::endl;
         summaryfile << "                          Dynamics │ " << syschoice << std::endl;
         summaryfile << "                Initial conditions │ " << initial_values << std::endl;
+        summaryfile << "                            Inputs │ ";
+        for (int i=0; i<inputsdim; i++)
+            summaryfile <<"("<<inputs[i].convert_int()<<","<<nb_inputs[i]<<") ";
+        summaryfile << std::endl;
         summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
         summaryfile << "                      Control step │ " << control_period << std::endl;
         summaryfile << "                         Time step │ " << tau << std::endl;

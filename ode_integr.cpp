@@ -103,7 +103,7 @@ void Ode::printTM(int order) {
 // computed using an a priori enclosure of the solution on [tn,tn+tau])
 // if active_discrete_trans is true, then we join with range of previous transition for the enclosure on the range (last coeff of TM)
 // tn here is the final time on which this TM should be valid
-void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
+void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) {
     vector<AAF> g_rough(sysdim); // rough estimation of solution of current mode on [tn,tn+tau]
     int i, j;
     double offset = (tn-t_begin)/t_end;
@@ -116,7 +116,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &param_inputs) {
         ode_x.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
     // computing a priori enclosure on [tn,tn+tau] of solution starting from center of initial conditions
-    g_rough = fixpoint(_bf,param_inputs,x,tau);
+    g_rough = fixpoint(_bf,params,param_inputs,x,tau);
     
     
         for (int i=0 ; i<sysdim ; i++)
@@ -214,7 +214,7 @@ void TM_val::init_nextstep(double _tau)
 // TM of the Jacobian with respect to IC of the solution of the ODE for all the range of IC
 // outputs are odeVAR_x (Taylor coefficients from 0 to order-1), odeVAR_g (for the remainder term,
 // evaluated using a priori enclosure on [tn,tn+tau]), and J_rough, also used for the remainder term
-void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_inputs_center) {
+void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, vector<AAF> &param_inputs_center) {
     vector<AAF> g_rough(sysdim);
     vector<vector<AAF>> Jac1_g_rough(jacdim, vector<AAF>(jacdim)); // \partial f_i / \partial (z_j,beta_k) => only the sysdim first lines are relevant
     // vector<T<F<AAF>>> tf_param_inputs(jacdim-sysdim);
@@ -248,7 +248,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &param_inputs, vector<AAF> &param_in
     }
     
     // compute an a priori enclosure on [tn,tn+tau] of solution
-    g_rough = fixpoint(_bf,param_inputs,x,tau);
+    g_rough = fixpoint(_bf,params,param_inputs,x,tau);
     
     for (i=0 ; i<sysdim ; i++) {
         g_rough[i].compact();
@@ -546,7 +546,7 @@ void TM_Jac::init_nextstep(double _tau, vector<AAF> &_x0)
 
 
 
-vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, double tau)
+vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &params, vector<AAF> &param_inputs, vector<AAF> &x0, double tau)
 {
     // calcul de x satisfaisant x0 + [0,tau][f](x) \subseteq x
     vector<AAF> y0(sysdim);
@@ -555,7 +555,7 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
     int iter;
     interval widen, coeff;
     
-    bf(fx0,param_inputs,nncontrol,x0);
+    bf(fx0,params,param_inputs,nncontrol,x0);
     
     for (int i=0; i<sysdim ; i++)
         y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();  // modif (*tau)
@@ -592,13 +592,11 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &param_inputs, vector<AAF> &x0, dou
         
       //  cout << "iter=" << iter << "fx0[1]=" << fx0[1].convert_int() << "\t" "y0[1]=" << y0[1].convert_int() << endl;
         
-        bf(fx0,param_inputs,nncontrol,y0);
+        bf(fx0,params,param_inputs,nncontrol,y0);
         // cout << "fx[0]=" << fx0[0] << "\t"  << fx0[1] << endl;
         //   cout << "y1=" << y1[0] << "\t"  << y1[1] << endl;
         for (int i=0; i<sysdim ; i++)
             y1[i] = x0[i] + interval(0,tau)*fx0[i].convert_int();
-        
-        
        
         iter = iter+1;
     }
@@ -752,7 +750,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
 
 
 
-void HybridStep_ode::init_nextstep(vector<AAF> &param_inputs, double _tau)
+void HybridStep_ode::init_nextstep(vector<AAF> &params, vector<AAF> &param_inputs, double _tau)
 {
    
     
@@ -810,21 +808,21 @@ void HybridStep_ode::init_nextstep(vector<AAF> &param_inputs, double _tau)
         vector<AAF> y_temp(sysdim);
         vector<AAF> control_inputs;
         recompute_control = true;
-        bf(y_temp,param_inputs,control_inputs,TMJac.xp1);  // to evaluate new control value
+        bf(y_temp,params,param_inputs,control_inputs,TMJac.xp1);  // to evaluate new control value
         recompute_control = false;
     }
 }
 
 
-void HybridStep_ode::TM_build(vector<AAF> &param_inputs,vector<AAF> &param_inputs_center)
+void HybridStep_ode::TM_build(vector<AAF> &params, vector<AAF> &param_inputs,vector<AAF> &param_inputs_center)
 {
     
     
     
     
-    TMcenter.build(bf,param_inputs_center);
+    TMcenter.build(bf,params,param_inputs_center);
     if (innerapprox == 1)
-        TMJac.build(bf,param_inputs,param_inputs_center);
+        TMJac.build(bf,params,param_inputs,param_inputs_center);
 }
 
 // eval s-th Taylor model and initialize s+1-th
@@ -889,9 +887,12 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             vector<F<F<AAF>>> ffxff(sysdim);
             vector<F<F<AAF>>> fftemp(sysdim);
             vector<F<F<AAF>>> ffparam_inputs(inputsdim);
+            vector<F<F<AAF>>> ffparams(sysdim_params);
             
             for (int i=0 ; i<sysdim; i++)
                 ffxff[i] = x[i];
+            for (int i=0; i < sysdim_params ; i++)
+                ffparams[i] = params[i];
             for (int i=0; i < inputsdim ; i++)
                 ffparam_inputs[i] = param_inputs[i];
             for (int i=0; i < sysdim ; i++) {
@@ -905,7 +906,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
                 ffu[i].x().diff(sysdim+i,sysdim+nncontroldim);  // second order
             }
             
-            f(fftemp,ffparam_inputs,ffu,ffxff);
+            f(fftemp,ffparams,ffparam_inputs,ffu,ffxff);
             
             for (int i=0; i < sysdim ; i++)
                 for (int j=0; j < nncontroldim ; j++)
@@ -1206,25 +1207,20 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
 
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
-vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &params, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
 {
     int n = (t_end - t_begin)/tau + 1;
    // int discr = 2;
     int nb_points = discr+1;
     
-    for (int j = 0; j < jacdim-sysdim ; j++)
-        param_inputs[j] = center_fullinputs[j];  // TODO: ajouter le sample aussi sur fullinputs et ne pas juste prendre le centre
-     //    param_inputs[j] = fullinputs[j];
-    //for (int j = inputsdim; j < jacdim-sysdim ; j++)
-    //    param_inputs[j] = 0; // test pour voir influecne => nulle comme imaginé !
-    
+   
     
     vector<interval> xinit(sysdim);
     for (int i=0 ; i<sysdim ; i++)
         xinit[i] = initial_values[i].convert_int();
     
     // limit the number of sampled points
-    for (int i=1; i < min(jacdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
+    for (int i=1; i < min(sysdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
         nb_points = nb_points * (discr+1);
     
     
@@ -1308,6 +1304,9 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     
     vector<AAF> input_dummy(sysdim), output_dummy(sysdim);
     vector<double> control(nncontroldim);
+    vector<double> sampled_nncontrol(nncontroldim);
+    vector<double> sampled_inputs(inputsdim);
+    vector<double> sampled_params(sysdim_params);
     
     recompute_control = false;
     
@@ -1325,6 +1324,10 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     for (cur_point=0 ; cur_point<nb_points; cur_point++)
     {
         iter = 1;
+        
+        // params is time constant
+        for (int j = 0; j < sysdim_params ; j++)
+            sampled_params[j] = params[j].convert_int().inf() + (params[j].convert_int().sup()-params[j].convert_int().inf())*((double) rand() / (RAND_MAX));
             
         for (tn=t_begin ; tn <t_end-0.00001*t_end ; tn = tn+tau)
         {
@@ -1333,9 +1336,8 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
             {
                 if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
                 {
-                    control = NH.eval_network(input[cur_point]);
-                    for (int i=0; i < control.size() ; i++)
-                        nncontrol[i] = control[i];
+                    sampled_nncontrol = NH.eval_network(input[cur_point]);
+                
                  }
                 else if (syschoice == 491)
                 {
@@ -1345,21 +1347,24 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                     res[2] = input[cur_point][4]; // v_ego
                     res[3] = input[cur_point][0]-input[cur_point][3]; // x_lead-x_ego
                     res[4] = input[cur_point][1]-input[cur_point][4];
-                    control = NH.eval_network(res);
-                    for (int i=0; i < control.size() ; i++)
-                        nncontrol[i] = control[i];
+                    
+                    sampled_nncontrol = NH.eval_network(res);
+                  //  sampled_nncontrol = NH.eval_network(syst_to_nn(input[cur_point]));
                 }
             }
             
             // taking a new value for time-varying inputs
             for (int j = 0; j < inputsdim ; j++) {
-                if (iter % (n/nb_inputs[j]) == 0)
-                    param_inputs[j] = inputs[j].convert_int().inf() + (inputs[j].convert_int().sup()-inputs[j].convert_int().sup())*((double) rand() / (RAND_MAX));
+                if (iter == 1 || (iter % (n/nb_inputs[j]) == 0)) {
+                    sampled_inputs[j] = param_inputs[j].convert_int().inf() + (param_inputs[j].convert_int().sup()-param_inputs[j].convert_int().inf())*((double) rand() / (RAND_MAX));
+                    cout << "iter=" << iter << "n=" << n << "nb_inputs[0]" << nb_inputs[0] << "n/nb_inputs[j]" << n/nb_inputs[j] << "iter % (n/nb_inputs[j])" << iter % (n/nb_inputs[j]) << endl;
+                }
             }
             cout << "param_inputs=" << param_inputs << endl;
+            cout << "sampled_inputs=" << sampled_inputs << endl;
             
             // param_inputs ?
-            output[cur_point] = RK(obf,input[cur_point],param_inputs,nncontrol,tau);
+            output[cur_point] = RK(obf,input[cur_point],sampled_params,sampled_inputs,sampled_nncontrol,tau);
             //outFile_xi << iter <<  "\t";
             //for (int i=0; i < sysdim ; i++)
             //    outFile_xi << output[cur_point][i] <<  "\t";
@@ -1420,43 +1425,43 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
 }
 
 // ponctual values but AAF necessary to comply with obf...
-vector<double> RK(OdeFunc &obf, vector<double> &yn, vector<AAF> &param_inputs, vector<AAF> &control_inputs, double h)
+vector<double> RK(OdeFunc &obf, vector<double> &yn, vector<double> &params, vector<double> &param_inputs, vector<double> &control_inputs, double h)
 {
-    vector<AAF> k1(sysdim), kb(sysdim), k2(sysdim), k3(sysdim), k4(sysdim), ynloc(sysdim);
+    vector<double> k1(sysdim), kb(sysdim), k2(sysdim), k3(sysdim), k4(sysdim), ynloc(sysdim);
     vector<double> ynp1(sysdim);
     
     for (int i=0 ; i<sysdim; i++)
         ynloc[i] = yn[i];
     
-    //    k1 = h * f(yn);
-    obf(k1,param_inputs,control_inputs,ynloc);
+    //    k1 = h * f(yn);s
+    obf(k1,params,param_inputs,control_inputs,ynloc);
     for (int i=0 ; i<sysdim; i++)
         k1[i] = h*k1[i];
     
     // k2 = h * (f((x0+h/2), (y0+k1/2)));
     for (int i=0 ; i<sysdim; i++)
         kb[i] = yn[i] + k1[i]/2.0;
-    obf(k2,param_inputs,control_inputs,kb);
+    obf(k2,params,param_inputs,control_inputs,kb);
     for (int i=0 ; i<sysdim; i++)
         k2[i] = h*k2[i];
     
     // k3 = h * (f((x0+h/2), (y0+k2/2)));
     for (int i=0 ; i<sysdim; i++)
         kb[i] = yn[i] + k2[i]/2.0;
-    obf(k3,param_inputs,control_inputs,kb);
+    obf(k3,params,param_inputs,control_inputs,kb);
     for (int i=0 ; i<sysdim; i++)
         k3[i] = h*k3[i];
     
     // k4 = h * (f((x0+h), (y0+k3)));
     for (int i=0 ; i<sysdim; i++)
         kb[i] = yn[i] + k3[i];
-    obf(k4,param_inputs,control_inputs,kb);
+    obf(k4,params,param_inputs,control_inputs,kb);
     for (int i=0 ; i<sysdim; i++)
         k4[i] = h*k4[i];
     
  /*   k = (k1+2*k2+2*k3+k4)/6;
       yn = y0 + k; */
     for (int i=0 ; i<sysdim; i++)
-        ynp1[i] = yn[i] + (k1[i].convert_int().inf()+2.0*k2[i].convert_int().inf()+2.0*k3[i].convert_int().inf()+k4[i].convert_int().inf())/6.0;
+        ynp1[i] = yn[i] + (k1[i]+2.0*k2[i]+2.0*k3[i]+k4[i])/6.0;
     return ynp1;
 }
