@@ -30,6 +30,7 @@ YAML::Emitter out_approx;
 int systype; // 0 is ODE, 1 is DDE
 int syschoice; // choice of system to analyze
 
+bool nn_analysis = false; // whether there is a network in the loop or not
 
 int points_per_graph = 50;
 

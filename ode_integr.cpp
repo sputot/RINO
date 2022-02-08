@@ -112,8 +112,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
     ode_x.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_x.x[j][0]=x[j]; // initialize with center;
-    for (j=0 ; j<sysdim_params ; j++)
-        ode_x.cst_params[j]=params[j];
+
     for (j=0 ; j<inputsdim ; j++)
         ode_x.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
@@ -133,8 +132,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
     for (j=0 ; j<inputsdim ; j++)
         ode_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
    
-    for (j=0 ; j<sysdim_params ; j++)
-        ode_g.cst_params[j]=params[j];
+
     
     for(i=0;i<order;i++)
     {
@@ -239,7 +237,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
             }
         }
         
-        for (j=0 ; j<sysdim_params ; j++)
+        for (j=0 ; j<paramsdim ; j++)
             odeVAR_x[k].cst_params[j]=params[j];
         
         for (j=0 ; j<inputsdim ; j++) {
@@ -267,7 +265,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
     odeVAR_g.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_g.x[j][0] = g_rough[j];
-    for (j=0 ; j<sysdim_params ; j++)
+    for (j=0 ; j<paramsdim ; j++)
         odeVAR_g.cst_params[j]=params[j];
     for (j=0 ; j<inputsdim ; j++)
         odeVAR_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
@@ -470,13 +468,13 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
                 cout << "aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl; */
         
         // TODO. Adding term of the jacobian due to NN control.
-        if ((i == 1) && ((syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+        if ((i == 1) && (nn_analysis))
             addMiMi(aux,Jac_params);
          //   for (int j=0 ; j<sysdim; j++)
         //            for (int k=0 ; k<jacdim; k++)
 //                        cout << "Jac_params["<<j<<"]["<<k<<"]=" << Jac_params[j][k].convert_int() << endl;
         
-        if ((i == 2) && ((syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111)))
+        if ((i == 2) && (nn_analysis))
                 addMiMi(aux,Jac_params_order2);
     
         // In fact we should compute this for all orders...
@@ -697,19 +695,16 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     if (syschoice == 491)
         nncontrol = NH.eval_network(syst_to_nn(x));
-    else    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
-    {
+    else if (nn_analysis)
         nncontrol = NH.eval_network(x);
-        cout << "nncontrol=" << nncontrol[0].convert_int() << " x=" << x[0].convert_int() << endl;
-        
-        
-    }
+    
     
     vector<F<AAF>> xf(sysdim);
     for (int i=0 ; i<sysdim; i++)
         xf[i] = x[i];
     for (int i=0; i < sysdim ; i++)
         xf[i].diff(i,sysdim);    // differentiate to x   // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
+
     vector<F<AAF>> nncontrolf;
     if (syschoice == 491) {
         vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
@@ -720,7 +715,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         resf[4] = xf[1]-xf[4];
         nncontrolf = NH.eval_network(resf);
     }
-    else if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+    else if (nn_analysis)
         nncontrolf = NH.eval_network(xf);
     
     OdeVar odeVAR_g = OdeVar(bf,nncontrolf);
@@ -748,7 +743,8 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
     
     HybridStep_ode res = HybridStep_ode(bf,TMcenter,TMJac,tn,tau,order);
     
-    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388 || syschoice == 1111|| syschoice == 1112)
+    // TODO. Think for the case syschoice == 491 ?
+    if (nn_analysis)
     {
         vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
         for (int i=0; i<sysdim; i++)
@@ -774,47 +770,8 @@ void HybridStep_ode::init_nextstep(vector<AAF> &params, vector<AAF> &param_input
     tn = tn + tau;
     tau = _tau;
     
-    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112) {
-       
+    if (nn_analysis)
         eval_valandJacobian_nn(TMJac.xp1,param_inputs,tn,tau,TMJac.J); // J_rough ou J ???
-       /* if (control_period > 0) // control update rate is not the same as time step
-        {
-            if ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))) {
-                
-                vector<F<AAF>> xf(sysdim);
-                for (int i=0 ; i<sysdim; i++)
-                    xf[i] = TMJac.x[i];
-                vector<F<AAF>> nncontrolf = NH.eval_network(syst_to_nn(xf));
-                for (int i=0 ; i<nncontrolf.size(); i++)
-        nncontrol[i] = nncontrolf[i].x();
-                // nncontrol = NH.eval_network(syst_to_nn(TMJac.x));
-                cout << "recomputing nncontrol at time " << tn << endl;
-            }
-        }
-        else {
-            vector<F<AAF>> xf(sysdim);
-            for (int i=0 ; i<sysdim; i++)
-                xf[i] = TMJac.x[i];
-            vector<F<AAF>> nncontrolf = NH.eval_network(syst_to_nn(xf));
-            for (int i=0 ; i<nncontrolf.size(); i++)
-        nncontrol[i] = nncontrolf[i].x();
-           // nncontrol = NH.eval_network(syst_to_nn(TMJac.x));
-            cout << "recomputing nncontrol at time " << tn << endl;
-        }
-        cout << "nncontrol=" << nncontrol[0].convert_int() << endl;
-        */
-    
-        // no need to do this if we do not modify nncontrol ?
-  /*      cout << "setting new bf" << endl;
-        bf = OdeFunc();  // to take into account new nncontrol if they have changed
-        // resetting
-        TMcenter.ode_x = Ode(bf);
-        TMcenter.ode_g = Ode(bf);
-        TMJac.odeVAR_x = vector<OdeVar>(sysdim+inputsdim);
-        for (int k = 0; k<sysdim+inputsdim; k++)
-            TMJac.odeVAR_x[k] = OdeVar(bf);
-        TMJac.odeVAR_g = OdeVar(bf); */
-    }
     else if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
     {
         vector<AAF> y_temp(sysdim);
@@ -848,7 +805,7 @@ void HybridStep_ode::TM_eval()
 // Jac_params_order2 contains d/dt (df/du . du/dx) = d/dx(Jac_order_1).(dx/dt)
 void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J)
 {
-    if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+    if (nn_analysis)
     {
         
         if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
@@ -897,11 +854,11 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             vector<F<F<AAF>>> ffxff(sysdim);
             vector<F<F<AAF>>> fftemp(sysdim);
             vector<F<F<AAF>>> ffparam_inputs(inputsdim);
-            vector<F<F<AAF>>> ffparams(sysdim_params);
+            vector<F<F<AAF>>> ffparams(paramsdim);
             
             for (int i=0 ; i<sysdim; i++)
                 ffxff[i] = x[i];
-            for (int i=0; i < sysdim_params ; i++)
+            for (int i=0; i < paramsdim ; i++)
                 ffparams[i] = params[i];
             for (int i=0; i < inputsdim ; i++)
                 ffparam_inputs[i] = param_inputs[i];
@@ -1316,7 +1273,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     vector<double> control(nncontroldim);
     vector<double> sampled_nncontrol(nncontroldim);
     vector<double> sampled_inputs(inputsdim);
-    vector<double> sampled_params(sysdim_params);
+    vector<double> sampled_params(paramsdim);
     
     recompute_control = false;
     
@@ -1336,7 +1293,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
         iter = 1;
         
         // params is time constant
-        for (int j = 0; j < sysdim_params ; j++)
+        for (int j = 0; j < paramsdim ; j++)
             sampled_params[j] = params[j].convert_int().inf() + (params[j].convert_int().sup()-params[j].convert_int().inf())*((double) rand() / (RAND_MAX));
             
         for (tn=t_begin ; tn <t_end-0.00001*t_end ; tn = tn+tau)
@@ -1344,12 +1301,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                 
             if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
             {
-                if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
-                {
-                    sampled_nncontrol = NH.eval_network(input[cur_point]);
-                
-                 }
-                else if (syschoice == 491)
+                if (syschoice == 491)
                 {
                     vector<double> res = vector<double>(NH.n_inputs);
                     res[0] = 30.0;
@@ -1361,13 +1313,14 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
                     sampled_nncontrol = NH.eval_network(res);
                   //  sampled_nncontrol = NH.eval_network(syst_to_nn(input[cur_point]));
                 }
+                else if (nn_analysis)
+                    sampled_nncontrol = NH.eval_network(input[cur_point]);
             }
             
             // taking a new value for time-varying inputs
             for (int j = 0; j < inputsdim ; j++) {
                 if (iter == 1 || (iter % (n/nb_inputs[j]) == 0)) {
                     sampled_inputs[j] = param_inputs[j].convert_int().inf() + (param_inputs[j].convert_int().sup()-param_inputs[j].convert_int().inf())*((double) rand() / (RAND_MAX));
-                //    cout << "iter=" << iter << "n=" << n << "nb_inputs[0]" << nb_inputs[0] << "n/nb_inputs[j]" << n/nb_inputs[j] << "iter % (n/nb_inputs[j])" << iter % (n/nb_inputs[j]) << endl;
                 }
             }
         //    cout << "param_inputs=" << param_inputs << endl;
@@ -1421,7 +1374,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
 
     if (syschoice == 491)
         nncontrol = NH.eval_network(syst_to_nn(initial_values));
-    else if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388|| syschoice == 1111|| syschoice == 1112)
+    else if (nn_analysis)
         nncontrol = NH.eval_network(initial_values);
     
     out_samples << YAML::EndSeq;

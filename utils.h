@@ -20,11 +20,13 @@
 extern int systype;    // systype = 0 (ODE) or 1 (DDE) -- initialized in main.cpp / command line
 extern int syschoice;  // to choose among the predefined systems of ODE or DDE -- initialized in main.cpp / command line
 
+extern bool nn_analysis; // whether there is a network in the loop or not
+
 extern int sysdim; // dimension of the system of ODE/DDE to analyze
 extern int inputsdim; // dimension of the uncertain inputs and parameters of the system
 extern int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
 extern int jacdim; // Jacobian will be dimension jacdim = sysdim + fullinputsdim
-extern int sysdim_params;  // dimension of the vector of parameters params that do not appear in Jacobian
+extern int paramsdim;  // dimension of the vector of parameters params that do not appear in Jacobian
 extern int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
 
 extern bool create_png; // whether or not the python script is called to create the .png result files

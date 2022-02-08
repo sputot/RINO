@@ -122,9 +122,6 @@ int main(int argc, char* argv[])
             systype = 1;
         else if (strcmp(str_systype,"discrete")==0)
             systype = 2;
-     //   else if (strcmp(str_systype,"nn")==0)
-      //      systype = 3;
-   //     cout << "systype= " << systype << endl;
     }
     
     char * str_syschoice = getCmdOption(argv, argv + argc, "-syschoice");
@@ -159,10 +156,12 @@ int main(int argc, char* argv[])
     if (sfx_filename && (sfx_filename[0] != 0)) {// read from config file
         cout << "reading network from" << sfx_filename << endl;
         NH = network_handler(sfx_filename);
+        nn_analysis = true;
     }
     else if (sfx_filename_temp) { // read from command-line
         cout << "reading network from" << sfx_filename_temp << endl;
         NH = network_handler(sfx_filename_temp);
+        nn_analysis = true;
     }
     else if (onnx_filename && (onnx_filename[0] != 0)) // read from config file
     {
@@ -170,6 +169,7 @@ int main(int argc, char* argv[])
         onnx_parser my_parser(onnx_filename);
         map<string, ParameterValues <uint32_t> > tensor_mapping;
         my_parser.build_graph(CG, tensor_mapping);
+        nn_analysis = true;
 #endif
     }
     else if (onnx_filename_temp) // read from command-line
@@ -178,15 +178,14 @@ int main(int argc, char* argv[])
         onnx_parser my_parser(onnx_filename_temp);
         map<string, ParameterValues <uint32_t> > tensor_mapping;
         my_parser.build_graph(CG, tensor_mapping);
+        nn_analysis = true;
 #endif
     }
-    else if (systype == 3) {
-        cout << "You should have entered a neural network to analyse (see option -help if needed)" << endl;
-        exit(0);
-    }
+    
     
     
     open_outputfiles();
+    
     clock_t begin, end; //  = clock();
     begin = clock();
     

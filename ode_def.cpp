@@ -27,7 +27,7 @@ int sysdim; // dimension of system of ODE/DDE
 int inputsdim; // dimension of the uncertain inputs and parameters of the system
 int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
 int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + fullinputsdim
-int sysdim_params; // dimension of the vector of parameters params that do not appear in Jacobian
+int paramsdim; // dimension of the vector of parameters params that do not appear in Jacobian
 int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
 
 double t_end; // ending time of integration
@@ -90,7 +90,7 @@ void define_system_dim()
 {
     /*************************************************************************** ODE ************************************************************/
     
-    sysdim_params = 0;
+    paramsdim = 0;
     inputsdim = 0;
     nncontroldim = 0;
     nb_subdiv_init = 1; // nb of initial subdivisions of the input range
@@ -101,12 +101,12 @@ void define_system_dim()
         if (syschoice == 1)  // running example
         {
             sysdim = 1;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 2)  // Brusselator
         {
             sysdim = 2;
-            sysdim_params = 2;
+            paramsdim = 2;
         }
         else if (syschoice == 3)  // ballistic
         {
@@ -120,18 +120,18 @@ void define_system_dim()
         else if (syschoice == 5)  // self-driving car
         {
             sysdim = 2;
-            sysdim_params = 2;
+            paramsdim = 2;
         }
         else if (syschoice == 6)  //  self-driving car
         {
             sysdim = 2;
             inputsdim = 2;
-            //     sysdim_params = 2;
+            //     paramsdim = 2;
         }
         else if (syschoice == 7)  //  self-driving car with time-varying parameters
         {
             sysdim = 4;
-            sysdim_params = 2;
+            paramsdim = 2;
         }
         else if (syschoice == 8)
         {
@@ -164,7 +164,7 @@ void define_system_dim()
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {
             sysdim = 7;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 14) // Van der Pol oscillator [Arch 2019]
         {
@@ -181,7 +181,7 @@ void define_system_dim()
         else if (syschoice == 18) // HSCC 2019 paper crazyflie example
         {
             sysdim = 14;
-            // sysdim_params = 3;
+            // paramsdim = 3;
             // 0 for sysdim params
         }
         else if (syschoice == 181) // HSCC 2019 paper crazyflie example with neural network controller
@@ -289,36 +289,36 @@ void define_system_dim()
         else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 4;
             inputsdim = 0;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 382) {
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 2;                // EX13  sherlock/systems_with_networks
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 2;              // EX14  sherlock/systems_with_networks
-            sysdim_params = 1;      // EX15  sherlock/systems_with_networks
+            paramsdim = 1;      // EX15  sherlock/systems_with_networks
         }
         else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 3;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 3;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 3;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 3;
-            sysdim_params = 1;
+            paramsdim = 1;
         }
         else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             sysdim = 4;
@@ -335,19 +335,19 @@ void define_system_dim()
         else if (syschoice == 42) // HSCC 2019 paper crazyflie example+aerodynamical effects
         {
             sysdim = 14;
-            // sysdim_params = 3;
+            // paramsdim = 3;
             // 0 for sysdim params
         }
         else if (syschoice == 43) // HSCC 2019 paper crazyflie example - new PID, no aerodynamical effects
         {
             sysdim = 14;
-            // sysdim_params = 3;
+            // paramsdim = 3;
             // 0 for sysdim params
         }
         else if (syschoice == 44) // HSCC 2019 paper crazyflie example+ new PID, with aerodynamical effects
         {
             sysdim = 14;
-            // sysdim_params = 3;
+            // paramsdim = 3;
             // 0 for sysdim params
         }
         else if (syschoice == 45) { // Mountain car Verisig
@@ -381,7 +381,7 @@ void define_system_dim()
         else if (syschoice == 1113) {  // toy example
             sysdim = 2;
             inputsdim = 0;
-            sysdim_params = 0;
+            paramsdim = 0;
         }
         else if (syschoice == 481) {  // // Ex 2 ReachNNstar (avec RNN format sfx obtenu a partir du .txt),
             sysdim = 2;
@@ -457,7 +457,7 @@ void define_system_dim()
         else if (syschoice == 6) // self-driving car
         {
             sysdim = 2;
-            sysdim_params = 2;
+            paramsdim = 2;
         }
         else if (syschoice == 8) // self-driving car but with coeff in interv
         {
@@ -521,7 +521,7 @@ void readfromfile_nbsubdiv(const char * params_filename, int &nb_subdiv_init)
     while (fgets(buff,LINESZ,params_file)) {
 //        sscanf(buff, "system-dimension = %d\n", &sysdim);
 //        sscanf(buff, "inputs-dimension = %d\n", &inputsdim);
-//        sscanf(buff, "sys-parameters-dimension = %d\n", &sysdim_params);
+//        sscanf(buff, "sys-parameters-dimension = %d\n", &paramsdim);
         sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
     }
     fclose(params_file);
@@ -690,7 +690,7 @@ template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
     
     if (syschoice == 493) // QMPC
     {
-        //vector<AAF> res = vector<AAF>(sysdim_params);
+        //vector<AAF> res = vector<AAF>(paramsdim);
         vector<double> actions(NH.n_outputs);
         for (int i=0 ; i<NH.n_outputs ; i++)
             actions[i] = sup(nnoutput[i].convert_int());
@@ -747,8 +747,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
     initial_values = vector<AAF>(sysdim);
     
     // parameters not part of the jacobian
-    if (sysdim_params > 0)
-        params = vector<AAF>(sysdim_params);
+    if (paramsdim > 0)
+        params = vector<AAF>(paramsdim);
     
     if (nncontroldim > 0) {
         nncontrol = vector<AAF>(nncontroldim);
