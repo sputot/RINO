@@ -107,11 +107,13 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
     vector<AAF> g_rough(sysdim); // rough estimation of solution of current mode on [tn,tn+tau]
     int i, j;
     double offset = (tn-t_begin)/t_end;
-    
+        
     // compute Taylor coefficients / Lie derivatives starting from center of initial conditions
     ode_x.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_x.x[j][0]=x[j]; // initialize with center;
+    for (j=0 ; j<sysdim_params ; j++)
+        ode_x.cst_params[j]=params[j];
     for (j=0 ; j<inputsdim ; j++)
         ode_x.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
@@ -127,9 +129,12 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
     ode_g.reset();
     for (j=0 ; j<sysdim ; j++)
         ode_g.x[j][0] = g_rough[j]; // initialize with enclosure of the flow on the time step
+    
     for (j=0 ; j<inputsdim ; j++)
         ode_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
    
+    for (j=0 ; j<sysdim_params ; j++)
+        ode_g.cst_params[j]=params[j];
     
     for(i=0;i<order;i++)
     {
@@ -234,6 +239,9 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
             }
         }
         
+        for (j=0 ; j<sysdim_params ; j++)
+            odeVAR_x[k].cst_params[j]=params[j];
+        
         for (j=0 ; j<inputsdim ; j++) {
             if ((k < j+sysdim) && (refined_mean_value))
                 odeVAR_x[k].param_inputs[j][0]=param_inputs_center[index_param_inv[j]+floor(offset*nb_inputs[j])];
@@ -259,14 +267,18 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
     odeVAR_g.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_g.x[j][0] = g_rough[j];
+    for (j=0 ; j<sysdim_params ; j++)
+        odeVAR_g.cst_params[j]=params[j];
     for (j=0 ; j<inputsdim ; j++)
         odeVAR_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
     // specify the variables to differentiate - we can probably differentiate only on the component we will be interested in - see later !
     for (k=0 ; k<sysdim; k++)
         odeVAR_x[k].x[k][0].diff(0,1);
+
     for (k=0 ; k<inputsdim ; k++)
         odeVAR_x[k+sysdim].param_inputs[k][0].diff(0,1); // index_param: correspondance for variable parameter
+    
    //     odeVAR_x[k+sysdim].param_inputs[index_param[k]][0].diff(0,1); // index_param: correspondance for variable parameter
     
     
@@ -817,9 +829,7 @@ void HybridStep_ode::init_nextstep(vector<AAF> &params, vector<AAF> &param_input
 void HybridStep_ode::TM_build(vector<AAF> &params, vector<AAF> &param_inputs,vector<AAF> &param_inputs_center)
 {
     
-    
-    
-    
+        
     TMcenter.build(bf,params,param_inputs_center);
     if (innerapprox == 1)
         TMJac.build(bf,params,param_inputs,param_inputs_center);
@@ -1357,11 +1367,11 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
             for (int j = 0; j < inputsdim ; j++) {
                 if (iter == 1 || (iter % (n/nb_inputs[j]) == 0)) {
                     sampled_inputs[j] = param_inputs[j].convert_int().inf() + (param_inputs[j].convert_int().sup()-param_inputs[j].convert_int().inf())*((double) rand() / (RAND_MAX));
-                    cout << "iter=" << iter << "n=" << n << "nb_inputs[0]" << nb_inputs[0] << "n/nb_inputs[j]" << n/nb_inputs[j] << "iter % (n/nb_inputs[j])" << iter % (n/nb_inputs[j]) << endl;
+                //    cout << "iter=" << iter << "n=" << n << "nb_inputs[0]" << nb_inputs[0] << "n/nb_inputs[j]" << n/nb_inputs[j] << "iter % (n/nb_inputs[j])" << iter % (n/nb_inputs[j]) << endl;
                 }
             }
-            cout << "param_inputs=" << param_inputs << endl;
-            cout << "sampled_inputs=" << sampled_inputs << endl;
+        //    cout << "param_inputs=" << param_inputs << endl;
+        //    cout << "sampled_inputs=" << sampled_inputs << endl;
             
             // param_inputs ?
             output[cur_point] = RK(obf,input[cur_point],sampled_params,sampled_inputs,sampled_nncontrol,tau);

@@ -128,10 +128,12 @@ void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF
 // define here  your ODE system yp = \dot y = f(y)
 class OdeFunc {
 public:
+    
+   
+    
     template <class C>
       void operator()(vector<C> &yp, vector<C> params, vector<C> param_inputs, vector<C> control_inputs, vector<C> y) {
-          
-          
+                    
           if (syschoice == 1) // running example
              yp[0] = (1+params[0]*y[0])*(1+params[0]*y[0]);
           else if (syschoice == 2)
@@ -139,6 +141,8 @@ public:
           {
               yp[0] = 1 - (params[1]+1)*y[0] + params[0]*y[0]*y[0]*y[1];
               yp[1] = params[1]*y[0] - params[0]*y[0]*y[0]*y[1];
+            //  yp[0] = 1 - (1.5+1)*y[0] + y[0]*y[0]*y[1];
+             // yp[1] = 1.5*y[0] - y[0]*y[0]*y[1];
           }
           else if (syschoice == 3)
           /******************* ballistic ****************************/
@@ -1728,6 +1732,11 @@ public:
               yp[0] = param_inputs[0]*y[1]*y[1] - y[1] + param_inputs[1];
               yp[1] = y[2] + 2;
               yp[2] = y[0] - y[1] - param_inputs[0]*param_inputs[0]*param_inputs[0];
+          }
+          else if (syschoice == 51)
+          {
+              yp[0] = y[1]*y[1]+2;
+              yp[1] = y[0];
           }
     }
 };
