@@ -1139,7 +1139,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
     }
     out_approx << YAML::EndMap;
     
-    ReachSet res = ReachSet(sampled_reachset,Xouter,Xinner);
+    ReachSet res = ReachSet(sampled_reachset,Xouter,Xouter_robust,Xinner,Xinner_robust);
     return res;
 }
 

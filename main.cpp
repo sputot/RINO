@@ -445,6 +445,15 @@ int main(int argc, char* argv[])
     }
     out_summary << YAML::Value << aff_zouter;
     
+    if (uncontrolled > 0) {
+        out_summary << YAML::Key << "zouter_rob";
+        for (int i=0; i<sysdim ; i++) {
+            aff_zouter[2*i] = RS.Xouter_rob[i].inf();
+            aff_zouter[2*i+1] = RS.Xouter_rob[i].sup();
+        }
+        out_summary << YAML::Value << aff_zouter;
+    }
+    
     out_summary << YAML::Key << "zinner";
     vector<double> aff_zinner(sysdim*2);
     for (int i=0; i<sysdim ; i++) {
@@ -452,6 +461,16 @@ int main(int argc, char* argv[])
         aff_zinner[2*i+1] = RS.Xinner[i].sup();
     }
     out_summary << YAML::Value << aff_zinner;
+    
+    if (uncontrolled > 0) {
+        out_summary << YAML::Key << "zinner_rob";
+        for (int i=0; i<sysdim ; i++) {
+            aff_zinner[2*i] = RS.Xinner_rob[i].inf();
+            aff_zinner[2*i+1] = RS.Xinner_rob[i].sup();
+        }
+        out_summary << YAML::Value << aff_zinner;
+    }
+    
     
     out_summary << YAML::Key << "elapsed-secs";
     out_summary << YAML::Value << elapsed_secs;
@@ -542,7 +561,10 @@ int main(int argc, char* argv[])
     summaryfile << "Sampled estimate of final reachset │ " << RS.Xsampled; // sampled_reachset[sampled_reachset.size()-2];  // or iter-1 would be better
     summaryfile << "                Over-approximation │ " << RS.Xouter;
     summaryfile << "               Under-approximation │ " << RS.Xinner;
-    
+    if (uncontrolled > 0) {
+    summaryfile << "         Robust over-approximation │ " << RS.Xouter_rob;
+    summaryfile << "        Robust under-approximation │ " << RS.Xinner_rob;
+    }
     summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
     summaryfile << "       Elapsed analysis time (sec) │ " << elapsed_secs << endl;
     summaryfile << "       Elapsed sampling time (sec) │ " << elapsed_secs_sampling << endl;

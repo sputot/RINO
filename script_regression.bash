@@ -12,9 +12,13 @@ yaml() {
     python3 -c "import yaml;print(yaml.safe_load(open('$1'))$2)"
 }
 
+yaml_bis() {
+    python3 -c "import yaml;data=yaml.safe_load(open('$1'));print(data['$2'] if '$2' in data else '')"
+}
+
 
 # examples (defined with config files)
-examples_ode=(cfg_ode_2.txt cfg_ode_6.txt cfg_ode_18.txt)
+examples_ode=(cfg_ode_2.txt cfg_ode_6.txt cfg_ode_18.txt cfg_ode_50.txt)
 examples_ode_nn=(cfg_B1_sigmoid.txt cfg_B1_tanh.txt cfg_B2_sigmoid.txt cfg_B2_tanh.txt cfg_B3_sigmoid.txt cfg_B3_tanh.txt cfg_B4_sigmoid.txt cfg_B4_tanh.txt cfg_B5_sigmoid.txt cfg_B5_tanh.txt cfg_acc_tanh.txt cfg_tora_sigmoid.txt cfg_tora_tanh.txt)
 examples_dde=(cfg_dde_1.txt cfg_dde_3.txt cfg_dde_6.txt cfg_dde_8.txt cfg_dde_10.txt cfg_dde_11.txt)
 examples_discrete=(cfg_discrete_15.txt cfg_discrete_16_1.txt cfg_discrete_16_2.txt cfg_discrete_17.txt)
@@ -40,6 +44,8 @@ then
   elif [ "$1" == "discrete" ]
   then
     examples=(${examples_discrete[@]})
+  else
+    examples=($1)
   fi
 fi
 
@@ -100,7 +106,13 @@ compare_to_ref=true
     elapsed_rino=$(yaml $file_rino "['elapsed-secs']")
     elapsed_ref=$(yaml $file_ref "['elapsed-secs']")
 
-    if [[ "$zouter_rino" != "$zouter_ref" ]] || [[ "$zinner_rino" != "$zinner_ref" ]]
+    # same as above but function yaml_bis handles the case when the key is not present
+    zouter_rob_rino=$(yaml_bis $file_rino "zouter_rob")
+    zouter_rob_ref=$(yaml_bis $file_ref "zouter_rob")
+    zinner_rob_rino=$(yaml_bis $file_rino "zinner_rob")
+    zinner_rob_ref=$(yaml_bis $file_ref "zinner_rob")
+
+    if [[ "$zouter_rino" != "$zouter_ref" ]] || [[ "$zinner_rino" != "$zinner_ref" ]] || [[ "$zouter_rob_rino" != "$zouter_rob_ref" ]] || [[ "$zinner_rob_rino" != "$zinner_rob_ref" ]]
     then
         results_changed=true
         echo "Reachability results in $file_rino and $file_ref differ"
@@ -108,9 +120,21 @@ compare_to_ref=true
         then
             echo "zouter_rino is" $zouter_rino
             echo "zouter_ref is" $zouter_ref
-        else
+        fi
+        if [[ "$zinner_rino" != "$zinner_ref" ]]
+        then
             echo "zinner_rino is" $zinner_rino
             echo "zinner_ref is" $zinner_ref
+        fi
+        if [[ $zouter_rob_rino != $zouter_rob_ref ]]
+        then
+            echo "zouter_rob_rino is" $zouter_rob_rino
+            echo "zouter_rob_ref is" $zouter_rob_ref
+        fi
+        if [[ "$zinner_rob_rino" != "$zinner_rob_ref" ]]
+        then
+            echo "zinner_rob_rino is" $zinner_rob_rino
+            echo "zinner_rob_ref is" $zinner_rob_ref
         fi
     fi
     

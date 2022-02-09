@@ -885,9 +885,8 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
     vector<interval> Xsampled(sysdim);
     for (int i=0; i<sysdim; i++)
         Xsampled[i] = sampled_reachset[i]; // interval::EMPTY();
-    res = ReachSet(Xsampled,Xouter,Xinner);
+    res = ReachSet(Xsampled,Xouter,Xouter_robust,Xinner,Xinner_robust);
     return res;
-//    print_solutionstep(Xouter,Xinner,Xcenter);
 }
 
 void Dde_TM_val::init_nextsmallstep(int s)

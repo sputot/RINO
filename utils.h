@@ -35,11 +35,14 @@ class ReachSet
 {
 public:
     vector<interval> Xsampled;
-    vector<interval> Xouter;
-    vector<interval> Xinner;
+    vector<interval> Xouter;        // maximal outer-approx
+    vector<interval> Xouter_rob;    // robust outer-approx
+    vector<interval> Xinner;        // maximal inner-approx
+    vector<interval> Xinner_rob;    // robust inner-approx
     
-    ReachSet() : Xsampled(sysdim), Xouter(sysdim), Xinner(sysdim) {}
-    ReachSet(vector<interval> &Xs, vector<interval> &Xo, vector<interval> &Xi) : Xsampled(Xs), Xouter(Xo), Xinner(Xi) {}  // ou recopie ?
+    
+    ReachSet() : Xsampled(sysdim), Xouter(sysdim), Xouter_rob(sysdim), Xinner(sysdim), Xinner_rob(sysdim) {}
+    ReachSet(vector<interval> &Xs, vector<interval> &Xo, vector<interval> &Xor, vector<interval> &Xi, vector<interval> &Xir) : Xsampled(Xs), Xouter(Xo), Xouter_rob(Xor), Xinner(Xi), Xinner_rob(Xir) {}
 };
 
 

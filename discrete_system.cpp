@@ -683,7 +683,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
         if (step % printing_period == 0)
             print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
-        res = ReachSet(estimated_range[nb_steps],z_outer,z_inner_proj);
+        // TODO. Attention ici il faudrait calculer aussi le range surapproximé robuste !
+        res = ReachSet(estimated_range[nb_steps],z_outer,z_outer,z_inner_proj,z_inner_proj_rob);
         
         if (sysdim >= 2) {
             
@@ -1193,7 +1194,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 out_approx << YAML::EndMap;
     }
     
-    ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_inner_proj);
+    ReachSet res = ReachSet(estimated_range[nb_steps],z_outer,z_outer,z_inner_proj,z_inner_proj_rob);
     return res;
     
 }
