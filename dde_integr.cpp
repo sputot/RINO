@@ -404,7 +404,7 @@ void  Dde_TM_Jac::init_dde(double t0, vector<AAF> &ix, vector<AAF> &inputs, doub
 // sets initial conditions and parameters for the ODE system
 void  HybridStep_dde::init_dde(vector<interval> &sampled_reachset)
 {
-    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
+    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xcenter(sysdim);
     
     
     
@@ -413,13 +413,13 @@ void  HybridStep_dde::init_dde(vector<interval> &sampled_reachset)
         
         for (int i= 0 ; i<sysdim; i++)
             Xouter[i] = TMcenter.x[0][i].convert_int();
-        print_solutionstep(-1,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset); // initial solution t=-d0
+        print_solutionstep(-1,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset); // initial solution t=-d0
         
         // print exact range
         for (int j=1; j<=p ; j++) {
             for (int i= 0 ; i<sysdim; i++)
                 Xouter[i] = TMcenter.x[j][i].convert_int();
-            print_solutionstep(j-1,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset); // initial solution t=-d0
+            print_solutionstep(j-1,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset); // initial solution t=-d0
         }
     }
     else
@@ -438,10 +438,10 @@ void  HybridStep_dde::init_dde(vector<interval> &sampled_reachset)
         out_approx << YAML::Key << "tn";
         out_approx << YAML::Value << tn;
         
-        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
         intersectViVi(Xouter,TMJac.x[0]);
         
-        print_solutionstep(-1,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter,sampled_reachset); // initial solution t=-d0
+        print_solutionstep(-1,Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter,sampled_reachset); // initial solution t=-d0
         
         out_approx << YAML::EndMap;
         
@@ -740,7 +740,7 @@ void HybridStep_dde::TM_eval(int s)
 
 
 // sampled_reachset given either by sampling or by analytical solution when available
-void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset)
+void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xcenter, vector<interval> &sampled_reachset)
 {
     
     cout << "print_solutionstep at t=" << tn+(s+1)*tau << ": " << endl;
@@ -753,12 +753,6 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
             cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
         for (int i=0 ; i<sysdim ; i++)
             cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
-    }
-    if (controlled > 0 || uncontrolled > 0) {
-        for (int i=0 ; i<sysdim ; i++)
-            cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-        for (int i=0 ; i<sysdim ; i++)
-            cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
     }
     
     //out_approx << YAML::BeginMap;
@@ -803,20 +797,6 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
         }
         out_approx << YAML::Value << temp; // Xinner_robust;
     }
-    if (controlled > 0 || uncontrolled > 0) {
-        out_approx << YAML::Key << "outerminimal";
-        for (int i=0 ; i<sysdim ; i++) {
-            temp[2*i] = Xouter_minimal[i].inf();
-            temp[2*i+1] = Xouter_minimal[i].sup();
-        }
-        out_approx << YAML::Value << temp; // Xouter_minimal;
-        out_approx << YAML::Key << "innerminimal";
-        for (int i=0 ; i<sysdim ; i++) {
-            temp[2*i] = Xinner_minimal[i].inf();
-            temp[2*i+1] = Xinner_minimal[i].sup();
-        }
-        out_approx << YAML::Value << temp; // Xinner_minimal;
-    }
         
         // error measures
         vector<double> temp2(sysdim);
@@ -841,10 +821,8 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
         // saving result
         Xouter_print[current_subdiv][current_iteration][i] = Xouter[i];
         Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];
-        Xouter_minimal_print[current_subdiv][current_iteration][i] = Xouter_minimal[i];
         Xinner_print[current_subdiv][current_iteration][i] = Xinner[i];
         Xinner_robust_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
-        Xinner_minimal_print[current_subdiv][current_iteration][i] = Xinner_minimal[i];
         t_print[current_iteration] = tn+(s+1)*tau;
     }
      current_iteration++;
@@ -855,7 +833,7 @@ void HybridStep_dde::print_solutionstep(int s, vector<interval> &Xouter, vector<
 //  A completer pour la sous-approx
 ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &eps, vector<interval> &sampled_reachset)
 {
-    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xouter_minimal(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xinner_minimal(sysdim),Xcenter(sysdim);
+    vector<interval> Xouter(sysdim),Xouter_robust(sysdim),Xinner(sysdim),Xinner_robust(sysdim),Xcenter(sysdim);
     ReachSet res;
     
     TM_eval(s);
@@ -872,7 +850,7 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
             Xouter[i] = TMcenter.xp1[s][i].convert_int();
         }
         
-        print_solutionstep(s,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset);
+        print_solutionstep(s,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset);
     }
     else // A modifier
     {
@@ -882,17 +860,17 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
             Xcenter[i] = TMcenter.xp1[s][i].convert_int();
         }
        
-        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
         cout << "without quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;
-     //   print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+     //   print_solutionstep(s,Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter);
         
-        InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau);
+        InnerOuter_discretize(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau);
         cout << "with quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;
-       //  print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter);
+       //  print_solutionstep(s,Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter);
         
         
      //   cout << "Xouter[0]" << Xouter[0] << endl;
@@ -900,7 +878,7 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
        // for (int i = 0 ; i<sysdim ; i++)
        //     Xouter[i] = TMJac.xp1[s][i].convert_int();
         cout << "with intersection with direct solution: ";
-        print_solutionstep(s,Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter,sampled_reachset);
+        print_solutionstep(s,Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter,sampled_reachset);
     }
     out_approx << YAML::EndMap;
     

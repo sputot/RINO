@@ -62,7 +62,7 @@ interval Kaucher_add_pro_impro_resultpro(interval pro, interval impro)
 // computer inner and outer-approx by mean-value theorem
 // Xinner_robust : when the 'uncontrolled' last parameters of parameter set are considered as not controllable => proper part that goes agains the improper part of the inner-approx on the other parameters
 // Application of the Generalized Mean-Value Theorem
-void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
+void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
 {
     vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
     vector<interval> ix0(sysdim);
@@ -85,7 +85,6 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         controlled_pro = 0;
         
         Xinner_robust[i] = 0;
-        Xinner_minimal[i] = 0;
         Xouter_robust[i] = 0;
         
         for (int j=0 ; j<jacdim ; j++)
@@ -116,13 +115,6 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro);
             Xouter_robust[i] = ix0[i] + initialcondition_pro + controlled_pro;
             Xouter_robust[i] = Kaucher_add_pro_impro_resultpro(Xouter_robust[i],uncontrolled_impro);
-        }
-        if (controlled > 0 || uncontrolled > 0)
-        {
-            Xinner_minimal[i] = ix0[i] + uncontrolled_pro + controlled_pro;
-            Xinner_minimal[i] = Kaucher_add_pro_impro(Xinner_minimal[i], initialcondition_impro);
-            Xouter_minimal[i] = ix0[i] + initialcondition_pro;
-            Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro + uncontrolled_impro);
         }
     }
     
@@ -575,7 +567,7 @@ void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff
 
 
 // same as InnerOuter but with quadrature
-void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
+void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
 {
     vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
     vector<interval> ix0(sysdim);
@@ -597,7 +589,6 @@ void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_ro
         controlled_pro[i] = 0;
         
         Xinner_robust[i] = 0;
-        Xinner_minimal[i] = 0;
         Xouter_robust[i] = 0;
         Xouter[i] = ix0[i];
     }
@@ -650,13 +641,6 @@ void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_ro
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro[i]);
             Xouter_robust[i] = ix0[i] + initialcondition_pro[i] + controlled_pro[i];
             Xouter_robust[i] = Kaucher_add_pro_impro_resultpro(Xouter_robust[i],uncontrolled_impro[i]);
-        }
-        if (controlled > 0 || uncontrolled > 0)
-        {
-            Xinner_minimal[i] = ix0[i] + uncontrolled_pro[i] + controlled_pro[i];
-            Xinner_minimal[i] = Kaucher_add_pro_impro(Xinner_minimal[i], initialcondition_impro[i]);
-            Xouter_minimal[i] = ix0[i] + initialcondition_pro[i];
-            Xouter_minimal[i] =Kaucher_add_pro_impro_resultpro(Xouter_minimal[i],controlled_impro[i] + uncontrolled_impro[i]);
         }
         
     }

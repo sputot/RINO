@@ -285,7 +285,7 @@ public:
     void init_nextsmallstep(int s);
     HybridStep_dde init_nextbigstep(double tau);
     
-    void print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset);
+    void print_solutionstep(int s, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xcenter, vector<interval> &sampled_reachset);
     
 };
 

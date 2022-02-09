@@ -92,10 +92,6 @@ if (path.isfile('approxreachset.yaml')):
         zmax_center = []
         zmin_exact = []
         zmax_exact = []
-        zmin_outer_min = []
-        zmax_outer_min = []
-        zmin_inner_min = []
-        zmax_inner_min = []
         zmin_outer_rob = []
         zmax_outer_rob = []
         zmin_inner_rob = []
@@ -131,14 +127,6 @@ if (path.isfile('approxreachset.yaml')):
             for i in range(sysdim):
                 zmin_exact.append([app["exact"][2*i+1] for app in approx])
                 zmax_exact.append([app["exact"][2*i+1] for app in approx])
-        if 'outerminimal' in approx[0]:
-            for i in range(sysdim):
-                zmin_outer_min.append([app["outerminimal"][2*i+1] for app in approx])
-                zmax_outer_min.append([app["outerminimal"][2*i+1] for app in approx])
-        if 'innerminimal' in approx[0]:
-            for i in range(sysdim):
-                zmin_inner_min.append([app["innerminimal"][2*i+1] for app in approx])
-                zmax_inner_min.append([app["innerminimal"][2*i+1] for app in approx])
         if 'outerrobust' in approx[0]:
             for i in range(sysdim):
                 zmin_outer_rob.append([app["outerrobust"][2*i+1] for app in approx])
@@ -169,10 +157,6 @@ if (path.isfile('approxreachset.yaml')):
                 inner2d_maxbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
             if 'maxskew' in inner2d[0][0]:
                 inner2d_maxskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
-            if 'minbox' in inner2d[0][0]:
-                inner2d_minbox = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
-            if 'minskew' in inner2d[0][0]:
-                inner2d_minskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
             if 'robbox'  in inner2d[0][0]:
                 inner2d_robbox  = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
             if 'robskew'  in inner2d[0][0]:
@@ -188,9 +172,6 @@ if (path.isfile('approxreachset.yaml')):
                     # plutot changer le test ci-dessous pour recuperer l'info de skew ou pas
                     if 'maxskew' in tuple:
                         inner2d_maxskew[no_iter][x1][x2]=tuple['maxskew']
-                    if 'minbox' in tuple:
-                        inner2d_minbox[no_iter][x1][x2]=tuple['minbox']
-                        inner2d_minskew[no_iter][x1][x2]=tuple['minskew']
                     if 'robbox' in tuple:
                         inner2d_robbox[no_iter][x1][x2]=tuple['robbox']
                         inner2d_robskew[no_iter][x1][x2]=tuple['robskew']
@@ -199,10 +180,7 @@ if (path.isfile('approxreachset.yaml')):
         if (int(sysdim) > 2 and 'inner3d' in approx[0]):
             inner3d = [app['inner3d'] for app in approx]
             inner3d_maxbox = np.zeros((len(approx_tn),sysdim,sysdim, sysdim, 6), float)
-            inner3d_minbox = []
             inner3d_robbox = []
-            if 'minbox' in inner3d[0][0]:
-                inner3d_minbox = np.zeros((len(approx_tn),sysdim,sysdim, sysdim, 6), float)
             if 'robbox' in inner3d[0][0]:
                 inner3d_robbox = np.zeros((len(approx_tn),sysdim,sysdim, sysdim, 6), float)
             
@@ -213,8 +191,6 @@ if (path.isfile('approxreachset.yaml')):
                     x2 = int(tuple['x2'])
                     x3 = int(tuple['x3'])
                     inner3d_maxbox[no_iter][x1][x2][x3]=tuple['maxbox']
-                    if 'minbox' in tuple:
-                        inner3d_minbox[no_iter][x1][x2][x3]=tuple['minbox']
                     if 'robbox' in tuple:
                         inner3d_robbox[no_iter][x1][x2][x3]=tuple['robbox']
                 no_iter = no_iter+1
@@ -254,17 +230,6 @@ def print_xy(no_varx,no_vary,sample,approx):
             for i in range(8):
                 xi[i] = inner2d_maxskew[no_iter][no_varx][no_vary][i]
             car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='orange',alpha=0.5,zorder=2)
-            ax.add_patch(car_fig)
-        for no_iter in range(len(inner2d_minbox)):    
-            # minimal box inner-approximation
-            for i in range(4):
-                xi[i] = inner2d_minbox[no_iter][no_varx][no_vary][i]
-            car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='red',alpha=0.5,zorder=4)
-            ax.add_patch(car_fig)
-            # minimal skewed box inner-approximation
-            for i in range(8):
-                xi[i] = inner2d_minskew[no_iter][no_varx][no_vary][i]
-            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='red',alpha=0.5,zorder=4)
             ax.add_patch(car_fig)
         for no_iter in range(len(inner2d_robbox)):    
             # robust box inner-approximation
@@ -346,19 +311,6 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
             ax.add_patch(car_fig)
         if (len(inner2d_maxskew) > 0):
             car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='under-approximation', color='orange',alpha=0.5,zorder=2)
-            ax.add_patch(car_fig)
-        
-        for no_iter in range(len(inner2d_minbox)):    
-            # minimal box inner-approximation
-            for i in range(4):
-                xi[i] = inner2d_minbox[no_iter][no_varx][no_vary][i]
-            car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='red',alpha=0.5,zorder=4)
-            ax.add_patch(car_fig)
-            
-            # minimal skewed box inner-approximation
-            for i in range(8):
-                xi[i] = inner2d_minskew[no_iter][no_varx][no_vary][i]
-            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='red',alpha=0.5,zorder=4)
             ax.add_patch(car_fig)
             
         for no_iter in range(len(inner2d_robbox)):    
@@ -511,13 +463,6 @@ def print_xyz(no_varx,no_vary,no_varz):
         ax.add_collection3d(Poly3DCollection(verts, facecolors='blue', linewidths=1, edgecolors='b', label='maximal inner-approximation', alpha=.5))      
     
                       
-    # minimal box inner-approximation
-    for no_iter in range(len(inner3d_minbox)):    
-        for i in range(6):
-            xi[i] = inner3d_minbox[no_iter][no_varx][no_vary][no_varz][i]
-        verts = transform(xi[0],xi[1],xi[2],xi[3],xi[4],xi[5])
-        ax.add_collection3d(Poly3DCollection(verts, facecolors='red', linewidths=1, edgecolors='r', label='minimal inner-approximation', alpha=.5))        
-
     # robust box inner-approximation
     for no_iter in range(len(inner3d_robbox)):    
         for i in range(6):
@@ -646,12 +591,11 @@ if (systype == 2):
 
 
 # if print_robust = True: print robust approx
-# if print_minimal = True: print minimal approx
 # print maximal approx in any case
 # if only_one_graph = True, print all components on same graph
 # if subplots = True, print all components on one figure using subplots
 # if print_interactive = False, only print in files, otherwise do both
-def print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display):
+def print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display):
     
     nbsubplots = sysdim #len(filenames_outer)
     nbcols = min(3,nbsubplots)
@@ -673,11 +617,7 @@ def print_projections(print_robust,print_minimal,print_maximal,print_sample,only
     else:
         fig = plt.figure()
     
-    if (print_robust and print_minimal and print_maximal):
-        extension = '_rob_min_max.png'
-    elif (print_minimal and print_maximal):
-        extension = '_min_max.png'
-    elif (print_robust and print_maximal):
+    if (print_robust and print_maximal):
         extension = '_rob_max.png'
     elif (print_robust):
         extension = '_rob.png'
@@ -719,17 +659,6 @@ def print_projections(print_robust,print_minimal,print_maximal,print_sample,only
                     if (len(zmin_exact) > 0):
                         plt.plot(approx_tn , zmax_exact[k], color='black', linestyle='dashed', label='exact reachable set')
                         plt.plot(approx_tn , zmin_exact[k], color='black', linestyle='dashed')
-            
-            if (print_minimal and (len(zmin_outer_min) > 0)):
-                if (subplots):
-                    ax.plot(approx_tn, zmax_outer_min[k], color='blue', label='minimal outer approx')
-                    ax.plot(approx_tn ,zmin_outer_min[k], color='blue')
-                    ax.fill_between(approx_tn,zmin_inner_min[k],zmax_inner_min[k], label='minimal inner approx')
-                    ax.title.set_text(variable)
-                else:
-                    plt.plot(approx_tn, zmax_outer_min[k], color='blue', label='minimal outer approx')
-                    plt.plot(approx_tn ,zmin_outer_min[k], color='blue')
-                    plt.fill_between(approx_tn,zmin_inner_min[k],zmax_inner_min[k], label='minimal inner approx')
             
             if (print_sample):
                 if (subplots):
@@ -774,26 +703,12 @@ def print_projections(print_robust,print_minimal,print_maximal,print_sample,only
 
 
 print_robust = False
-print_minimal = False
 print_maximal = True
 print_sample = False
 only_one_graph = False
 subplots = False
 
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
-
-
-# In[68]:
-
-
-print_robust = False
-print_minimal = True
-print_maximal = True
-print_sample = False
-only_one_graph = False
-subplots = False
-
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[69]:
@@ -801,68 +716,62 @@ print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one
 
 if (not samples_absent):
     print_robust = False
-    print_minimal = False
     print_sample = True
     only_one_graph = False
     subplots = False
 
-    print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+    print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[70]:
 
 
 print_robust = True
-print_minimal = False
 print_sample = False
 only_one_graph = False
 subplots = False
 
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[71]:
 
 
 print_robust = False
-print_minimal = False
 print_maximal = True
 only_one_graph = False
 subplots = False
 
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[72]:
 
 
 print_robust = True
-print_minimal = True
 print_maximal = True
 only_one_graph = False
 subplots = False
 
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[73]:
 
 
 print_robust = False
-print_minimal = False
 only_one_graph = True
 subplots = False
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[74]:
 
 
 print_robust = False
-print_minimal = True
 only_one_graph = False
 subplots = True
-print_projections(print_robust,print_minimal,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
 # In[75]:

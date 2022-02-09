@@ -324,10 +324,8 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
         
         Xouter_print[current_subdiv][0][i] = range_x;
         Xouter_robust_print[current_subdiv][0][i] = range_x;
-        Xouter_minimal_print[current_subdiv][0][i] = range_x;
         Xinner_print[current_subdiv][0][i] = range_x;
         Xinner_robust_print[current_subdiv][0][i] = range_x;
-        Xinner_minimal_print[current_subdiv][0][i] = range_x;
         Xexact_print[current_subdiv][0][i] = range_x;
     }
         

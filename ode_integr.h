@@ -292,7 +292,7 @@ public:
     void init_nextstep(vector<AAF> &params, vector<AAF> &param_inputs, double _tau);
     
     
-    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv);
+    void print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv);
     
     
     void eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_inputs, double tn, double tau, vector<vector<AAF>> J);

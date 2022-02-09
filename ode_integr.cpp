@@ -950,7 +950,7 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
 
 
 
-void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xouter_minimal, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &Xinner_minimal, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv)
+void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &Xcenter, vector<interval> &sampled_reachset, int current_subdiv)
 {
     //double mean_dist; // mean value on the xi of max distance between inner and outer approximations
     double tnp1 = tn + tau;
@@ -988,14 +988,6 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
                 for (int i=0 ; i<sysdim ; i++) {
                     cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
                     cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
-                }
-                cout << endl;
-            }
-            if (controlled > 0 || uncontrolled > 0)
-            {
-                for (int i=0 ; i<sysdim ; i++) {
-                    cout << "Xouter_minimal[" << i <<"]=" << Xouter_minimal[i] << "\t";
-                    cout << "Xinner_minimal[" << i <<"]=" << Xinner_minimal[i] << "\t";
                 }
                 cout << endl;
             }
@@ -1048,20 +1040,6 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
             }
             out_approx << YAML::Value << temp; // Xinner_robust;
         }
-        if (controlled > 0 || uncontrolled > 0) {
-            out_approx << YAML::Key << "outerminimal";
-            for (int i=0 ; i<sysdim ; i++) {
-                temp[2*i] = Xouter_minimal[i].inf();
-                temp[2*i+1] = Xouter_minimal[i].sup();
-            }
-            out_approx << YAML::Value << temp; // Xouter_minimal;
-            out_approx << YAML::Key << "innerminimal";
-            for (int i=0 ; i<sysdim ; i++) {
-                temp[2*i] = Xinner_minimal[i].inf();
-                temp[2*i+1] = Xinner_minimal[i].sup();
-            }
-            out_approx << YAML::Value << temp; // Xinner_minimal;
-        }
         
         // error measures
         vector<double> temp2(sysdim);
@@ -1089,10 +1067,8 @@ void HybridStep_ode::print_solutionstep(vector<interval> &Xouter, vector<interva
         if (innerapprox == 1)
         {
             Xouter_robust_print[current_subdiv][current_iteration][i] = Xouter_robust[i];
-            Xouter_minimal_print[current_subdiv][current_iteration][i] = Xouter_minimal[i];
             Xinner_print[current_subdiv][current_iteration][i] = Xinner[i];
             Xinner_robust_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
-            Xinner_minimal_print[current_subdiv][current_iteration][i] = Xinner_robust[i];
         }
         t_print[current_iteration] = tnp1;
     }
@@ -1108,7 +1084,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
     assert (tn <= tnp1);
     assert (tnp1 <= tn+tau);
     
-    vector<interval> Xouter(sysdim), Xouter_robust(sysdim), Xouter_minimal(sysdim), Xinner(sysdim), Xinner_robust(sysdim), Xinner_minimal(sysdim), Xcenter(sysdim);
+    vector<interval> Xouter(sysdim), Xouter_robust(sysdim), Xinner(sysdim), Xinner_robust(sysdim), Xcenter(sysdim);
     
     // eval and store at time tnp1
     TM_eval();
@@ -1130,7 +1106,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xouter[i] = TMcenter.xp1[i].convert_int();
         }
-        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset,current_subdiv);
+        print_solutionstep(Xouter,Xouter,Xouter,Xouter,Xouter,sampled_reachset,current_subdiv);
     }
     else {
     // deduce inner-approx by mean-value thm
@@ -1139,12 +1115,12 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
-        InnerOuter(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
         cout << "without quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;
         
-    /*    InnerOuter_discretize(Xinner,Xinner_robust,Xinner_minimal,Xouter,Xouter_robust,Xouter_minimal,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+    /*    InnerOuter_discretize(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
         cout << "with quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner; */
@@ -1157,7 +1133,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
         intersectViVi(Xouter,TMJac.xp1);
         
         cout << "with intersection with direct solution: ";
-        print_solutionstep(Xouter,Xouter_robust,Xouter_minimal,Xinner,Xinner_robust,Xinner_minimal,Xcenter,sampled_reachset,current_subdiv);
+        print_solutionstep(Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter,sampled_reachset,current_subdiv);
         
     // print_solutionstep_ode(Xouter,Xinner,Xcenter,tnp1);
     }
