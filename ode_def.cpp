@@ -35,7 +35,8 @@ double t_begin; // starting time of initialization
 double control_period = 0.0;
 
 // parameters of the system of the ODEs
-vector<AAF> params;  // params of the ODE that don't appear in the Jcaobian such as control given by NN output (or nondeterministic disturbances ?)
+vector<interval> params_int; // constant params of the ODE
+vector<AAF> params;  // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
 vector<AAF> nncontrol;
 
 vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
@@ -633,8 +634,8 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
             int i = 0;
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
-                params[i] = interval(a,b);
-                  //       cout <<"params="<<params[i].convert_int()<<endl;
+                params_int[i] = interval(a,b);
+                params[i] = params_int[i];
                 i++;
                 token = strtok(NULL,space);
             }
@@ -747,8 +748,10 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
     initial_values = vector<AAF>(sysdim);
     
     // parameters not part of the jacobian
-    if (paramsdim > 0)
+    if (paramsdim > 0) {
+        params_int = vector<interval>(paramsdim);
         params = vector<AAF>(paramsdim);
+    }
     
     if (nncontroldim > 0) {
         nncontrol = vector<AAF>(nncontroldim);
@@ -768,7 +771,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             order = 3;
             
             initial_values[0] = interval(0.9,1);
-            params[0] = 1.0;
+            params_int[0] = 1.0;
          //   nb_subdiv_init = 2;
          //   component_to_subdiv = 0;
         }
@@ -781,8 +784,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[0] = interval(0.9,1);
             initial_values[1] = interval(0,0.1);
             
-            params[0] = 1;
-            params[1] = 1.5;
+            params_int[0] = 1;
+            params_int[1] = 1.5;
         }
         else if (syschoice == 3) // ballistic
         {
@@ -825,8 +828,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
             //  uncertain parameter 
-            params[0] =  interval(1.9,2.1);  // Kp
-            params[1] =  interval(2.9,3.1);    // Kd
+            params_int[0] =  interval(1.9,2.1);  // Kp
+            params_int[1] =  interval(2.9,3.1);    // Kd
         }
         else if (syschoice == 6) // self-driving car with piecewise constant parameters; sysdim = 4, jacdim = 4
         {
@@ -854,8 +857,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             initial_values[1] = interval(0,0.1);
             initial_values[2] =  interval(1.9,2.1);  // Kp
             initial_values[3] =  interval(2.9,3.1);    // Kd
-            params[0] =  interval(-2,2);
-            params[1] =  interval(-2,2);
+            params_int[0] =  interval(-2,2);
+            params_int[1] =  interval(-2,2);
          //   is_uncontrolled[3] = true; // Kd uncontrolled
             // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
          //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
@@ -1893,7 +1896,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 50) // Ex mixed monotonicity
        {
            tau = 0.1;
-           t_end = 0.5;
+           t_end = 0.75;
            order = 3;
            initial_values[0] = interval(-0.5,0.5); // x1_0
            initial_values[1] = interval(-0.5,0.5); // x2_0
@@ -1998,8 +2001,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
-            params[0] =  interval(1.9,2.1); // 2;  // Kp
-            params[1] =  interval(2.9,3.1);  // 3;   // Kd
+            params_int[0] =  interval(1.9,2.1); // 2;  // Kp
+            params_int[1] =  interval(2.9,3.1);  // 3;   // Kd
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
         {
@@ -2075,8 +2078,8 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
     for (int i=0; i< sysdim; i++)
         variables_to_display[i] = true;
     
-    
-        
+    for (int i=0; i< paramsdim; i++)
+        params[i] = params_int[i];
 }
 
 

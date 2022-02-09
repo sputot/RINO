@@ -332,7 +332,7 @@ int main(int argc, char* argv[])
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset(obf,initial_values,params,inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset(obf,initial_values,params_int,inputs,t_begin,t_end,tau, nb_sample_per_dim);
         
         end = clock();
         elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;

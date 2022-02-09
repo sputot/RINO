@@ -29,8 +29,8 @@ extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
 extern double control_period;
 
-
-extern vector<AAF> params;      // params of the ODE that don't appear in the Jcaobian: either constant params or control given by NN output, is it a problem to have used the same vector or non ?
+extern vector<interval> params_int; // constant params of the ODE
+extern vector<AAF> params;          // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
 extern vector<AAF> nncontrol;
 extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 extern vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
@@ -1730,7 +1730,7 @@ public:
           else if (syschoice == 50) // Ex mixed monotonicity
           {
               yp[0] = param_inputs[0]*y[1]*y[1] - y[1] + param_inputs[1];
-              yp[1] = y[2] + 2;
+              yp[1] = y[2] + 3;
               yp[2] = y[0] - y[1] - param_inputs[0]*param_inputs[0]*param_inputs[0];
           }
           else if (syschoice == 51)

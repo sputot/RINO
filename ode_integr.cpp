@@ -237,8 +237,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
             }
         }
         
-        for (j=0 ; j<paramsdim ; j++)
-            odeVAR_x[k].cst_params[j]=params[j];
+       
         
         for (j=0 ; j<inputsdim ; j++) {
             if ((k < j+sysdim) && (refined_mean_value))
@@ -265,8 +264,7 @@ void TM_Jac::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs, 
     odeVAR_g.reset();
     for (j=0 ; j<sysdim ; j++)
         odeVAR_g.x[j][0] = g_rough[j];
-    for (j=0 ; j<paramsdim ; j++)
-        odeVAR_g.cst_params[j]=params[j];
+    
     for (j=0 ; j<inputsdim ; j++)
         odeVAR_g.param_inputs[j][0]=param_inputs[index_param_inv[j]+floor(offset*nb_inputs[j])];
     
@@ -1174,7 +1172,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
 
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
-vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<AAF> &params, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<interval> &params, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
 {
     int n = (t_end - t_begin)/tau + 1;
    // int discr = 2;
@@ -1294,7 +1292,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
         
         // params is time constant
         for (int j = 0; j < paramsdim ; j++)
-            sampled_params[j] = params[j].convert_int().inf() + (params[j].convert_int().sup()-params[j].convert_int().inf())*((double) rand() / (RAND_MAX));
+            sampled_params[j] = params[j].inf() + (params[j].sup()-params[j].inf())*((double) rand() / (RAND_MAX));
             
         for (tn=t_begin ; tn <t_end-0.00001*t_end ; tn = tn+tau)
         {
