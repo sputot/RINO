@@ -55,8 +55,13 @@ void setVi(vector<interval> &x,vector<AAF> &y, vector<AAF> &constraints);
 
 void setId(vector<vector<AAF>> &J);
 
-vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary);
+void compute_print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, const char *approxtype);
 vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<vector<double>> &A, int varx, int vary, int varz);
+
+// builds conditionner for skewbox computation
+// A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
+void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> Jaux, int i, int k);
+
 #endif
 
 

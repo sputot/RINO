@@ -347,7 +347,7 @@ int main(int argc, char* argv[])
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
             tn = t_begin;
-            print_initstats(initial_values,param_inputs);
+            print_initstats(initial_values,param_inputs);  // print initial conditions and init XML 
             
             // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
         //    vector<AAF> yp(sysdim);

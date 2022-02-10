@@ -20,6 +20,11 @@ interval Kaucher_multeps(interval Jac, interval eps);
 interval Kaucher_add_pro_impro(interval pro, interval impro);
 // Kaucher addition where we consider pro as proper and impro as improper and we want an proper result
 interval Kaucher_add_pro_impro_resultpro(interval pro, interval impro);
+
+void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, const bool skewed, vector<vector<double>> &A);
+
+void compute_print_outerskewbox(interval &range_i, interval &range_k, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, const bool skewed, vector<vector<double>> &A);
+
 // computer inner and outer-approx by mean-value theorem
 // using special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system
 void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1);

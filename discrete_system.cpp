@@ -888,8 +888,9 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             out_approx << YAML::Value << varx;
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << vary;
-            cout << "outer skewed box (mean value): ";
-            output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step);
+            //cout << "outer skewed box (mean value): ";
+            //output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step);
+            compute_print_skewbox(temp_outer[varx],temp_outer[vary],A_o,varx,vary,"maxskew");
             out_approx << YAML::EndMap;
             out_approx << YAML::EndSeq;
             }
@@ -905,9 +906,10 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             out_approx << YAML::Value << vary;
             if (skew)
             {
-                cout << "inner skewed box (mean value): ";
-                print_pi(exist_quantified);
-                output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_i,  varx,  vary, step);
+                //cout << "inner skewed box (mean value): ";
+                //print_pi(exist_quantified);
+                //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_i,  varx,  vary, step);
+                compute_print_skewbox(temp_inner[varx],temp_inner[vary],A_i,varx,vary,"maxskew");
             }
             else
                 print_innerbox(temp_inner, exist_quantified, varx, vary, step);
@@ -1109,8 +1111,9 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 out_approx << YAML::Value << varx;
                 out_approx << YAML::Key << "x2";
                 out_approx << YAML::Value << vary;
-                cout << "outer skewed box (mean value) for x" << varx+1 <<" and x" << vary+1 <<": ";
-                output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step);
+                // cout << "outer skewed box (mean value) for x" << varx+1 <<" and x" << vary+1 <<": ";
+                //output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step);
+                compute_print_skewbox(temp_outer[varx],temp_outer[vary],A_o,varx,vary,"maxskew");
                 out_approx << YAML::EndMap;
                 
                 }
@@ -1165,9 +1168,10 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 out_approx << YAML::Value << vary;
                 if (skew)
                 {
-                    cout << "inner skewed box (mean value): ";
-                    print_pi(exist_quantified);
-                    output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_o,  varx,  vary, step);
+                    //cout << "inner skewed box (mean value): ";
+                    //print_pi(exist_quantified);
+                    //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_o,  varx,  vary, step);
+                    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A_o,varx,vary,"maxskew");
                 }
                 else
                     print_innerbox(temp_inner, exist_quantified, varx, vary, step);
@@ -3060,8 +3064,9 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 1;
-    cout << "outer skewed box (mean value): ";
-    output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A,  varx,  vary, -1);
+    //cout << "outer skewed box (mean value): ";
+    //output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer[varx],temp_outer[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     temp_outer = evaluate_outerrange_order2(f0,radx,CJacf0,CHessf);
@@ -3072,8 +3077,9 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 2;
-    cout << "outer skewed box (order 2): ";
-    output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A,  varx,  vary, -1);
+    // cout << "outer skewed box (order 2): ";
+    // output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer[varx],temp_outer[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     out_approx << YAML::EndSeq;
     
@@ -3102,9 +3108,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 1;
-    cout << "inner skewed box (mean value): ";
-    print_pi(exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    //cout << "inner skewed box (mean value): ";
+    //print_pi(exist_quantified);
+    // output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     temp_inner = evaluate_innerrange_order2(f0,radx,CJacf0,CHessf,false,exist_quantified);
@@ -3115,9 +3122,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 2;
-    cout << "inner skewed box (order 2): ";
-    print_pi(exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    //cout << "inner skewed box (order 2): ";
+    //print_pi(exist_quantified);
+    //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     // TO BE generalized for more then 2 variables/components
@@ -3138,9 +3146,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 1;
-    cout << "inner skewed box (mean value): ";
-    print_pi(exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    //cout << "inner skewed box (mean value): ";
+    //print_pi(exist_quantified);
+    //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     temp_inner = evaluate_innerrange_order2(f0,radx,CJacf0,CHessf,false,exist_quantified);
@@ -3151,9 +3160,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 2;
-    cout << "inner skewed box (order 2): ";
-    print_pi(exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    //cout << "inner skewed box (order 2): ";
+    //print_pi(exist_quantified);
+    //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     if (jacdim >= 3)
@@ -3176,9 +3186,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 1;
-        cout << "inner skewed box (mean value): ";
-        print_pi(exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        //cout << "inner skewed box (mean value): ";
+        //print_pi(exist_quantified);
+        //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         temp_inner = evaluate_innerrange_order2(f0,radx,CJacf0,CHessf,false,exist_quantified);
@@ -3189,9 +3200,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 2;
-        cout << "inner skewed box (order 2): ";
-        print_pi(exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        //cout << "inner skewed box (order 2): ";
+        //print_pi(exist_quantified);
+        //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         // TO BE generalized for more then 2 variables/components
@@ -3212,9 +3224,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 1;
-        cout << "inner skewed box (mean value): ";
-        print_pi(exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        //cout << "inner skewed box (mean value): ";
+        //print_pi(exist_quantified);
+        //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         temp_inner = evaluate_innerrange_order2(f0,radx,CJacf0,CHessf,false,exist_quantified);
@@ -3225,9 +3238,10 @@ void preconditioned_joint_ranges(vector<interval> &z0, vector<interval> &radx, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 2;
-        cout << "inner skewed box (order 2): ";
-        print_pi(exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        //cout << "inner skewed box (order 2): ";
+        //print_pi(exist_quantified);
+        //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[varx],temp_inner[vary],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
     }
@@ -3295,8 +3309,9 @@ void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 1;
-    cout << "outer skewed box: ";
-    output_skewedbox = print_skewbox(temp_outer_x, temp_outer_y, A,  varx,  vary, -1);
+    //cout << "outer skewed box: ";
+    //output_skewedbox = print_skewbox(temp_outer_x, temp_outer_y, A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer_x,temp_outer_y,A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     out_approx << YAML::EndSeq;
     
@@ -3332,7 +3347,8 @@ void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &
             out_approx << YAML::Value << varx;
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << vary;
-            output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
             out_approx << YAML::EndMap;
         }
     }
@@ -3361,7 +3377,8 @@ void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &
             out_approx << YAML::Value << varx;
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << vary;
-            output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
             out_approx << YAML::EndMap;
         }
     }
@@ -3391,7 +3408,8 @@ void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &
                 out_approx << YAML::Value << varx;
                 out_approx << YAML::Key << "x2";
                 out_approx << YAML::Value << vary;
-                output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
                 out_approx << YAML::EndMap;
             }
         }
@@ -3418,7 +3436,8 @@ void preconditioned_joint_ranges_subdiv(vector<interval> &z0, vector<interval> &
                 out_approx << YAML::Value << varx;
                 out_approx << YAML::Key << "x2";
                 out_approx << YAML::Value << vary;
-                output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
                 out_approx << YAML::EndMap;
             }
         }
@@ -3486,7 +3505,8 @@ void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<
     out_approx << YAML::Key << "x2";
     out_approx << YAML::Value << vary;
     cout << "outer skewed box: ";
-    output_skewedbox = print_skewbox(temp_outer_x, temp_outer_y, A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_outer_x, temp_outer_y, A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer_x,temp_outer_y,A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     out_approx << YAML::EndSeq;
     
@@ -3522,7 +3542,8 @@ void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<
             out_approx << YAML::Value << varx;
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << vary;
-            output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
             out_approx << YAML::EndMap;
         }
     }
@@ -3551,7 +3572,8 @@ void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<
             out_approx << YAML::Value << varx;
             out_approx << YAML::Key << "x2";
             out_approx << YAML::Value << vary;
-            output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+            compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
             out_approx << YAML::EndMap;
         }
     }
@@ -3581,7 +3603,8 @@ void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<
                 out_approx << YAML::Value << varx;
                 out_approx << YAML::Key << "x2";
                 out_approx << YAML::Value << vary;
-                output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
                 out_approx << YAML::EndMap;
             }
         }
@@ -3608,7 +3631,8 @@ void preconditioned_joint_ranges_subdiv_discretize(vector<interval> &z0, vector<
                 out_approx << YAML::Value << varx;
                 out_approx << YAML::Key << "x2";
                 out_approx << YAML::Value << vary;
-                output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                //output_skewedbox = print_skewbox(temp_inner_x, temp_inner_y, A,  varx,  vary, -1);
+                compute_print_skewbox(temp_inner_x,temp_inner_y,A,varx,vary,"maxskew");
                 out_approx << YAML::EndMap;
             }
         }
@@ -3690,7 +3714,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 1;
     cout << "outer skewed box (mean-value, 1d discretization): ";
-    output_skewedbox = print_skewbox(temp_outer[0], temp_outer[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_outer[0], temp_outer[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer[0],temp_outer[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     // outer range
@@ -3703,7 +3728,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 2;
     cout << "outer skewed box (order 2, 1d discretization): ";
-    output_skewedbox = print_skewbox(temp_outer[0], temp_outer[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_outer[0], temp_outer[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_outer[0],temp_outer[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     out_approx << YAML::EndSeq;
     
@@ -3735,7 +3761,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     cout << "inner skewed box (mean-value, 1d discretization): ";
     print_pi(exist_quantified);
     temp_inner = evaluate_innerrange_discretize_simultaneous(f0,radx,CJacAff,false,exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     out_approx << YAML::BeginMap;
@@ -3748,7 +3775,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     cout << "inner skewed box (order 2, 1d discretization): ";
     print_pi(exist_quantified);
     temp_inner = evaluate_innerrange_order2_discretize_simultaneous(f0,radx,CJacAff,Cdfdx0,CHessAff,false,exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     // TO BE generalized for more then 2 variables/components
@@ -3771,7 +3799,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     cout << "inner skewed box (mean-value, 1d discretization): ";
     print_pi(exist_quantified);
     temp_inner = evaluate_innerrange_discretize_simultaneous(f0,radx,CJacAff,false,exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     out_approx << YAML::BeginMap;
@@ -3781,10 +3810,11 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
     out_approx << YAML::Value << vary;
     out_approx << YAML::Key << "order";
     out_approx << YAML::Value << 2;
-    cout << "inner skewed box (order 2, 1d discretization): ";
-    print_pi(exist_quantified);
+    //cout << "inner skewed box (order 2, 1d discretization): ";
+    //print_pi(exist_quantified);
     temp_inner = evaluate_innerrange_order2_discretize_simultaneous(f0,radx,CJacAff,Cdfdx0,CHessAff,false,exist_quantified);
-    output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+    compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
     out_approx << YAML::EndMap;
     
     if (jacdim >= 3)
@@ -3807,10 +3837,11 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 1;
-        cout << "inner skewed box (mean-value, 1d discretization): ";
-        print_pi(exist_quantified);
+        //cout << "inner skewed box (mean-value, 1d discretization): ";
+        //print_pi(exist_quantified);
         temp_inner = evaluate_innerrange_discretize_simultaneous(f0,radx,CJacAff,false,exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         out_approx << YAML::BeginMap;
@@ -3820,10 +3851,11 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 2;
-        cout << "inner skewed box (order 2, 1d discretization): ";
-        print_pi(exist_quantified);
+        //cout << "inner skewed box (order 2, 1d discretization): ";
+        //print_pi(exist_quantified);
         temp_inner = evaluate_innerrange_order2_discretize_simultaneous(f0,radx,CJacAff,Cdfdx0,CHessAff,false,exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         // TO BE generalized for more then 2 variables/components
@@ -3843,10 +3875,11 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 1;
-        cout << "inner skewed box (mean-value, 1d discretization): ";
-        print_pi(exist_quantified);
+        //cout << "inner skewed box (mean-value, 1d discretization): ";
+        //print_pi(exist_quantified);
         temp_inner = evaluate_innerrange_discretize_simultaneous(f0,radx,CJacAff,false,exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
         
         out_approx << YAML::BeginMap;
@@ -3856,10 +3889,11 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
         out_approx << YAML::Value << vary;
         out_approx << YAML::Key << "order";
         out_approx << YAML::Value << 2;
-        cout << "inner skewed box (order 2, 1d discretization): ";
-        print_pi(exist_quantified);
+        //cout << "inner skewed box (order 2, 1d discretization): ";
+        //print_pi(exist_quantified);
         temp_inner = evaluate_innerrange_order2_discretize_simultaneous(f0,radx,CJacAff,Cdfdx0,CHessAff,false,exist_quantified);
-        output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        //output_skewedbox = print_skewbox(temp_inner[0], temp_inner[1], A,  varx,  vary, -1);
+        compute_print_skewbox(temp_inner[0],temp_inner[1],A,varx,vary,"maxskew");
         out_approx << YAML::EndMap;
     }
     
@@ -4193,26 +4227,4 @@ void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int 
     //outFile_jointinner.close();
 }
 
-vector<vector<double>> print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, int step) {
-    // resulting quadrilatere A * inner is an inner approximation of the range of f
-    vector<vector<double>> output_skewedbox;
-    
-    output_skewedbox = compute_skewbox(temp_inner_x,temp_inner_y,A,varx,vary);
-    
-    
-    //  cout << "inner skewed box: (pi : 1 -> " << exist_quantified[0]+1 << ", 2 -> " << exist_quantified[1]+1 << ")" << endl;
-    for (int i=0; i<4; i++)
-        cout << "(" << output_skewedbox[i][0] <<", " << output_skewedbox[i][1] << ") ";
-    cout << endl;
-    
-    vector<double> temp2(8);
-    for (int p=0; p<=3; p++) {
-        temp2[2*p] = output_skewedbox[p][0];
-        temp2[2*p+1] = output_skewedbox[p][1];
-    }
-    
-    out_approx << YAML::Key << "maxskew";
-    out_approx << YAML::Value << temp2;
-    
-    return output_skewedbox;
-}
+

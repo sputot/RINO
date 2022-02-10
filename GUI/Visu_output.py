@@ -6,7 +6,7 @@
 
 # ## Reading result files
 
-# In[58]:
+# In[404]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -146,11 +146,29 @@ if (path.isfile('approxreachset.yaml')):
                 meanerrordiff.append([app["meanerrordiff"][2*i+1] for app in approx])
                 relmeanerrordiff.append([app["relmeanerrordiff"][2*i+1] for app in approx])
         
+        if (int(sysdim) > 1 and 'outer2d' in approx[0]):
+            outer2d = [app['outer2d'] for app in approx]
+            outer2d_maxskew = []
+            outer2d_robskew = []
+            if 'maxskew' in outer2d[0][0]:
+                outer2d_maxskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
+            if 'robskew' in outer2d[0][0]:
+                outer2d_robskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)
+                
+            no_iter = 0
+            for iter in outer2d:
+                for tuple in iter:
+                    x1 = int(tuple['x1'])
+                    x2 = int(tuple['x2'])
+                    if 'maxskew' in tuple:
+                        outer2d_maxskew[no_iter][x1][x2]=tuple['maxskew']
+                    if 'robbox' in tuple:
+                        outer2d_robskew[no_iter][x1][x2]=tuple['robskew']
+                no_iter = no_iter+1
+        
         if (int(sysdim) > 1 and 'inner2d' in approx[0]):
             inner2d_maxbox = []
             inner2d_maxskew = []
-            outer2d_maxskew = []
-            inner2d_minbox = []
             inner2d_robbox = []
             inner2d = [app['inner2d'] for app in approx]
             if 'maxbox' in inner2d[0][0]:
@@ -160,7 +178,7 @@ if (path.isfile('approxreachset.yaml')):
             if 'robbox'  in inner2d[0][0]:
                 inner2d_robbox  = np.zeros((len(approx_tn),sysdim, sysdim, 4), float)
             if 'robskew'  in inner2d[0][0]:
-                inner2d_robskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float) 
+                inner2d_robskew = np.zeros((len(approx_tn),sysdim, sysdim, 8), float)   
             
             no_iter = 0
             for iter in inner2d:
@@ -196,7 +214,7 @@ if (path.isfile('approxreachset.yaml')):
                 no_iter = no_iter+1
 
 
-# In[59]:
+# In[405]:
 
 
 width_in_inches = 12
@@ -205,92 +223,33 @@ dots_per_inch = 100
 #fig = plt.figure(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
 from matplotlib.patches import Rectangle, Polygon
 from matplotlib.collections import PatchCollection
-    
-def print_xy(no_varx,no_vary,sample,approx):      
-    fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
-        
-    if (sample):
-        plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='estimated reachable states')
 
-    if (approx):
-        # print maximal outer approximation
-        for xo1,xo2,yo1,yo2 in zip(zmin_outer[no_varx],zmax_outer[no_varx],zmin_outer[no_vary],zmax_outer[no_vary]):
-            car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1,ec='black', color='green',alpha=0.1,zorder=1)
-            ax.add_patch(car_fig)
-        
-         # print inner-approximations
-        xi = np.zeros((8), float)
-        for no_iter in range(len(inner2d_maxbox)):
-            # maximal box inner-approximation
-            for i in range(4):
-                xi[i] = inner2d_maxbox[no_iter][no_varx][no_vary][i]
-            car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='orange',alpha=0.5,zorder=2)
-            ax.add_patch(car_fig)
-            # maximal skewed box inner-approximation
-            for i in range(8):
-                xi[i] = inner2d_maxskew[no_iter][no_varx][no_vary][i]
-            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='orange',alpha=0.5,zorder=2)
-            ax.add_patch(car_fig)
-        for no_iter in range(len(inner2d_robbox)):    
-            # robust box inner-approximation
-            for i in range(4):
-                xi[i] = inner2d_robbox[no_iter][no_varx][no_vary][i]
-            car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='yellow',alpha=0.5,zorder=3)
-            ax.add_patch(car_fig)
-            # robust skewed box inner-approximation
-            for i in range(8):
-                xi[i] = inner2d_robskew[no_iter][no_varx][no_vary][i]
-            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='yellow',alpha=0.5,zorder=3)
-            ax.add_patch(car_fig) 
-
-        ax.autoscale()
-        varx = 'x'+str(no_varx+1)
-        vary = 'x'+str(no_vary+1)
-        ax.set_xlabel(varx)
-        ax.set_ylabel(vary)
-         #   plt.legend()
-        
-        if (sample and approx):            
-            f_output = 'sample_approx' + varx + vary
-        elif (sample):
-            f_output = 'sample' + varx + vary
-        else:
-            f_output = varx + vary
-        plt.savefig(f_output)
-        if (print_interactive):
-            plt.show() 
-        plt.close()
-
-
-# In[60]:
-
-
-def print_discrete_xy(no_varx,no_vary,sample,approx):
+def print_xy(no_varx,no_vary,sample,approx,skew):
     
     fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
     plt.grid(True,which="both", linestyle='--')
     
     if (sample):
-        plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='estimated reachable states')
+        plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='sampled states')
     
     if (approx):
         xi = np.zeros((8), float)
         # print maximal outer approximation - if only boxes we print boxes otherwise we print skew boxes
-        if len(outer2d_maxskew) == 0:
+        if len(outer2d_maxskew) == 0 or (not skew):
             for xo1,xo2,yo1,yo2 in zip(zmin_outer[no_varx],zmax_outer[no_varx],zmin_outer[no_vary],zmax_outer[no_vary]):
                 car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1,color='green', ec='black', linewidth=2, alpha=0.1,zorder=1)
                 ax.add_patch(car_fig)
-            car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1, label='over-approximation', color='green', ec='black', linewidth=2, alpha=0.1,zorder=1)
+            car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1, label='maximal over-approx.', color='green', ec='black', linewidth=2, alpha=0.1,zorder=1)
             ax.add_patch(car_fig)
         else:
-            for no_iter in range(len(outer2d_maxskew)):
+            for no_iter in range(len(outer2d_maxskew)):  
             # maximal skewed box outer-approximation
                 for i in range(8):
                     xi[i] = outer2d_maxskew[no_iter][no_varx][no_vary][i]
                 car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='green', ec='black', linewidth=2,alpha=0.1,zorder=1)
                 ax.add_patch(car_fig)
-            if (len(outer2d_maxbox) > 0):
-                car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='green', ec='black', linewidth=2,alpha=0.1,zorder=1)
+            if (len(outer2d_maxskew) > 0):
+                car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='maximal over-approx.', color='green', ec='black', linewidth=2,alpha=0.1,zorder=1)
                 ax.add_patch(car_fig)
                 
         for no_iter in range(len(inner2d_maxbox)):
@@ -298,9 +257,6 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
             for i in range(4):
                 xi[i] = inner2d_maxbox[no_iter][no_varx][no_vary][i]
             car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='orange',alpha=0.5,zorder=2)
-            ax.add_patch(car_fig)
-        if (len(inner2d_maxbox) > 0):
-            car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], label='under-approximation', color='orange',alpha=0.5,zorder=2)
             ax.add_patch(car_fig)
          
         for no_iter in range(len(inner2d_maxskew)):
@@ -310,7 +266,7 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
             car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='orange',alpha=0.5,zorder=2)
             ax.add_patch(car_fig)
         if (len(inner2d_maxskew) > 0):
-            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='under-approximation', color='orange',alpha=0.5,zorder=2)
+            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='maximal under-approx.', color='orange',alpha=0.5,zorder=2)
             ax.add_patch(car_fig)
             
         for no_iter in range(len(inner2d_robbox)):    
@@ -324,7 +280,10 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
             for i in range(8):
                 xi[i] = inner2d_robskew[no_iter][no_varx][no_vary][i]
             car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='yellow',alpha=0.5,zorder=3)
-            ax.add_patch(car_fig)         
+            ax.add_patch(car_fig)
+        if (len(inner2d_robskew) > 0):
+            car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='robust under-approx.', color='yellow',alpha=0.5,zorder=3)
+            ax.add_patch(car_fig) 
         
     ax.autoscale()
     varx = 'x'+str(no_varx+1)
@@ -333,10 +292,12 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
     ax.set_ylabel(vary,fontsize="x-large")
         
     plt.legend(fontsize="x-large",loc='lower right')
-    if (sample and approx):            
-        f_output = 'sample_approx' + varx + vary
+    if (sample and approx and skew):            
+        f_output = varx + vary + '_approx_sample'
+    elif (sample and approx):            
+        f_output = varx + vary + '_box_sample'
     elif (sample):
-        f_output = 'sample' + varx + vary
+        f_output = varx + vary + '_sample'
     else:
         f_output = varx + vary
     plt.savefig(f_output)
@@ -345,7 +306,75 @@ def print_discrete_xy(no_varx,no_vary,sample,approx):
     plt.close()
 
 
-# In[61]:
+# In[406]:
+
+
+def print_finalstate_xy(no_varx,no_vary):
+    
+    fig, ax = plt.subplots(figsize=(width_in_inches, height_in_inches), dpi=dots_per_inch)
+    plt.grid(True,which="both", linestyle='--')
+    
+    #plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='sampled states')
+    for no_iter in range(len(sample_z[no_varx])):
+        if (sample_tn[no_iter] == approx_tn[len(approx_tn)-1]):
+            plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.)        
+    plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.,label='sampled states')
+    
+    xi = np.zeros((8), float)
+    # print maximal outer approximation - if only boxes we print boxes otherwise we print skew boxes
+    xo1 = zmin_outer[no_varx][len(approx_tn)-1]
+    xo2 = zmax_outer[no_varx][len(approx_tn)-1]
+    yo1 = zmin_outer[no_vary][len(approx_tn)-1]
+    yo2 = zmax_outer[no_vary][len(approx_tn)-1]
+    car_fig = Rectangle([xo1,yo1],xo2-xo1,yo2-yo1, label='maximal over-approx.', color='green', ec='black', linewidth=2, alpha=0.1,zorder=1)
+    ax.add_patch(car_fig)
+    
+    if len(outer2d_maxskew) != 0:
+        # maximal skewed box outer-approximation
+        for i in range(8):
+            xi[i] = outer2d_maxskew[len(approx_tn)-1][no_varx][no_vary][i]
+        car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], color='green', ec='black', linewidth=2,alpha=0.1,zorder=1)
+        ax.add_patch(car_fig)
+                
+    # maximal box inner-approximation
+    for i in range(4):
+        xi[i] = inner2d_maxbox[len(approx_tn)-1][no_varx][no_vary][i]
+    car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='orange',alpha=0.5,zorder=2)
+    ax.add_patch(car_fig)
+         
+    # maximal skewed box inner-approximation
+    for i in range(8):
+        xi[i] = inner2d_maxskew[len(approx_tn)-1][no_varx][no_vary][i]
+    car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='maximal under-approx.', color='orange',alpha=0.5,zorder=2)
+    ax.add_patch(car_fig)
+            
+    # robust box inner-approximation
+    for i in range(4):
+        xi[i] = inner2d_robbox[len(approx_tn)-1][no_varx][no_vary][i]
+    car_fig = Rectangle([xi[0],xi[2]],xi[1]-xi[0],xi[3]-xi[2], color='yellow',alpha=0.5,zorder=3)
+    ax.add_patch(car_fig)
+            
+    # robust skewed box inner-approximation
+    for i in range(8):
+        xi[i] = inner2d_robskew[len(approx_tn)-1][no_varx][no_vary][i]
+    car_fig = Polygon([(xi[0],xi[1]), (xi[2],xi[3]), (xi[4],xi[5]), (xi[6],xi[7])], label='robust under-approx.', color='yellow',alpha=0.5,zorder=3)
+    ax.add_patch(car_fig) 
+        
+    ax.autoscale()
+    varx = 'x'+str(no_varx+1)
+    vary = 'x'+str(no_vary+1)
+    ax.set_xlabel(varx,fontsize="x-large")
+    ax.set_ylabel(vary,fontsize="x-large")
+        
+    plt.legend(fontsize="x-large",loc='lower right')
+    f_output = varx + vary + '_finalstate'
+    plt.savefig(f_output)
+    if (print_interactive):
+        plt.show() 
+    plt.close()
+
+
+# In[407]:
 
 
 # print joint ranges and sampled joint range of variables to display
@@ -354,16 +383,14 @@ for vary in range(sysdim):
     for varx in range(vary):
         varx_nb = '-' + str(varx+1) + '-'
         if (re.match(varx_nb,variables_to_display) and re.match(vary_nb,variables_to_display)) or re.match("all",variables_to_display):
-            if (systype == 2): #discrete-time systems
-                print_discrete_xy(varx,vary,False,True) # not sample and approx
-                print_discrete_xy(varx,vary,True,True)  # sample and approx
-            elif (systype == 0): # ODEs
-                print_xy(varx,vary,True,False) # sample and not approx
-                print_xy(varx,vary,False,True) # not sample and approx
-                print_xy(varx,vary,True,True)  # sample and approx
+            print_xy(varx,vary,True,False,True) # sample and not approx and skew
+            print_xy(varx,vary,False,True,True) # not sample and approx and skew
+            print_xy(varx,vary,True,True,True)  # sample and approx and skew
+            print_xy(varx,vary,True,True,False)  # sample and approx and not skew
+            print_finalstate_xy(varx,vary)
 
 
-# In[62]:
+# In[408]:
 
 
 # 3D printing in continuous case  (ODEs)
@@ -486,7 +513,7 @@ def print_xyz(no_varx,no_vary,no_varz):
     plt.close()
 
 
-# In[63]:
+# In[409]:
 
 
 # print joint outer and inner 3D ranges in continuous case (ODEs)
@@ -501,7 +528,7 @@ if (systype == 0):  # ODEs
                     print_xyz(varx,vary,varz)
 
 
-# In[64]:
+# In[410]:
 
 
 # 3D printing in case of discrete-time systems - different from continuous case, x,y as a function of time...
@@ -573,7 +600,7 @@ def print3d_discrete_xyt(no_varx,no_vary):
     plt.close()
 
 
-# In[65]:
+# In[411]:
 
 
 # 3D printing in discrete time systems - different from continuous case, x,y as a function of time...
@@ -587,7 +614,7 @@ if (systype == 2):
                   print3d_discrete_xyt(varx,vary)
 
 
-# In[66]:
+# In[412]:
 
 
 # if print_robust = True: print robust approx
@@ -699,7 +726,7 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
         plt.close()
 
 
-# In[67]:
+# In[413]:
 
 
 print_robust = False
@@ -711,7 +738,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[69]:
+# In[414]:
 
 
 if (not samples_absent):
@@ -723,7 +750,7 @@ if (not samples_absent):
     print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[70]:
+# In[415]:
 
 
 print_robust = True
@@ -734,7 +761,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[71]:
+# In[416]:
 
 
 print_robust = False
@@ -745,7 +772,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[72]:
+# In[417]:
 
 
 print_robust = True
@@ -756,7 +783,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[73]:
+# In[418]:
 
 
 print_robust = False
@@ -765,7 +792,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[74]:
+# In[419]:
 
 
 print_robust = False
@@ -774,7 +801,7 @@ subplots = True
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[75]:
+# In[420]:
 
 
 if 'etaouter' in approx[0]:
@@ -802,7 +829,7 @@ if 'gamma' in approx[0]:
     plt.close()
 
 
-# In[76]:
+# In[421]:
 
 
 print_interactive = False
@@ -820,7 +847,7 @@ if (len(meanerrorinner) > 0):
     plt.close()
 
 
-# In[77]:
+# In[422]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any

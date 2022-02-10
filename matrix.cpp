@@ -320,23 +320,21 @@ void setId(vector<vector<AAF>> &J) {
 }
 
  // resulting quadrilatere A * inner is an inner approximation of the range of f
-vector<vector<double>> compute_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary)
+void compute_print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, const char *approxtype)
 {
-    vector<vector<double>> output_skewedbox(4);
-    for (int i=0; i<4; i++)
-        output_skewedbox[i] = vector<double>(2);
+    vector<double> output_skewedbox(8);
     
+    output_skewedbox[0] = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    output_skewedbox[1] = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
+    output_skewedbox[2] = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    output_skewedbox[3] = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    output_skewedbox[4] = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
+    output_skewedbox[5] = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
+    output_skewedbox[6] = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
+    output_skewedbox[7] = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
     
-    output_skewedbox[0][0] = inf(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    output_skewedbox[0][1] = inf(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
-    output_skewedbox[1][0] = inf(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    output_skewedbox[1][1] = inf(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    output_skewedbox[2][0] = sup(temp_inner_x)*A[varx][varx] + sup(temp_inner_y)*A[varx][vary];
-    output_skewedbox[2][1] = sup(temp_inner_x)*A[vary][varx] + sup(temp_inner_y)*A[vary][vary];
-    output_skewedbox[3][0] = sup(temp_inner_x)*A[varx][varx] + inf(temp_inner_y)*A[varx][vary];
-    output_skewedbox[3][1] = sup(temp_inner_x)*A[vary][varx] + inf(temp_inner_y)*A[vary][vary];
-    
-    return output_skewedbox;
+    out_approx << YAML::Key << approxtype;
+    out_approx << YAML::Value << output_skewedbox;
 }
 
 vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<vector<double>> &A, int varx, int vary, int varz)
@@ -378,4 +376,33 @@ vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<v
     output_skewedbox[7][2] = sup(temp_inner[varx])*A[varz][varx] + inf(temp_inner[vary])*A[varz][vary] + sup(temp_inner[varz])*A[varz][varz];
     
     return output_skewedbox;
+}
+
+
+// builds conditionner for skewbox computation
+// A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
+void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> Jaux, int i, int k)
+{
+    double determinant;
+    
+    for (int p=0 ; p<sysdim; p++) {
+        for (int q=0 ; q<sysdim; q++) {
+            A[p][q] = 0.0;
+            C[p][q] = 0.0;
+        }
+        A[p][p] = 1.0;
+        C[p][p] = 1.0;
+    }
+    
+    A[i][i] = mid(Jaux[i][i]);
+    A[k][k] = mid(Jaux[k][k]);
+    A[i][k] = mid(Jaux[i][k]);
+    A[k][i] = mid(Jaux[k][i]);
+    
+    // C is inverse of A
+    determinant = 1.0/(A[i][i]*A[k][k]-A[i][k]*A[k][i]);
+    C[i][i] = determinant*A[k][k];
+    C[i][k] = - determinant*A[i][k];
+    C[k][i] = - determinant*A[k][i];
+    C[k][k] = determinant*A[i][i];
 }
