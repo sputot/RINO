@@ -23,7 +23,7 @@ interval Kaucher_add_pro_impro_resultpro(interval pro, interval impro);
 
 void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, const bool skewed, vector<vector<double>> &A);
 
-void compute_print_outerskewbox(interval &range_i, interval &range_k, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, const bool skewed, vector<vector<double>> &A);
+void compute_print_outerskewbox(vector<interval> &range, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k,  vector<vector<double>> &A);
 
 // computer inner and outer-approx by mean-value theorem
 // using special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system

@@ -125,20 +125,50 @@ void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector
 }
 
 
-void compute_print_outerskewbox(interval &range_i, interval &range_k, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, const bool skewed, vector<vector<double>> &A)
+void compute_print_outerskewbox(vector<interval> &range, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, vector<vector<double>> &A)
 {
-    interval max_i, max_k;
+    vector<int> indices(2);
+    indices[0] = i;
+    indices[1] = k;
+    vector<interval> max(2);
     
-    max_i = range_i;
-    max_k = range_k;
-    for (int j=0 ; j<jacdim ; j++) {
-        max_i += Jaux[i][j]*eps[j];
-        max_k += Jaux[k][j]*eps[j];
+    // robust outer-approx
+    if (uncontrolled > 0)
+    {
+        vector<interval> robust(2);
+        vector<interval> initialcondition_pro(2), uncontrolled_impro(2), controlled_pro(2);
+        
+        for (int l=0 ; l<=1; l++)
+        {
+            initialcondition_pro[l] = 0;
+            uncontrolled_impro[l] = 0;
+            controlled_pro[l] = 0;
+        
+            for (int j=0 ; j<jacdim ; j++)
+            {
+                if (j<sysdim) // initial conditions (controlled)
+                    initialcondition_pro[l] = initialcondition_pro[l] + Jaux[indices[l]][j]*eps[j];
+                else if (!is_uncontrolled[index_param[j-sysdim]])
+                    controlled_pro[l] = controlled_pro[l] + Jaux[indices[l]][j]*eps[j];
+                else // uncontrolled part
+                    uncontrolled_impro[l] = uncontrolled_impro[l] + Kaucher_multeps(Jaux[indices[l]][j],eps[j]) ;
+            }
+ 
+            robust[l] = range[l] + initialcondition_pro[l] + controlled_pro[l];
+            robust[l] = Kaucher_add_pro_impro_resultpro(robust[l],uncontrolled_impro[l]);
+        }
+        compute_print_skewbox(robust[0],robust[1],A,i,k,"robskew");
     }
     
-    if (skewed) {
-        compute_print_skewbox(max_i,max_k,A,i,k,"maxskew");
+    // maximal outer-approx
+    for (int l=0 ; l<=1; l++)
+    {
+        max[l] = range[l];
+        for (int j=0 ; j<jacdim ; j++)
+            max[l] += Jaux[indices[l]][j]*eps[j];
     }
+    compute_print_skewbox(max[0],max[1],A,i,k,"maxskew");
+    
     
 }
 
@@ -214,6 +244,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     // note that we could enumerate all possible mappings and superpose all corresponding boxes in the same file ?
     if (print_debug)
     {
+        vector<interval> range(3);
         interval range_i, range_k;
         interval robust_i, max_i, robust_i_impro, max_i_impro, range_i_impro;
         interval robust_k, max_k, robust_k_impro, max_k_impro, range_k_impro;
@@ -245,17 +276,17 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 out_approx << YAML::Value << k;
                 
                 // computing and printing inner boxes (max and robust)
-                range_i = ix0[i];   // center and uncontrolled (forall) part
-                range_k = ix0[k];
-                compute_print_jointinnerranges(range_i, range_k, Jaux, eps, i, k, false,A);
+                range[0] = ix0[i];   // center and uncontrolled (forall) part
+                range[1] = ix0[k];
+                compute_print_jointinnerranges(range[0], range[1], Jaux, eps, i, k, false,A);
            
                 // computing and printing skew inner boxes  (max and robust)
                 build_2dpreconditionner(A,C,Jaux,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
                 multMiMi(CJac,C,Jaux); // CJac = C*Jaux
 
-                range_i = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
-                range_k = C[k][k]*ix0[k] + C[k][i]*ix0[i];
-                compute_print_jointinnerranges(range_i, range_k, CJac, eps, i, k, true, A);
+                range[0] = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
+                range[1] = C[k][k]*ix0[k] + C[k][i]*ix0[i];
+                compute_print_jointinnerranges(range[0], range[1], CJac, eps, i, k, true, A);
 
                  
                 out_approx << YAML::EndMap;
@@ -281,9 +312,10 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 // computing and printing skew inner boxes  (max and robust)
                 build_2dpreconditionner(A,C,Jaux,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
                 multMiMi(CJac,C,Jaux); // CJac = C*Jaux
-                range_i = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
-                range_k = C[k][k]*ix0[k] + C[k][i]*ix0[i];
-                compute_print_outerskewbox(range_i, range_k, CJac, eps, i, k, true, A);
+                range[0] = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
+                range[1] = C[k][k]*ix0[k] + C[k][i]*ix0[i];
+                
+                compute_print_outerskewbox(range, CJac, eps, i, k, A);
                 
                 out_approx << YAML::EndMap;
             }

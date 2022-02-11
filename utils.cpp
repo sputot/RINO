@@ -399,12 +399,12 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
             
             out_approx << YAML::Key << "maxskew";
             out_approx << YAML::Value << tempskew;
-            /*
+            
             if (uncontrolled > 0) {
                 out_approx << YAML::Key << "robskew";
                 out_approx << YAML::Value << tempskew;
             }
-            */
+            
             out_approx << YAML::EndMap;
         }
     }
