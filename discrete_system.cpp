@@ -721,89 +721,30 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             }
             
             
-            for (int i=0 ; i<sysdim; i++) {
-                A_o[i][i] = 1.0;
-                C_o[i][i] = 1.0;
-                A_i[i][i] = 1.0;
-                C_i[i][i] = 1.0;
-            }
             
             if (sysdim >=3 && skew) {
-                for (int i=0 ; i<sysdim; i++) {
-                    A_o[i][i] = 1.0;
-                    C_o[i][i] = 1.0;
-                    A_i[i][i] = 1.0;
-                    C_i[i][i] = 1.0;
-                }
-                // 3D preconditioner -  supposing for now that varx, vary, varz = 0, 1, 2
-                for (int i = 0; i < 3; i++){
-                    for (int j = 0; j < 3; j++) {
-                        if (order == 1) {
-                            A_o[i][j] = mid(Jacf_o[i][j]);
-                            A_i[i][j] = mid(Jacf_i[i][j]);
-                        }
-                        else {
-                            A_o[i][j] = mid(dfdx0_o[i][j]);
-                            A_i[i][j] = mid(dfdx0_i[i][j]);
-                        }
-                    }
-                }
                 
-                // C is inverse of A
-                // supposing for now that varx, vary, varz = 0, 1, 2
-                double determinant = 0;
-                for (int i = 0; i < 3; i++)
-                    determinant = determinant + (A_o[0][i] * (A_o[1][(i+1)%3] * A_o[2][(i+2)%3] - A_o[1][(i+2)%3] * A_o[2][(i+1)%3]));
-                for (int i = 0; i < 3; i++){
-                    for (int j = 0; j < 3; j++)
-                        C_o[i][j] = ((A_o[(j+1)%3][(i+1)%3] * A_o[(j+2)%3][(i+2)%3]) - (A_o[(j+1)%3][(i+2)%3] * A_o[(j+2)%3][(i+1)%3]))/ determinant;
+                if (order == 1) {
+                    build_3dpreconditionner(A_o, C_o, Jacf_o, varx, vary, varz);
+                    build_3dpreconditionner(A_i, C_i, Jacf_i, varx, vary, varz);
                 }
-                
-                determinant = 0;
-                for (int i = 0; i < 3; i++)
-                    determinant = determinant + (A_i[0][i] * (A_i[1][(i+1)%3] * A_i[2][(i+2)%3] - A_i[1][(i+2)%3] * A_i[2][(i+1)%3]));
-                for (int i = 0; i < 3; i++){
-                    for (int j = 0; j < 3; j++)
-                        C_i[i][j] = ((A_i[(j+1)%3][(i+1)%3] * A_i[(j+2)%3][(i+2)%3]) - (A_i[(j+1)%3][(i+2)%3] * A_i[(j+2)%3][(i+1)%3]))/ determinant;
+                else {
+                    build_3dpreconditionner(A_o, C_o, dfdx0_o, varx, vary, varz);
+                    build_3dpreconditionner(A_i, C_i, dfdx0_i, varx, vary, varz);
                 }
+           
             }
             else if (sysdim >=2 && skew)
             {
                 // 2D preconditioner - just on components varx and vary
                 if (order == 1) {
-                    A_o[varx][varx] = mid(Jacf_o[varx][varx]);
-                    A_o[vary][vary] = mid(Jacf_o[vary][vary]);
-                    A_o[varx][vary] = mid(Jacf_o[varx][vary]);
-                    A_o[vary][varx] = mid(Jacf_o[vary][varx]);
-                    A_i[varx][varx] = mid(Jacf_i[varx][varx]);
-                    A_i[vary][vary] = mid(Jacf_i[vary][vary]);
-                    A_i[varx][vary] = mid(Jacf_i[varx][vary]);
-                    A_i[vary][varx] = mid(Jacf_i[vary][varx]);
+                    build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);    // C is inverse of A
+                    build_2dpreconditionner(A_i, C_i, Jacf_i, varx, vary);
                 }
                 else if (order == 2) {
-                    
-                    A_o[varx][varx] = mid(dfdx0_o[varx][varx]);
-                    A_o[vary][vary] = mid(dfdx0_o[vary][vary]);
-                    A_o[varx][vary] = mid(dfdx0_o[varx][vary]);
-                    A_o[vary][varx] = mid(dfdx0_o[vary][varx]);
-                    A_i[varx][varx] = mid(dfdx0_i[varx][varx]);
-                    A_i[vary][vary] = mid(dfdx0_i[vary][vary]);
-                    A_i[varx][vary] = mid(dfdx0_i[varx][vary]);
-                    A_i[vary][varx] = mid(dfdx0_i[vary][varx]);
-                
+                    build_2dpreconditionner(A_o, C_o, dfdx0_o, varx, vary);    // C is inverse of A
+                    build_2dpreconditionner(A_i, C_i, dfdx0_i, varx, vary);
                 }
-            
-                // C is inverse of A
-                double determinant = 1.0/(A_o[varx][varx]*A_o[vary][vary]-A_o[varx][vary]*A_o[vary][varx]);
-                C_o[varx][varx] = determinant*A_o[vary][vary];
-                C_o[varx][vary] = - determinant*A_o[varx][vary];
-                C_o[vary][varx] = - determinant*A_o[vary][varx];
-                C_o[vary][vary] = determinant*A_o[varx][varx];
-                determinant = 1.0/(A_i[varx][varx]*A_i[vary][vary]-A_i[varx][vary]*A_i[vary][varx]);
-                C_i[varx][varx] = determinant*A_i[vary][vary];
-                C_i[varx][vary] = - determinant*A_i[varx][vary];
-                C_i[vary][varx] = - determinant*A_i[vary][varx];
-                C_i[vary][vary] = determinant*A_i[varx][varx];
             }
             
             // f0 = C * z0
@@ -878,43 +819,44 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 temp_inner = evaluate_innerrange_order2(f0_i, radx_i, Cdfdx0_i, CHessf_i,false,exist_quantified);
             
             if (step % printing_period == 0) {
-            if (skew)
-            {
-            out_approx << YAML::Key << "outer2d";
-            out_approx << YAML::Value;
-            out_approx << YAML::BeginSeq;
-            out_approx << YAML::BeginMap;
-            out_approx << YAML::Key << "x1";
-            out_approx << YAML::Value << varx;
-            out_approx << YAML::Key << "x2";
-            out_approx << YAML::Value << vary;
-            //cout << "outer skewed box (mean value): ";
-            //output_skewedbox = print_skewbox(temp_outer[varx], temp_outer[vary], A_o,  varx,  vary, step);
-            compute_print_skewbox(temp_outer[varx],temp_outer[vary],A_o,varx,vary,"maxskew");
-            out_approx << YAML::EndMap;
-            out_approx << YAML::EndSeq;
-            }
+            
+                out_approx << YAML::Key << "outer2d";
+                out_approx << YAML::Value;
+                out_approx << YAML::BeginSeq;
+                out_approx << YAML::BeginMap;
+                out_approx << YAML::Key << "x1";
+                out_approx << YAML::Value << varx;
+                out_approx << YAML::Key << "x2";
+                out_approx << YAML::Value << vary;
+                
+                //cout << "outer skewed box (mean value): ";
+                compute_print_skewbox(temp_outer[varx],temp_outer[vary],A_o,varx,vary,"maxskew");
+                
+                out_approx << YAML::EndMap;
+                out_approx << YAML::EndSeq;
             
             
-            out_approx << YAML::Key << "inner2d";
-            out_approx << YAML::Value;
-            out_approx << YAML::BeginSeq;
-            out_approx << YAML::BeginMap;
-            out_approx << YAML::Key << "x1";
-            out_approx << YAML::Value << varx;
-            out_approx << YAML::Key << "x2";
-            out_approx << YAML::Value << vary;
-            if (skew)
-            {
-                //cout << "inner skewed box (mean value): ";
-                //print_pi(exist_quantified);
-                //output_skewedbox = print_skewbox(temp_inner[varx], temp_inner[vary], A_i,  varx,  vary, step);
-                compute_print_skewbox(temp_inner[varx],temp_inner[vary],A_i,varx,vary,"maxskew");
-            }
-            else
-                print_innerbox(temp_inner, exist_quantified, varx, vary, step);
-            out_approx << YAML::EndMap;
-            out_approx << YAML::EndSeq;
+            
+                out_approx << YAML::Key << "inner2d";
+                out_approx << YAML::Value;
+                out_approx << YAML::BeginSeq;
+                out_approx << YAML::BeginMap;
+                out_approx << YAML::Key << "x1";
+                out_approx << YAML::Value << varx;
+                out_approx << YAML::Key << "x2";
+                out_approx << YAML::Value << vary;
+            
+                //cout << "inner skewed box (mean value): "; print_pi(exist_quantified);
+                
+                // 2D skewed box
+                if (skew)
+                    compute_print_skewbox(temp_inner[varx],temp_inner[vary],A_i,varx,vary,"maxskew");
+                else
+                // 2D box. TODO. Ci-dessous box fausse (c'est la skewed box ici), a reprendre
+                    print_innerbox(temp_inner, exist_quantified, varx, vary, step);
+                
+                out_approx << YAML::EndMap;
+                out_approx << YAML::EndSeq;
             }
             
             z_inner = temp_inner;

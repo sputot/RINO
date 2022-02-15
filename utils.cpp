@@ -145,19 +145,14 @@ void print_init_discrete(vector<interval> &x, bool skew)
     out_approx << YAML::Key << "inner";
     out_approx << YAML::Value << temp; //
     
-/*    if (uncontrolled > 0) {
+    if (uncontrolled > 0) {
         out_approx << YAML::Key << "innerrobust";
         out_approx << YAML::Value << temp; //
         out_approx << YAML::Key << "outerrobust";
         out_approx << YAML::Value << temp; //
     }
-    if (controlled > 0 || uncontrolled > 0) {
-        out_approx << YAML::Key << "innerminimal";
-        out_approx << YAML::Value << temp;
-        out_approx << YAML::Key << "outerminimal";
-        out_approx << YAML::Value << temp;
-    }
     
+    /*
     for (int i=0 ; i<sysdim ; i++) {
         range_x = x[i].convert_int();
         temp[2*i] = range_x.mid();
@@ -179,13 +174,16 @@ void print_init_discrete(vector<interval> &x, bool skew)
     out_approx << YAML::Value << temp2;
     
     
-
-    out_approx << YAML::Key << "inner2d";
-    out_approx << YAML::Value << YAML::BeginSeq;
-    
+if (sysdim >= 2)
+{
     vector<double> temp2d(4);
     vector<double> temp3d(6);
     vector<double> tempskew(8);
+    
+    out_approx << YAML::Key << "outer2d";
+    out_approx << YAML::Value << YAML::BeginSeq;
+    
+
         
     for (int i=0 ; i<sysdim ; i++) {
         for (int j=i+1 ; j < sysdim ; j++) {
@@ -199,50 +197,80 @@ void print_init_discrete(vector<interval> &x, bool skew)
             out_approx << YAML::Value << j;
             
             temp2d[0] = inf(x[i]); temp2d[1] = sup(x[i]); temp2d[2] = inf(x[j]); temp2d[3] = sup(x[j]);
-            if (!skew) {
-                out_approx << YAML::Key << "maxbox";
-                out_approx << YAML::Value << temp2d;
-            }
-            else {
-        
-                tempskew[0] = temp2d[0];
-                tempskew[1] = temp2d[2];
-                tempskew[2] = temp2d[0];
-                tempskew[3] = temp2d[3];
-                tempskew[4] = temp2d[1];
-                tempskew[5] = temp2d[3];
-                tempskew[6] = temp2d[1];
-                tempskew[7] = temp2d[2];
             
-                out_approx << YAML::Key << "maxskew";
-                out_approx << YAML::Value << tempskew;
-            }
+            tempskew[0] = temp2d[0];
+            tempskew[1] = temp2d[2];
+            tempskew[2] = temp2d[0];
+            tempskew[3] = temp2d[3];
+            tempskew[4] = temp2d[1];
+            tempskew[5] = temp2d[3];
+            tempskew[6] = temp2d[1];
+            tempskew[7] = temp2d[2];
             
-            /*    if (uncontrolled > 0 || controlled > 0) {
-                    out_approx << YAML::Key << "minbox";
-                    out_approx << YAML::Value << temp2d;
-                }
-                if (uncontrolled > 0) {
-                    out_approx << YAML::Key << "robbox";
-                    out_approx << YAML::Value << temp2d;
-                }
-                */
+            out_approx << YAML::Key << "maxskew";
+            out_approx << YAML::Value << tempskew;
             
-            
-      /*      if (uncontrolled > 0 || controlled > 0) {
-                out_approx << YAML::Key << "minskew";
-                out_approx << YAML::Value << tempskew;
-            }
             if (uncontrolled > 0) {
                 out_approx << YAML::Key << "robskew";
                 out_approx << YAML::Value << tempskew;
             }
-            */
+            
             out_approx << YAML::EndMap;
         }
     }
     
     out_approx << YAML::EndSeq;
+    
+    
+    out_approx << YAML::Key << "inner2d";
+    out_approx << YAML::Value << YAML::BeginSeq;
+    
+    
+        
+    for (int i=0 ; i<sysdim ; i++) {
+        for (int j=i+1 ; j < sysdim ; j++) {
+            
+            
+            out_approx << YAML::BeginMap;
+            
+            out_approx << YAML::Key << "x1";
+            out_approx << YAML::Value << i;
+            out_approx << YAML::Key << "x2";
+            out_approx << YAML::Value << j;
+            
+            temp2d[0] = inf(x[i]); temp2d[1] = sup(x[i]); temp2d[2] = inf(x[j]); temp2d[3] = sup(x[j]);
+            
+            out_approx << YAML::Key << "maxbox";
+            out_approx << YAML::Value << temp2d;
+            
+        
+            tempskew[0] = temp2d[0];
+            tempskew[1] = temp2d[2];
+            tempskew[2] = temp2d[0];
+            tempskew[3] = temp2d[3];
+            tempskew[4] = temp2d[1];
+            tempskew[5] = temp2d[3];
+            tempskew[6] = temp2d[1];
+            tempskew[7] = temp2d[2];
+            
+            out_approx << YAML::Key << "maxskew";
+            out_approx << YAML::Value << tempskew;
+            
+            
+            if (uncontrolled > 0) {
+                out_approx << YAML::Key << "robbox";
+                out_approx << YAML::Value << temp2d;
+                
+                out_approx << YAML::Key << "robskew";
+                out_approx << YAML::Value << tempskew;
+            }
+            
+            out_approx << YAML::EndMap;
+        }
+    }
+    
+    out_approx << YAML::EndSeq;
+}
     
     /* TODO. A AJOUTER PLUS TARD
     

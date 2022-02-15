@@ -406,3 +406,35 @@ void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &
     C[k][i] = - determinant*A[k][i];
     C[k][k] = determinant*A[i][i];
 }
+
+// builds conditionner for skewbox computation
+// A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
+void build_3dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> J, int i, int k, int l)
+{
+    double determinant = 0;
+    vector<int> indices(3);
+    
+    indices[0] = i; indices[1] = k; indices[2] = l;
+    
+    for (int p=0 ; p<sysdim; p++) {
+        for (int q=0 ; q<sysdim; q++) {
+            A[p][q] = 0.0;
+            C[p][q] = 0.0;
+        }
+        A[p][p] = 1.0;
+        C[p][p] = 1.0;
+    }
+    
+    for (int id1 = 0; id1 < 3; id1++)
+        for (int id2 = 0; id2 < 3; id2++)
+            A[indices[id1]][indices[id2]] = mid(J[indices[id1]][indices[id2]]);
+       
+    for (int id1 = 0; id1 < 3; id1++)
+        determinant = determinant + (A[indices[0]][indices[id1]] * (A[indices[1]][indices[(id1+1)%3]] * A[indices[2]][indices[(id1+2)%3]] - A[indices[1]][indices[(id1+2)%3]] * A[indices[2]][indices[(id1+1)%3]]));
+        
+     // JEN SUIS LA !
+    for (int id1 = 0; id1 < 3; id1++)
+        for (int id2 = 0; id2 < 3; id2++)
+            C[indices[id1]][indices[id2]] = ((A[indices[(id2+1)%3]][indices[(id1+1)%3]] * A[indices[(id2+2)%3]][indices[(id1+2)%3]]) - (A[indices[(id2+1)%3]][indices[(id1+2)%3]] * A[indices[(id2+2)%3]][indices[(id1+1)%3]]))/ determinant;
+        
+}
