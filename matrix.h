@@ -58,6 +58,13 @@ void setId(vector<vector<AAF>> &J);
 void compute_print_skewbox(interval &temp_inner_x, interval &temp_inner_y, vector<vector<double>> &A, int varx, int vary, const char *approxtype);
 vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<vector<double>> &A, int varx, int vary, int varz);
 
+void multMiMi(vector<vector<vector<interval>>> &CHessf, vector<vector<double>> &C, vector<vector<vector<interval>>> &Hessf, int varx, int vary, int varz, bool skew);
+void multMiVi(vector<interval> &f0, vector<vector<double>> &C, vector<interval> z0, int varx, int vary, int varz, bool skew);
+void multMiVi(vector <F<F<AAF>>> &f0, vector<vector<double>> &C, vector <F<F<AAF>>> z0, int varx, int vary, int varz, bool skew);
+void multMiVi(vector <F<interval>> &f0, vector<vector<double>> &C, vector <F<interval>> z0, int varx, int vary, int varz, bool skew);
+void multMiVi(vector <F<AAF>> &f0, vector<vector<double>> &C, vector <F<AAF>> z0, int varx, int vary, int varz, bool skew);
+//template <class Cl> void multMiVi(vector <Cl> &f0, vector<vector<double>> &C, vector <Cl> z0, int varx, int vary, int varz, bool skew);
+
 // builds conditionner for skewbox computation
 // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
 void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> Jaux, int i, int k);

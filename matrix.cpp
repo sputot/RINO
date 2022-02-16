@@ -379,6 +379,113 @@ vector<vector<double>> compute_skewbox_3d(vector<interval> &temp_inner, vector<v
 }
 
 
+void multMiMi(vector<vector<vector<interval>>> &CHessf, vector<vector<double>> &C, vector<vector<vector<interval>>> &Hessf, int varx, int vary, int varz, bool skew)
+{
+    for (int j=0 ; j<jacdim; j++) {
+        for (int k=0 ; k<jacdim; k++) {
+            for (int i=0 ; i<sysdim; i++)
+                CHessf[i][j][k] = Hessf[i][j][k];
+            
+            if (sysdim >=3 && skew) {
+                CHessf[varx][j][k] = C[varx][varx]*Hessf[varx][j][k] + C[varx][vary]*Hessf[vary][j][k] + C[varx][varz]*Hessf[varz][j][k];
+                CHessf[vary][j][k] = C[vary][varx]*Hessf[varx][j][k] + C[vary][vary]*Hessf[vary][j][k] + C[vary][varz]*Hessf[varz][j][k];
+                CHessf[varz][j][k] = C[varz][varx]*Hessf[varx][j][k] + C[varz][vary]*Hessf[vary][j][k] + C[varz][varz]*Hessf[varz][j][k];
+            }
+            else if (sysdim >=2 && skew) {
+                CHessf[varx][j][k] = C[varx][varx]*Hessf[varx][j][k] + C[varx][vary]*Hessf[vary][j][k];
+                CHessf[vary][j][k] = C[vary][varx]*Hessf[varx][j][k] + C[vary][vary]*Hessf[vary][j][k];
+            }
+        }
+    }
+}
+
+
+// z0 is copied (and not &z0) so that same variable can be used for z0 and f0
+void multMiVi(vector<interval> &f0, vector<vector<double>> &C, vector<interval> z0, int varx, int vary, int varz, bool skew)
+{
+    for (int i=0 ; i<sysdim; i++)
+        f0[i] = z0[i];
+    
+    if (sysdim >=3 && skew) {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary] + C[varx][varz]*z0[varz];
+        f0[vary] = C[vary][varx]*z0[varx] + C[vary][vary]*z0[vary] + C[vary][varz]*z0[varz];
+        f0[varz] = C[varz][varx]*z0[varx] + C[varz][vary]*z0[vary] + C[varz][varz]*z0[varz];
+    }
+    else if (sysdim >=2 && skew)
+    {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary];
+        f0[vary] = C[vary][vary]*z0[vary] + C[vary][varx]*z0[varx];
+    }
+}
+
+// z0 is copied (and not &z0) so that same variable can be used for z0 and f0
+void multMiVi(vector <F<F<AAF>>> &f0, vector<vector<double>> &C, vector <F<F<AAF>>> z0, int varx, int vary, int varz, bool skew)
+{
+    
+    if (sysdim >=3 && skew) {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary] + C[varx][varz]*z0[varz];
+        f0[vary] = C[vary][varx]*z0[varx] + C[vary][vary]*z0[vary] + C[vary][varz]*z0[varz];
+        f0[varz] = C[varz][varx]*z0[varx] + C[varz][vary]*z0[vary] + C[varz][varz]*z0[varz];
+    }
+    else if (sysdim >=2 && skew)
+    {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary];
+        f0[vary] = C[vary][vary]*z0[vary] + C[vary][varx]*z0[varx];
+    }
+}
+
+// z0 is copied (and not &z0) so that same variable can be used for z0 and f0
+void multMiVi(vector <F<AAF>> &f0, vector<vector<double>> &C, vector <F<AAF>> z0, int varx, int vary, int varz, bool skew)
+{
+    
+    if (sysdim >=3 && skew) {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary] + C[varx][varz]*z0[varz];
+        f0[vary] = C[vary][varx]*z0[varx] + C[vary][vary]*z0[vary] + C[vary][varz]*z0[varz];
+        f0[varz] = C[varz][varx]*z0[varx] + C[varz][vary]*z0[vary] + C[varz][varz]*z0[varz];
+    }
+    else if (sysdim >=2 && skew)
+    {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary];
+        f0[vary] = C[vary][vary]*z0[vary] + C[vary][varx]*z0[varx];
+    }
+}
+
+
+// z0 is copied (and not &z0) so that same variable can be used for z0 and f0
+void multMiVi(vector <F<interval>> &f0, vector<vector<double>> &C, vector <F<interval>> z0, int varx, int vary, int varz, bool skew)
+{
+    
+    if (sysdim >=3 && skew) {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary] + C[varx][varz]*z0[varz];
+        f0[vary] = C[vary][varx]*z0[varx] + C[vary][vary]*z0[vary] + C[vary][varz]*z0[varz];
+        f0[varz] = C[varz][varx]*z0[varx] + C[varz][vary]*z0[vary] + C[varz][varz]*z0[varz];
+    }
+    else if (sysdim >=2 && skew)
+    {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary];
+        f0[vary] = C[vary][vary]*z0[vary] + C[vary][varx]*z0[varx];
+    }
+}
+
+/*
+// z0 is copied (and not &z0) so that same variable can be used for z0 and f0
+template <class Cl> void multMiVi(vector <Cl> &f0, vector<vector<double>> &C, vector <Cl> z0, int varx, int vary, int varz, bool skew)
+{
+    
+    if (sysdim >=3 && skew) {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary] + C[varx][varz]*z0[varz];
+        f0[vary] = C[vary][varx]*z0[varx] + C[vary][vary]*z0[vary] + C[vary][varz]*z0[varz];
+        f0[varz] = C[varz][varx]*z0[varx] + C[varz][vary]*z0[vary] + C[varz][varz]*z0[varz];
+    }
+    else if (sysdim >=2 && skew)
+    {
+        f0[varx] = C[varx][varx]*z0[varx] + C[varx][vary]*z0[vary];
+        f0[vary] = C[vary][vary]*z0[vary] + C[vary][varx]*z0[varx];
+    }
+}
+*/
+
+
 // builds conditionner for skewbox computation
 // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
 void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> Jaux, int i, int k)

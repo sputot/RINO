@@ -475,46 +475,16 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
         
         for (int i=0; i < jacdim ; i++)
             x_i[i].diff(i,jacdim);
-        
-        // x_i = A . x_i
-        if (sysdim >=3 && skew) {
-            temp1 = A_i[varx][varx]*x_i[varx] + A_i[varx][vary]*x_i[vary] + A_i[varx][varz]*x_i[varz];
-            temp2 = A_i[vary][varx]*x_i[varx] + A_i[vary][vary]*x_i[vary] + A_i[vary][varz]*x_i[varz];
-            x_i[varz] = A_i[varz][varx]*x_i[varx] + A_i[varz][vary]*x_i[vary] + A_i[varz][varz]*x_i[varz];
-            x_i[varx] = temp1;
-            x_i[vary] = temp2;
-        }
-        else if (sysdim >=2 && skew) {
-            temp = A_i[varx][varx]*x_i[varx] + A_i[varx][vary]*x_i[vary];
-            x_i[vary] = A_i[vary][vary]*x_i[vary] + A_i[vary][varx]*x_i[varx];
-            x_i[varx] = temp;
-        }
-        
-        
+        multMiVi(x_i,A_i,x_i,varx,vary,varz,skew);   // x_i = A . x_i
         z_i = f(x_i);
-        
         for (int i=0; i < sysdim ; i++)
             for (int j=0; j < jacdim ; j++)
                 Jacf_i[i][j] = z_i[i].d(j).convert_int();// JacAff_i[i][j].convert_int();
         
         for (int i=0; i < jacdim ; i++)
             x_o[i].diff(i,jacdim);
-        
-        if (sysdim >=3 && skew) {
-            temp1 = A_o[varx][varx]*x_o[varx] + A_o[varx][vary]*x_o[vary] + A_o[varx][varz]*x_o[varz];
-            temp2 = A_o[vary][varx]*x_o[varx] + A_o[vary][vary]*x_o[vary] + A_o[vary][varz]*x_o[varz];
-            x_o[varz] = A_o[varz][varx]*x_o[varx] + A_o[varz][vary]*x_o[vary] + A_o[varz][varz]*x_o[varz];
-            x_o[varx] = temp1;
-            x_o[vary] = temp2;
-        }
-        else if (sysdim >=2 && skew) {
-            temp = A_o[varx][varx]*x_o[varx] + A_o[varx][vary]*x_o[vary];
-            x_o[vary] = A_o[vary][vary]*x_o[vary] + A_o[vary][varx]*x_o[varx];
-            x_o[varx] = temp;
-        }
-        
+        multMiVi(x_o,A_o,x_o,varx,vary,varz,skew);
         z_o = f(x_o);
-        
         for (int i=0; i < sysdim ; i++)
             for (int j=0; j < jacdim ; j++)
                 Jacf_o[i][j] = z_o[i].d(j).convert_int(); //JacAff_o[i][j].convert_int();
@@ -533,19 +503,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 x0ff_o[i].diff(i,jacdim);
             }
             
-            if (sysdim >=3 && skew) {
-                tempf1 = A_o[varx][varx]*x0ff_o[varx] + A_o[varx][vary]*x0ff_o[vary] + A_o[varx][varz]*x0ff_o[varz];
-                tempf2 = A_o[vary][varx]*x0ff_o[varx] + A_o[vary][vary]*x0ff_o[vary] + A_o[vary][varz]*x0ff_o[varz];
-                x0ff_o[varz] = A_o[varz][varx]*x0ff_o[varx] + A_o[varz][vary]*x0ff_o[vary] + A_o[varz][varz]*x0ff_o[varz];
-                x0ff_o[varx] = tempf1;
-                x0ff_o[vary] = tempf2;
-            }
-            else if (sysdim >=2 && skew) {
-                tempf = A_o[varx][varx]*x0ff_o[varx] + A_o[varx][vary]*x0ff_o[vary];
-                x0ff_o[vary] = A_o[vary][vary]*x0ff_o[vary] + A_o[vary][varx]*x0ff_o[varx];
-                x0ff_o[varx] = tempf;
-            }
             
+            multMiVi(x0ff_o,A_o,x0ff_o,varx,vary,varz,skew);
             z0ff_o = f(x0ff_o);
             
             for (int i=0 ; i<sysdim ; i++)
@@ -557,19 +516,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 x0ff_i[i].diff(i,jacdim);
             }
 
-            if (sysdim >=3 && skew) {
-                tempf1 = A_i[varx][varx]*x0ff_i[varx] + A_i[varx][vary]*x0ff_i[vary] + A_i[varx][varz]*x0ff_i[varz];
-                tempf2 = A_i[vary][varx]*x0ff_i[varx] + A_i[vary][vary]*x0ff_i[vary] + A_i[vary][varz]*x0ff_i[varz];
-                x0ff_i[varz] = A_i[varz][varx]*x0ff_i[varx] + A_i[varz][vary]*x0ff_i[vary] + A_i[varz][varz]*x0ff_i[varz];
-                x0ff_i[varx] = tempf1;
-                x0ff_i[vary] = tempf2;
-            }
-            else if (sysdim >=2 && skew) {
-                tempf = A_i[varx][varx]*x0ff_i[varx] + A_i[varx][vary]*x0ff_i[vary];
-                x0ff_i[vary] = A_i[vary][vary]*x0ff_i[vary] + A_i[vary][varx]*x0ff_i[varx];
-                x0ff_i[varx] = tempf;
-            }
-            
+            multMiVi(x0ff_i,A_i,x0ff_i,varx,vary,varz,skew);
             z0ff_i = f(x0ff_i);
             
             for (int i=0 ; i<sysdim ; i++)
@@ -584,20 +531,9 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 xff_o[i].x().diff(i,jacdim);      // second order
             }
             
-            if (sysdim >=3 && skew) {
-                tempaff1 = A_o[varx][varx]*xff_o[varx] + A_o[varx][vary]*xff_o[vary] + A_o[varx][varz]*xff_o[varz];
-                tempaff2 = A_o[vary][varx]*xff_o[varx] + A_o[vary][vary]*xff_o[vary] + A_o[vary][varz]*xff_o[varz];
-                xff_o[varz] = A_o[varz][varx]*xff_o[varx] + A_o[varz][vary]*xff_o[vary] + A_o[varz][varz]*xff_o[varz];
-                xff_o[varx] = tempaff1;
-                xff_o[vary] = tempaff2;
-            }
-            else if (sysdim >=2 && skew) {
-                tempaff = A_o[varx][varx]*xff_o[varx] + A_o[varx][vary]*xff_o[vary];
-                xff_o[vary] = A_o[vary][vary]*xff_o[vary] + A_o[vary][varx]*xff_o[varx];
-                xff_o[varx] = tempaff;
-            }
-            
+            multMiVi(xff_o,A_o,xff_o,varx,vary,varz,skew);
             zff_o = f(xff_o);
+
             
             for (int i=0; i < jacdim ; i++) {
                 xff_i[i] = z_inner[i];
@@ -605,19 +541,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 xff_i[i].x().diff(i,jacdim);      // second order
             }
             
-            if (sysdim >=3 && skew) {
-                tempaff1 = A_i[varx][varx]*xff_i[varx] + A_i[varx][vary]*xff_i[vary] + A_i[varx][varz]*xff_i[varz];
-                tempaff2 = A_i[vary][varx]*xff_i[varx] + A_i[vary][vary]*xff_i[vary] + A_i[vary][varz]*xff_i[varz];
-                xff_i[varz] = A_i[varz][varx]*xff_i[varx] + A_i[varz][vary]*xff_i[vary] + A_i[varz][varz]*xff_i[varz];
-                xff_i[varx] = tempaff1;
-                xff_i[vary] = tempaff2;
-            }
-            else if (sysdim >=2 && skew) {
-                tempaff = A_i[varx][varx]*xff_i[varx] + A_i[varx][vary]*xff_i[vary];
-                xff_i[vary] = A_i[vary][vary]*xff_i[vary] + A_i[vary][varx]*xff_i[varx];
-                xff_i[varx] = tempaff;
-            }
-            
+            multMiVi(xff_i,A_i,xff_i,varx,vary,varz,skew);
             zff_i = f(xff_i);
             
             for (int i=0; i < sysdim ; i++) {
@@ -626,34 +550,14 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                         Hessf_o[i][j][k] =zff_o[i].d(j).d(k).convert_int();
                         Hessf_i[i][j][k] =zff_i[i].d(j).d(k).convert_int();
                     }
-                    //    cout << "JacAff[i][j]=" << JacAff[i][j] << JacAff[i][j].convert_int();
                 }
             }
         }
         
         // x0 = A x0
-        if (sysdim >=3 && skew) {
-            interval tempi1 = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary] + A_i[varx][varz]*x0_i[varz];
-            interval tempi2 = A_i[vary][varx]*x0_i[varx] + A_i[vary][vary]*x0_i[vary] + A_i[vary][varz]*x0_i[varz];
-            x0_i[varz] = A_i[varz][varx]*x0_i[varx] + A_i[varz][vary]*x0_i[vary] + A_i[varz][varz]*x0_i[varz];
-            x0_i[varx] = tempi1;
-            x0_i[vary] = tempi2;
-            
-            tempi1 = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary] + A_o[varx][varz]*x0_o[varz];
-            tempi2 = A_o[vary][varx]*x0_o[varx] + A_o[vary][vary]*x0_o[vary] + A_o[vary][varz]*x0_o[varz];
-            x0_o[varz] = A_o[varz][varx]*x0_o[varx] + A_o[varz][vary]*x0_o[vary] + A_o[varz][varz]*x0_o[varz];
-            x0_o[varx] = tempi1;
-            x0_o[vary] = tempi2;
-        }
-        else if (sysdim >=2 && skew) {
-            interval tempi = A_i[varx][varx]*x0_i[varx] + A_i[varx][vary]*x0_i[vary];
-            x0_i[vary] = A_i[vary][vary]*x0_i[vary] + A_i[vary][varx]*x0_i[varx];
-            x0_i[varx] = tempi;
+        multMiVi(x0_i,A_i,x0_i,varx,vary,varz,skew);
+        multMiVi(x0_o,A_o,x0_o,varx,vary,varz,skew);
         
-            tempi = A_o[varx][varx]*x0_o[varx] + A_o[varx][vary]*x0_o[vary];
-            x0_o[vary] = A_o[vary][vary]*x0_o[vary] + A_o[vary][varx]*x0_o[varx];
-            x0_o[varx] = tempi;
-        }
         
         z0_o = f(x0_o);
         z0_i = f(x0_i);
@@ -738,7 +642,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             {
                 // 2D preconditioner - just on components varx and vary
                 if (order == 1) {
-                    build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);    // C is inverse of A
+                    build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);    // C is inverse of A which is center of Jac on components varx and vary
                     build_2dpreconditionner(A_i, C_i, Jacf_i, varx, vary);
                 }
                 else if (order == 2) {
@@ -748,27 +652,9 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             }
             
             // f0 = C * z0
-            for (int i=0 ; i<sysdim; i++) {
-                f0_o[i] = z0_o[i];
-                f0_i[i] = z0_i[i];
-            }
-            
-            if (sysdim >=3 && skew) {
-                f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary] + C_o[varx][varz]*z0_o[varz];
-                f0_o[vary] = C_o[vary][varx]*z0_o[varx] + C_o[vary][vary]*z0_o[vary] + C_o[vary][varz]*z0_o[varz];
-                f0_o[varz] = C_o[varz][varx]*z0_o[varx] + C_o[varz][vary]*z0_o[vary] + C_o[varz][varz]*z0_o[varz];
-                f0_i[varx] = C_i[varx][varx]*z0_i[varx] + C_i[varx][vary]*z0_i[vary] + C_i[varx][varz]*z0_i[varz];
-                f0_i[vary] = C_i[vary][varx]*z0_i[varx] + C_i[vary][vary]*z0_i[vary] + C_i[vary][varz]*z0_i[varz];
-                f0_i[varz] = C_i[varz][varx]*z0_i[varx] + C_i[varz][vary]*z0_i[vary] + C_i[varz][varz]*z0_i[varz];
-            }
-            else if (sysdim >=2 && skew)
-            {
-                f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary];
-                f0_o[vary] = C_o[vary][vary]*z0_o[vary] + C_o[vary][varx]*z0_o[varx];
-                f0_i[varx] = C_i[varx][varx]*z0_i[varx] + C_i[varx][vary]*z0_i[vary];
-                f0_i[vary] = C_i[vary][vary]*z0_i[vary] + C_i[vary][varx]*z0_i[varx];
-            }
-            
+            multMiVi(f0_o, C_o, z0_o,varx,vary,varz,skew);
+            multMiVi(f0_i, C_i, z0_i,varx,vary,varz,skew);
+        
             multMiMi(CJacf_o,C_o,Jacf_o);
             multMiMi(CJacf_i,C_i,Jacf_i);
             
@@ -778,28 +664,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
                 multMiMi(Cdfdx0_o,C_o,dfdx0_o);
                 multMiMi(Cdfdx0_i,C_i,dfdx0_i);
                 
-                for (int j=0 ; j<jacdim; j++) {
-                    for (int k=0 ; k<jacdim; k++) {
-                        for (int i=0 ; i<sysdim; i++) {
-                            CHessf_o[i][j][k] = Hessf_o[i][j][k];
-                            CHessf_i[i][j][k] = Hessf_i[i][j][k];
-                        }
-                        if (sysdim >=3 && skew) {
-                            CHessf_o[varx][j][k] = C_o[varx][varx]*Hessf_o[varx][j][k] + C_o[varx][vary]*Hessf_o[vary][j][k] + C_o[varx][varz]*Hessf_o[varz][j][k];
-                            CHessf_i[varx][j][k] = C_i[varx][varx]*Hessf_i[varx][j][k] + C_i[varx][vary]*Hessf_i[vary][j][k] + C_i[varx][varz]*Hessf_i[varz][j][k];
-                            CHessf_o[vary][j][k] = C_o[vary][varx]*Hessf_o[varx][j][k] + C_o[vary][vary]*Hessf_o[vary][j][k] + C_o[vary][varz]*Hessf_o[varz][j][k];
-                            CHessf_i[vary][j][k] = C_i[vary][varx]*Hessf_i[varx][j][k] + C_i[vary][vary]*Hessf_i[vary][j][k] + C_i[vary][varz]*Hessf_i[varz][j][k];
-                            CHessf_o[varz][j][k] = C_o[varz][varx]*Hessf_o[varx][j][k] + C_o[varz][vary]*Hessf_o[vary][j][k] + C_o[varz][varz]*Hessf_o[varz][j][k];
-                            CHessf_i[varz][j][k] = C_i[varz][varx]*Hessf_i[varx][j][k] + C_i[varz][vary]*Hessf_i[vary][j][k] + C_i[varz][varz]*Hessf_i[varz][j][k];
-                        }
-                        else if (sysdim >=2 && skew) {
-                            CHessf_o[varx][j][k] = C_o[varx][varx]*Hessf_o[varx][j][k] + C_o[varx][vary]*Hessf_o[vary][j][k];
-                            CHessf_i[varx][j][k] = C_i[varx][varx]*Hessf_i[varx][j][k] + C_i[varx][vary]*Hessf_i[vary][j][k];
-                            CHessf_o[vary][j][k] = C_o[vary][varx]*Hessf_o[varx][j][k] + C_o[vary][vary]*Hessf_o[vary][j][k];
-                            CHessf_i[vary][j][k] = C_i[vary][varx]*Hessf_i[varx][j][k] + C_i[vary][vary]*Hessf_i[vary][j][k];
-                        }
-                    }
-                }
+                multMiMi(CHessf_o, C_o, Hessf_o,  varx,  vary,  varz,  skew); // cases sysdim = 2 and sysdim >=3 separated inside
+                multMiMi(CHessf_i, C_i, Hessf_i,  varx,  vary,  varz,  skew);
                 
             }
             
@@ -1017,22 +883,8 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                     for (vary=varx+1;vary<sysdim;vary++)
                     {
                         
-                        for (int i=0 ; i<sysdim; i++) {
-                            A_o[i][i] = 1.0;
-                            C_o[i][i] = 1.0;
-                        }
-                    // 2D preconditioner - just on components varx and vary
-                    A_o[varx][varx] = mid(Jacf_o[varx][varx]);
-                    A_o[vary][vary] = mid(Jacf_o[vary][vary]);
-                    A_o[varx][vary] = mid(Jacf_o[varx][vary]);
-                    A_o[vary][varx] = mid(Jacf_o[vary][varx]);
-           
-                    // C is inverse of A
-                    double determinant = 1.0/(A_o[varx][varx]*A_o[vary][vary]-A_o[varx][vary]*A_o[vary][varx]);
-                    C_o[varx][varx] = determinant*A_o[vary][vary];
-                    C_o[varx][vary] = - determinant*A_o[varx][vary];
-                    C_o[vary][varx] = - determinant*A_o[vary][varx];
-                    C_o[vary][vary] = determinant*A_o[varx][varx];
+                        build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);
+                        
                     
                     for (int i=0 ; i<sysdim; i++)
                         f0_o[i] = z0_o[i];
@@ -1073,23 +925,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 for (vary=varx+1;vary<sysdim;vary++)
                 {
                     
-                        for (int i=0 ; i<sysdim; i++) {
-                            A_o[i][i] = 1.0;
-                            C_o[i][i] = 1.0;
-                        }
-             //   if (sysdim == 2) {
-                    // 2D preconditioner - just on components varx and vary
-                    A_o[varx][varx] = mid(Jacf_o[varx][varx]);
-                    A_o[vary][vary] = mid(Jacf_o[vary][vary]);
-                    A_o[varx][vary] = mid(Jacf_o[varx][vary]);
-                    A_o[vary][varx] = mid(Jacf_o[vary][varx]);
-           
-                    // C is inverse of A
-                    double determinant = 1.0/(A_o[varx][varx]*A_o[vary][vary]-A_o[varx][vary]*A_o[vary][varx]);
-                    C_o[varx][varx] = determinant*A_o[vary][vary];
-                    C_o[varx][vary] = - determinant*A_o[varx][vary];
-                    C_o[vary][varx] = - determinant*A_o[vary][varx];
-                    C_o[vary][vary] = determinant*A_o[varx][varx];
+                    build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);
                     
                     for (int i=0 ; i<sysdim; i++)
                         f0_o[i] = z0_o[i];
