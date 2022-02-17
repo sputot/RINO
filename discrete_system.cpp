@@ -2,7 +2,7 @@
  File   : discrete system.cpp
  Author : Sylvie Putot, Ecole Polytechnique (France)
  
- Part of the RINO package for Inner and Outer Reachability Analysis.
+ Part of the RINO package for Inner and Outer Reachability Analysis.evaluate_outerrange
  
  This file computes ranges for functions and discrete dynamical systems
  ============================================================================*/
@@ -882,20 +882,16 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
                 for (varx=0; varx<sysdim; varx++)
                     for (vary=varx+1;vary<sysdim;vary++)
                     {
-                        
                         build_2dpreconditionner(A_o, C_o, Jacf_o, varx, vary);
-                        
                     
                     for (int i=0 ; i<sysdim; i++)
                         f0_o[i] = z0_o[i];
                         
                     f0_o[varx] = C_o[varx][varx]*z0_o[varx] + C_o[varx][vary]*z0_o[vary];
                     f0_o[vary] = C_o[vary][vary]*z0_o[vary] + C_o[vary][varx]*z0_o[varx];
-              
                 
                 // CJacf = C * Jacf
                 multMiMi(CJacf_o,C_o,Jacf_o);
-                
                 
                 // outer 2D range
                 vector<interval> temp_outer = evaluate_outerrange(f0_o,radx_o,CJacf_o);

@@ -12,7 +12,7 @@ CURRENT_DIR = $(shell pwd)
 LIBS = -laaf -lprim -lgsl -llapack -lblas -lstdc++ -lyaml-cpp
 
 
-CXXFLAGS = -ggdb -Wall -frounding-math -DMAXORDER=$(MAX_ORDER) -I. -I$(FILIBHOME) -I$(FADBADHOME) -I/usr/local/include \
+CXXFLAGS = -ggdb -Wall -frounding-math -DMAXORDER=$(MAX_ORDER) -DUSE_AAF_EXTENSIONS -I. -I$(FILIBHOME) -I$(FADBADHOME) -I/usr/local/include \
 	 -I$(CURRENT_DIR)/aaflib-0.1 -fpermissive -std=c++11
 
 LDFLAGS  +=  -L/usr/local/lib -L$(CURRENT_DIR)/aaflib-0.1 -L$(FILIBHOME)/libprim/.libs/

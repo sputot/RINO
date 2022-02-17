@@ -347,7 +347,7 @@ int main(int argc, char* argv[])
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
             tn = t_begin;
-            print_initstats(initial_values,param_inputs);  // print initial conditions and init XML 
+            print_initstats(initial_values,param_inputs);  // print initial conditions and init XML
             
             // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
         //    vector<AAF> yp(sysdim);
@@ -361,6 +361,10 @@ int main(int argc, char* argv[])
             vector<F<AAF>> temp(sysdim);
             for (int j=0 ; j<sysdim; j++)
                 temp[j] = x[j];
+            
+            cout << "indice initial values[0]=" << x[0].getFirstIndex() << " coeff=" << x[0].at(x[0].getFirstIndex()) << endl; cout << "indice initial values[1]" << x[1].getFirstIndex() << " coeff=" << x[1].at(x[1].getFirstIndex()) << endl;
+            cout <<x[0];
+            cout <<x[1];
            
             current_iteration = 1;
             HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);

@@ -506,13 +506,63 @@ void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &
     A[i][k] = mid(Jaux[i][k]);
     A[k][i] = mid(Jaux[k][i]);
     
+    // cout << "A=" << A;
+    
     // C is inverse of A
     determinant = 1.0/(A[i][i]*A[k][k]-A[i][k]*A[k][i]);
+    cout << "determinant=" << 1.0/determinant << endl;
+    
+    if (1.0/determinant < 0.005)
+    {
+        for (int p=0 ; p<sysdim; p++) {
+            for (int q=0 ; q<sysdim; q++) {
+                A[p][q] = 0.0;
+                C[p][q] = 0.0;
+            }
+            A[p][p] = 1.0;
+            C[p][p] = 1.0;
+        }
+    }
+    else
+    {
+    
+        C[i][i] = determinant*A[k][k];
+        C[i][k] = - determinant*A[i][k];
+        C[k][i] = - determinant*A[k][i];
+        C[k][k] = determinant*A[i][i];
+    }
+}
+
+
+void build_2dpreconditionner_frominit(vector<vector<double>> &A, vector<vector<double>> &C, vector<AAF> xp1, int i, int k)
+{
+    double determinant;
+    
+    for (int p=0 ; p<sysdim; p++) {
+        for (int q=0 ; q<sysdim; q++) {
+            A[p][q] = 0.0;
+            C[p][q] = 0.0;
+        }
+        A[p][p] = 1.0;
+        C[p][p] = 1.0;
+    }
+    
+    A[i][i] = xp1[i].at(5)/0.05;
+    A[k][k] = xp1[k].at(6)/0.05;
+    A[i][k] = xp1[i].at(6)/0.05;
+    A[k][i] = xp1[k].at(5)/0.05;
+    
+    cout << "A from init=" << A;
+    
+    // C is inverse of A
+    determinant = 1.0/(A[i][i]*A[k][k]-A[i][k]*A[k][i]);
+    cout << "determinant=" << 1.0/determinant << endl;
     C[i][i] = determinant*A[k][k];
     C[i][k] = - determinant*A[i][k];
     C[k][i] = - determinant*A[k][i];
     C[k][k] = determinant*A[i][i];
 }
+
 
 // builds conditionner for skewbox computation
 // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A

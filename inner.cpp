@@ -125,67 +125,21 @@ void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector
 }
 
 
-void compute_print_outerskewbox(vector<interval> &range, vector<vector<interval>> &Jaux, vector<interval> &eps, int i, int k, vector<vector<double>> &A)
-{
-    vector<int> indices(2);
-    indices[0] = i;
-    indices[1] = k;
-    vector<interval> max(2);
-    
-    // robust outer-approx
-    if (uncontrolled > 0)
-    {
-        vector<interval> robust(2);
-        vector<interval> initialcondition_pro(2), uncontrolled_impro(2), controlled_pro(2);
-        
-        for (int l=0 ; l<=1; l++)
-        {
-            initialcondition_pro[l] = 0;
-            uncontrolled_impro[l] = 0;
-            controlled_pro[l] = 0;
-        
-            for (int j=0 ; j<jacdim ; j++)
-            {
-                if (j<sysdim) // initial conditions (controlled)
-                    initialcondition_pro[l] = initialcondition_pro[l] + Jaux[indices[l]][j]*eps[j];
-                else if (!is_uncontrolled[index_param[j-sysdim]])
-                    controlled_pro[l] = controlled_pro[l] + Jaux[indices[l]][j]*eps[j];
-                else // uncontrolled part
-                    uncontrolled_impro[l] = uncontrolled_impro[l] + Kaucher_multeps(Jaux[indices[l]][j],eps[j]) ;
-            }
- 
-            robust[l] = range[l] + initialcondition_pro[l] + controlled_pro[l];
-            robust[l] = Kaucher_add_pro_impro_resultpro(robust[l],uncontrolled_impro[l]);
-        }
-        compute_print_skewbox(robust[0],robust[1],A,i,k,"robskew");
-    }
-    
-    // maximal outer-approx
-    for (int l=0 ; l<=1; l++)
-    {
-        max[l] = range[l];
-        for (int j=0 ; j<jacdim ; j++)
-            max[l] += Jaux[indices[l]][j]*eps[j];
-    }
-    compute_print_skewbox(max[0],max[1],A,i,k,"maxskew");
-    
-    
-}
 
 
 // computer inner and outer-approx by mean-value theorem
 // Xinner_robust : when the 'uncontrolled' last parameters of parameter set are considered as not controllable => proper part that goes agains the improper part of the inner-approx on the other parameters
 // Application of the Generalized Mean-Value Theorem
-void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, double tnp1)
+void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<AAF> &x0p1, vector<vector<AAF>> &Jtau, vector<interval> &eps, vector<AAF> &xp1, double tnp1)
 {
-    vector<vector<interval>> Jaux(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
+    vector<vector<interval>> Jloc(sysdim, vector<interval>(jacdim)); // will copy only the sysdim relevant lines of Jaux
     vector<interval> ix0(sysdim);
     interval initialcondition_impro, initialcondition_pro, uncontrolled_impro, uncontrolled_pro, controlled_impro, controlled_pro, aux_impro;
     
     for (int i=0 ; i<sysdim ; i++) {
         ix0[i] = x0p1[i].convert_int();
         for (int k=0 ; k<jacdim ; k++)
-            Jaux[i][k] = Jtau[i][k].convert_int();
+            Jloc[i][k] = Jtau[i][k].convert_int();
     }
     
     // inner approx: special addition corresponding to addition of proper and improper intervals: the result is an inner range for the solution of ODE system
@@ -205,18 +159,18 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         { // adding the controlled (exists) part
             if (j<sysdim) // initial conditions //(is_initialcondition[j])
             {
-                initialcondition_impro = initialcondition_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
-                initialcondition_pro = initialcondition_pro + Jaux[i][j]*eps[j];
+                initialcondition_impro = initialcondition_impro + Kaucher_multeps(Jloc[i][j],eps[j]);
+                initialcondition_pro = initialcondition_pro + Jloc[i][j]*eps[j];
             }
             else if (!is_uncontrolled[index_param[j-sysdim]])
             {
-                controlled_impro = controlled_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
-                controlled_pro = controlled_pro + Jaux[i][j]*eps[j];
+                controlled_impro = controlled_impro + Kaucher_multeps(Jloc[i][j],eps[j]);
+                controlled_pro = controlled_pro + Jloc[i][j]*eps[j];
             }
             else // uncontrolled part
             {
-                uncontrolled_impro = uncontrolled_impro + Kaucher_multeps(Jaux[i][j],eps[j]) ;
-                uncontrolled_pro = uncontrolled_pro + Jaux[i][j]*eps[j] ;
+                uncontrolled_impro = uncontrolled_impro + Kaucher_multeps(Jloc[i][j],eps[j]) ;
+                uncontrolled_pro = uncontrolled_pro + Jloc[i][j]*eps[j] ;
             }
         }
         
@@ -233,7 +187,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
     }
     
     // outer-approx computation : Xouter = x0p1 + Jtau*eps;
-    multMiVi(Xouter,Jaux,eps);
+    multMiVi(Xouter,Jloc,eps);
     addViVi(Xouter,ix0);
     
     
@@ -278,11 +232,11 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 // computing and printing inner boxes (max and robust)
                 range[0] = ix0[i];   // center and uncontrolled (forall) part
                 range[1] = ix0[k];
-                compute_print_jointinnerranges(range[0], range[1], Jaux, eps, i, k, false,A);
+                compute_print_jointinnerranges(range[0], range[1], Jloc, eps, i, k, false,A);
            
                 // computing and printing skew inner boxes  (max and robust)
-                build_2dpreconditionner(A,C,Jaux,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
-                multMiMi(CJac,C,Jaux); // CJac = C*Jaux
+                build_2dpreconditionner(A,C,Jloc,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
+                multMiMi(CJac,C,Jloc); // CJac = C*Jaux
 
                 range[0] = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
                 range[1] = C[k][k]*ix0[k] + C[k][i]*ix0[i];
@@ -310,12 +264,76 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 out_approx << YAML::Value << k;
                 
                 // computing and printing skew inner boxes  (max and robust)
-                build_2dpreconditionner(A,C,Jaux,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
-                multMiMi(CJac,C,Jaux); // CJac = C*Jaux
-                range[0] = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
-                range[1] = C[k][k]*ix0[k] + C[k][i]*ix0[i];
+                build_2dpreconditionner(A,C,Jloc,i,k); // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
+        
+                multMiMi(CJac,C,Jloc); // CJac = C*Jaux
                 
-                compute_print_outerskewbox(range, CJac, eps, i, k, A);
+                //range[0] = C[i][i]*ix0[i] + C[i][k]*ix0[k];   //
+                //range[1] = C[k][k]*ix0[k] + C[k][i]*ix0[i];
+                range[0] = (C[i][i]*x0p1[i] + C[i][k]*x0p1[k]).convert_int();
+                range[1] = (C[k][k]*x0p1[k] + C[k][i]*x0p1[i]).convert_int();
+                
+                vector<int> indices(2);
+                indices[0] = i;
+                indices[1] = k;
+                vector<interval> max(2);
+                
+                for (int l=0 ; l<=1; l++)
+                {
+                    max[l] = range[l];
+                    for (int j=0 ; j<jacdim ; j++)
+                        max[l] += Jloc[indices[l]][j]*eps[j];
+                }
+                
+                max[0] = intersect(max[0],(C[i][i]*xp1[i] + C[i][k]*xp1[k]).convert_int());
+                max[1] = intersect(max[1],(C[k][k]*xp1[k] + C[k][i]*xp1[i]).convert_int());
+                compute_print_skewbox(max[0],max[1],A,i,k,"maxskewJac");
+                
+                // skewed  direct solution
+                // attention faux de faire l'intersection de chaque composante, il faudrait faire l'intersection des objets...
+                max[0] = (C[i][i]*xp1[i] + C[i][k]*xp1[k]).convert_int();
+                max[1] = (C[k][k]*xp1[k] + C[k][i]*xp1[i]).convert_int();
+                compute_print_skewbox(max[0],max[1],A,i,k,"maxskew");
+                //cout << "max0" << C[i][i]*xp1[i] + C[i][k]*xp1[k];
+                //cout << "max1" << C[k][k]*xp1[k] + C[k][i]*xp1[i];
+                
+                //cout << "xp1[i]=" << xp1[i];
+                //cout << "xp1[k]=" << xp1[k];
+                //build_2dpreconditionner_frominit(A, C, xp1, i, k);
+                //max[0] = (C[i][i]*xp1[i] + C[i][k]*xp1[k]).convert_int();
+                //max[1] = (C[k][k]*xp1[k] + C[k][i]*xp1[i]).convert_int();
+                //compute_print_skewbox(max[0],max[1],A,i,k,"maxskew");
+                
+                //compute_print_outerskewbox(range, CJac, eps, i, k, A);
+                
+                if (uncontrolled > 0)
+                {
+                    vector<interval> robust(2);
+                    vector<interval> initialcondition_pro(2), uncontrolled_impro(2), controlled_pro(2);
+                    
+                    for (int l=0 ; l<=1; l++)
+                    {
+                        initialcondition_pro[l] = 0;
+                        uncontrolled_impro[l] = 0;
+                        controlled_pro[l] = 0;
+                    
+                        for (int j=0 ; j<jacdim ; j++)
+                        {
+                            if (j<sysdim) // initial conditions (controlled)
+                                initialcondition_pro[l] = initialcondition_pro[l] + Jloc[indices[l]][j]*eps[j];
+                            else if (!is_uncontrolled[index_param[j-sysdim]])
+                                controlled_pro[l] = controlled_pro[l] + Jloc[indices[l]][j]*eps[j];
+                            else // uncontrolled part
+                                uncontrolled_impro[l] = uncontrolled_impro[l] + Kaucher_multeps(Jloc[indices[l]][j],eps[j]) ;
+                        }
+             
+                        robust[l] = range[l] + initialcondition_pro[l] + controlled_pro[l];
+                        robust[l] = Kaucher_add_pro_impro_resultpro(robust[l],uncontrolled_impro[l]);
+                    }
+                    compute_print_skewbox(robust[0],robust[1],A,i,k,"robskew");
+                }
+                
+                
                 
                 out_approx << YAML::EndMap;
             }
@@ -349,19 +367,19 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                         range_l = ix0[l];
                         range_l_impro = 0;
                         for (int j=0 ; j<sysdim/3 ; j++) {
-                            range_k = range_k + Jaux[k][j]*eps[j];
-                            range_l = range_l + Jaux[l][j]*eps[j];
-                            range_i_impro = range_i_impro + Kaucher_multeps(Jaux[i][j],eps[j]);
+                            range_k = range_k + Jloc[k][j]*eps[j];
+                            range_l = range_l + Jloc[l][j]*eps[j];
+                            range_i_impro = range_i_impro + Kaucher_multeps(Jloc[i][j],eps[j]);
                         }
                         for (int j=sysdim/3 ; j<2*sysdim/3 ; j++) {
-                            range_i = range_i + Jaux[i][j]*eps[j];
-                            range_l = range_l + Jaux[l][j]*eps[j];
-                            range_k_impro = range_k_impro + Kaucher_multeps(Jaux[k][j],eps[j]);
+                            range_i = range_i + Jloc[i][j]*eps[j];
+                            range_l = range_l + Jloc[l][j]*eps[j];
+                            range_k_impro = range_k_impro + Kaucher_multeps(Jloc[k][j],eps[j]);
                         }
                         for (int j=2*sysdim/3 ; j<sysdim ; j++) {
-                            range_i = range_i + Jaux[i][j]*eps[j];
-                            range_k = range_k + Jaux[k][j]*eps[j];
-                            range_l_impro = range_l_impro + Kaucher_multeps(Jaux[l][j],eps[j]);
+                            range_i = range_i + Jloc[i][j]*eps[j];
+                            range_k = range_k + Jloc[k][j]*eps[j];
+                            range_l_impro = range_l_impro + Kaucher_multeps(Jloc[l][j],eps[j]);
                         }
                         
                         robust_i = 0; max_i = 0;
@@ -371,43 +389,43 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                         
                         for (int j=0 ; j<fullinputsdim/3 ; j++) {
                             if (is_uncontrolled[index_param[j]])
-                                robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                                robust_i += Jloc[i][j+sysdim]*eps[j+sysdim];
                             else
-                                robust_i_impro += Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
-                            max_i_impro += Kaucher_multeps(Jaux[i][j+sysdim],eps[j+sysdim]);
+                                robust_i_impro += Kaucher_multeps(Jloc[i][j+sysdim],eps[j+sysdim]);
+                            max_i_impro += Kaucher_multeps(Jloc[i][j+sysdim],eps[j+sysdim]);
                             
-                            robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
-                            max_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                            robust_k += Jloc[k][j+sysdim]*eps[j+sysdim];
+                            max_k += Jloc[k][j+sysdim]*eps[j+sysdim];
                             
-                            robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
-                            max_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                            robust_l += Jloc[l][j+sysdim]*eps[j+sysdim];
+                            max_l += Jloc[l][j+sysdim]*eps[j+sysdim];
                         }
                         
                         for (int j=fullinputsdim/3 ; j<2*fullinputsdim/3 ; j++) {
-                            robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
-                            max_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                            robust_i += Jloc[i][j+sysdim]*eps[j+sysdim];
+                            max_i += Jloc[i][j+sysdim]*eps[j+sysdim];
                             
                             if (is_uncontrolled[index_param[j]])
-                                robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                                robust_k += Jloc[k][j+sysdim]*eps[j+sysdim];
                             else
-                                robust_k_impro += Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
-                            max_k_impro += Kaucher_multeps(Jaux[k][j+sysdim],eps[j+sysdim]);
+                                robust_k_impro += Kaucher_multeps(Jloc[k][j+sysdim],eps[j+sysdim]);
+                            max_k_impro += Kaucher_multeps(Jloc[k][j+sysdim],eps[j+sysdim]);
                             
-                            robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
-                            max_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                            robust_l += Jloc[l][j+sysdim]*eps[j+sysdim];
+                            max_l += Jloc[l][j+sysdim]*eps[j+sysdim];
                         }
                         for (int j=2*fullinputsdim/2 ; j<fullinputsdim ; j++) {
-                            robust_i += Jaux[i][j+sysdim]*eps[j+sysdim];
-                            max_i += Jaux[i][j+sysdim]*eps[j+sysdim];
+                            robust_i += Jloc[i][j+sysdim]*eps[j+sysdim];
+                            max_i += Jloc[i][j+sysdim]*eps[j+sysdim];
                             
-                            robust_k += Jaux[k][j+sysdim]*eps[j+sysdim];
-                            max_k += Jaux[k][j+sysdim]*eps[j+sysdim];
+                            robust_k += Jloc[k][j+sysdim]*eps[j+sysdim];
+                            max_k += Jloc[k][j+sysdim]*eps[j+sysdim];
                             
                             if (is_uncontrolled[index_param[j]])
-                                robust_l += Jaux[l][j+sysdim]*eps[j+sysdim];
+                                robust_l += Jloc[l][j+sysdim]*eps[j+sysdim];
                             else
-                                robust_l_impro += Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
-                            max_l_impro += Kaucher_multeps(Jaux[l][j+sysdim],eps[j+sysdim]);
+                                robust_l_impro += Kaucher_multeps(Jloc[l][j+sysdim],eps[j+sysdim]);
+                            max_l_impro += Kaucher_multeps(Jloc[l][j+sysdim],eps[j+sysdim]);
                         }
                         
                         robust_i = Kaucher_add_pro_impro(robust_i + range_i, range_i_impro + robust_i_impro);

@@ -68,6 +68,7 @@ void multMiVi(vector <F<AAF>> &f0, vector<vector<double>> &C, vector <F<AAF>> z0
 // builds conditionner for skewbox computation
 // A is center of Jaux on components i and k (otherwise diagonal), C is inverse of A
 void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> Jaux, int i, int k);
+void build_2dpreconditionner_frominit(vector<vector<double>> &A, vector<vector<double>> &C, vector<AAF> xp1, int i, int k);
 void build_3dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &C, vector<vector<interval>> J, int i, int k, int l);
 
 #endif

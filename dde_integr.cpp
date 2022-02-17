@@ -438,7 +438,7 @@ void  HybridStep_dde::init_dde(vector<interval> &sampled_reachset)
         out_approx << YAML::Key << "tn";
         out_approx << YAML::Value << tn;
         
-        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.x[0],TMJac.J[0],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.x[0],TMJac.J[0],eps,TMJac.xp1[0],tn+tau); //x0p1,Jp1,eps);
         intersectViVi(Xouter,TMJac.x[0]);
         
         print_solutionstep(-1,Xouter,Xouter_robust,Xinner,Xinner_robust,Xcenter,sampled_reachset); // initial solution t=-d0
@@ -860,7 +860,7 @@ ReachSet HybridStep_dde::TM_evalandprint_solutionstep(int s, vector<interval> &e
             Xcenter[i] = TMcenter.xp1[s][i].convert_int();
         }
        
-        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1[s],TMJac.Jp1[s],eps,tn+tau); //x0p1,Jp1,eps);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1[s],TMJac.Jp1[s],eps,TMJac.xp1[s],tn+tau); //x0p1,Jp1,eps);
         cout << "without quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;

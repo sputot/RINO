@@ -1115,7 +1115,7 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
             TMcenter.xp1[i].sumup(tol_noise); // group small terms
             Xcenter[i] = TMcenter.xp1[i].convert_int();
         }
-        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1,TMJac.Jp1,eps,tn+tau);
+        InnerOuter(Xinner,Xinner_robust,Xouter,Xouter_robust,TMcenter.xp1,TMJac.Jp1,eps,TMJac.xp1,tn+tau);
         cout << "without quadrature: ";
         cout << "Xouter=" << Xouter;
         cout << "Xinner=" << Xinner;
