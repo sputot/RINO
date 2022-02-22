@@ -36,22 +36,31 @@ double delay; // = 1;   // delay in DDE
 int nb_subdiv_delay; // = 10;   // number of Taylor models on [0,delay]
 
 // parameters of the system of the ODEs
-vector<interval> params_int; // constant params of the ODE
-vector<AAF> params;  // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
+vector<interval> params; // constant params of the ODE
+vector<AAF> params_aff;  // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
 vector<AAF> nncontrol;
 
 vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
 
-vector<AAF> initial_values;
-vector<AAF> center_initial_values;
+vector<interval> initial_values; // initial values
+vector<AAF> initial_values_aff; // same as initial_values_int but in affine forms
+vector<interval> center_initial_values;
+vector<AAF> center_initial_values_aff;
 
-vector<AAF> inputs; // uncertain inputs and parameters
-vector<AAF> fullinputs; // uncertain inputs and parameters
+vector<interval> inputs; // uncertain inputs and parameters
+vector<AAF> inputs_aff; // uncertain inputs and parameters
+vector<interval> fullinputs; // uncertain inputs and parameters
+vector<AAF> fullinputs_aff; // uncertain inputs and parameters
 vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
-vector<AAF> center_fullinputs;
+vector<interval> center_fullinputs;
+vector<AAF> center_fullinputs_aff;
 vector<int> index_param;
 vector<int> index_param_inv;
+
+// to save initial_values and fullinputs when subdivisions
+vector<interval> initial_values_save;
+vector<interval> fullinputs_save;
 
 vector<interval> eps;
 
@@ -603,8 +612,8 @@ void read_parameters(const char * params_filename)
             int i = 0;
             while( token != NULL ) {
                 sscanf(token,"[%lf,%lf]",&a,&b);
-                params_int[i] = interval(a,b);
-                params[i] = params_int[i];
+                params[i] = interval(a,b);
+                params_aff[i] = params[i];
                 i++;
                 token = strtok(NULL,space);
             }
@@ -700,7 +709,8 @@ void init_system()
     // inputs
     cout << "inputsdim=" << inputsdim << "sysdim=" << sysdim << endl;
     
-    inputs = vector<AAF>(inputsdim);      // bounds
+    inputs_aff = vector<AAF>(inputsdim);
+    inputs = vector<interval>(inputsdim);      // bounds
     nb_inputs = vector<int>(inputsdim);   // number of instances for each input
     for (int i=0; i<inputsdim; i++)
         nb_inputs[i] = 1;
@@ -714,12 +724,13 @@ void init_system()
     unsafe_set = vector<interval>(sysdim);
     
     // initial values
-    initial_values = vector<AAF>(sysdim);
+    initial_values_aff = vector<AAF>(sysdim);
+    initial_values = vector<interval>(sysdim);
     
     // parameters not part of the jacobian
     if (paramsdim > 0) {
-        params_int = vector<interval>(paramsdim);
-        params = vector<AAF>(paramsdim);
+        params = vector<interval>(paramsdim);
+        params_aff = vector<AAF>(paramsdim);
     }
     
     if (nncontroldim > 0) {
@@ -740,7 +751,7 @@ void init_system()
             Taylor_order = 3;
             
             initial_values[0] = interval(0.9,1);
-            params_int[0] = 1.0;
+            params[0] = 1.0;
          //   nb_subdiv_init = 2;
          //   component_to_subdiv = 0;
         }
@@ -753,8 +764,8 @@ void init_system()
             initial_values[0] = interval(0.9,1);
             initial_values[1] = interval(0,0.1);
             
-            params_int[0] = 1;
-            params_int[1] = 1.5;
+            params[0] = 1;
+            params[1] = 1.5;
         }
         else if (syschoice == 3) // ballistic
         {
@@ -797,8 +808,8 @@ void init_system()
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
             //  uncertain parameter 
-            params_int[0] =  interval(1.9,2.1);  // Kp
-            params_int[1] =  interval(2.9,3.1);    // Kd
+            params[0] =  interval(1.9,2.1);  // Kp
+            params[1] =  interval(2.9,3.1);    // Kd
         }
         else if (syschoice == 6) // self-driving car with piecewise constant parameters; sysdim = 4, jacdim = 4
         {
@@ -826,8 +837,8 @@ void init_system()
             initial_values[1] = interval(0,0.1);
             initial_values[2] =  interval(1.9,2.1);  // Kp
             initial_values[3] =  interval(2.9,3.1);    // Kd
-            params_int[0] =  interval(-2,2);
-            params_int[1] =  interval(-2,2);
+            params[0] =  interval(-2,2);
+            params[1] =  interval(-2,2);
          //   is_uncontrolled[3] = true; // Kd uncontrolled
             // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
          //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
@@ -1458,87 +1469,6 @@ void init_system()
             is_uncontrolled[0] = true;
             nb_inputs[0] = 25; // control is constant for each step of the control loop: will take 30 different values overall
         }
-        else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference - EX 19 dnas le repository
-            tau = 0.02;
-            t_end = 0.2*25;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.5,0.501); //interval(0.5,0.6);
-            initial_values[1] = interval(0.5,0.501); //interval(0.5,0.6);
-            initial_values[2] = interval(0.5,0.501); //interval(0.5,0.6);
-            initial_values[3] = interval(0.5,0.501); //interval(0.5,0.6);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2;
-//            inputs[0] = interval(0.0,0.0);
-//            is_uncontrolled[0] = true;
-//            nb_inputs[0] = 25; // control is constant for each step of the control loop: will take 30 different values overall
-        }
-        else if (syschoice == 382) { // Ex 12 in sherlock/systems_with_networks
-            tau = 0.01;
-            t_end = 6;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.5,0.55);  // interval(0.5,0.9);
-            initial_values[1] = interval(0.5,0.55);   // interval(0.5,0.9);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2; // a verifier
-        }
-        else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;                 // Ex 13 in sherlock/systems_with_networks
-            t_end = 0.2*50;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.7,0.9); // interval(0.7,0.9);
-            initial_values[1] = interval(0.42,0.5); // interval(0.42,0.58);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2;
-        }
-        else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;              // Ex 14 in sherlock/systems_with_networks
-            t_end = 0.1*100;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.8,0.9); // interval(0.8,0.9);
-            initial_values[1] = interval(0.4,0.5); // interval(0.4,0.5);
-            params= NH.eval_network(initial_values);
-            control_period = 0.1;
-        }
-        else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;                 // Ex 15 in sherlock/systems_with_networks
-            t_end = 0.2*50;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.35,0.45);
-            initial_values[1] = interval(0.25,0.35);
-            initial_values[2] = interval(0.35,0.45);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2;
-        }
-        else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;             // Ex 16 in sherlock/systems_with_networks
-            t_end = 0.2*50;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.3,0.4);
-            initial_values[1] = interval(0.3,0.4);
-            initial_values[2] = interval(-0.4,-0.3);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2;
-        }
-        else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.02;             // Ex 17 in sherlock/systems_with_networks
-            t_end = 0.2*50;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.35,0.4);
-            initial_values[1] = interval(-0.35,-0.3);
-            initial_values[2] = interval(0.35,0.4);
-            params= NH.eval_network(initial_values);
-            control_period = 0.2;
-        }
-        else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
-            tau = 0.05;
-            t_end = 0.5*20;
-            Taylor_order = 3;
-            initial_values[0] = interval(0.39,0.41); // interval(0.35,0.45);
-            initial_values[1] = interval(0.49,0.51); // interval(0.45,0.55);
-            initial_values[2] = interval(0.29,0.31); // interval(0.25,0.35);
-            params= NH.eval_network(initial_values);
-            control_period = 0.5;
-        }
         else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.1;
             t_end = 20;
@@ -1711,7 +1641,7 @@ void init_system()
            initial_values[0] = interval(-0.53,-0.5);
            initial_values[1] = interval(0.,0.);   // interval(0.,0.001);
            
-           nncontrol= NH.eval_network(initial_values);
+           // nncontrol= NH.eval_network(initial_values);
            //inputs[0] = interval(0.0,0.0);
            //is_uncontrolled[0] = true;
            //nb_inputs[0] = 30; // control is constant for each step of the control loop: will take 30 different values overall
@@ -1747,7 +1677,7 @@ void init_system()
            // ub = [-0.75; -0.43; 0.54; -0.28];
            // reachStep = 0.01; controlPeriod = 0.5;
            // goal = Box([-0.1;0.2 ],[-0.9;-0.6]);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            
             control_period = 0.1;
        }
@@ -1758,7 +1688,7 @@ void init_system()
            Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            // goal [0,0.2],[0.05,0.3]
            target_set[0] = interval(0,0.2);
            target_set[1] = interval(0.05,0.3);
@@ -1772,7 +1702,7 @@ void init_system()
            Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            control_period = 0.2; // 0.01; // control_period = 0.2;
        }
        else if (syschoice == 1113) {  //toy example
@@ -1790,7 +1720,7 @@ void init_system()
            Taylor_order = 3;
            initial_values[0] = interval(0.7,0.9);
            initial_values[1] = interval(0.7,0.9);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            // goal [-0.3,0.1],[-0.35,0.5]
            control_period = 0.2;
        }
@@ -1801,7 +1731,7 @@ void init_system()
            Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.4,0.5);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            // goal [0.2,0.3],[-0.3,-0.05]
            control_period = 0.1;
        }
@@ -1813,7 +1743,7 @@ void init_system()
            initial_values[0] = interval(0.25,0.27);
            initial_values[1] = interval(0.08,0.1);
            initial_values[2] = interval(0.25,0.27);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            // goal [-0.05,0.05],[-0.05,-0.]
            control_period = 0.1;
        }
@@ -1825,7 +1755,7 @@ void init_system()
            initial_values[0] = interval(0.38,0.4);
            initial_values[1] = interval(0.45,0.47);
            initial_values[2] = interval(0.25,0.27);
-           nncontrol= NH.eval_network(initial_values);
+           //nncontrol= NH.eval_network(initial_values);
            // goal [-0.4,-0.28],[0.05,0.22]
            control_period = 0.2;
        }
@@ -1840,7 +1770,7 @@ void init_system()
            initial_values[3] = interval(10,11);
            initial_values[4] = interval(30,30.05);
            initial_values[5] = interval(0,0);
-           nncontrol= NH.eval_network(syst_to_nn(initial_values));
+           //nncontrol= NH.eval_network(syst_to_nn(initial_values));
          //  cout << params;
          //  params= NH.eval_network(initial_values);
            control_period = 0.1;
@@ -1985,8 +1915,8 @@ void init_system()
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
-            params_int[0] =  interval(1.9,2.1); // 2;  // Kp
-            params_int[1] =  interval(2.9,3.1);  // 3;   // Kd
+            params[0] =  interval(1.9,2.1); // 2;  // Kp
+            params[1] =  interval(2.9,3.1);  // 3;   // Kd
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
         {
@@ -2063,7 +1993,16 @@ void init_system()
         variables_to_display[i] = true;
     
     for (int i=0; i< paramsdim; i++)
-        params[i] = params_int[i];
+        params_aff[i] = params[i];
+    
+    for (int i=0; i< sysdim; i++)
+        initial_values_aff[i] = initial_values[i];
+    
+    for (int i=0; i< inputsdim; i++)
+        inputs_aff[i] = inputs[i];
+    
+    if (nn_analysis)
+        nncontrol= NH.eval_network(initial_values_aff);
 }
 
 
@@ -2095,10 +2034,13 @@ void init_utils_inputs()
         }
     }
     
-    fullinputs = vector<AAF>(fullinputsdim);
+    fullinputs = vector<interval>(fullinputsdim);
+    fullinputs_aff = vector<AAF>(fullinputsdim);
     for (int i=0; i<inputsdim; i++) {
-        for (int j=0; j<nb_inputs[i]; j++)
-            fullinputs[index_param_inv[i]+j] = inputs[i].convert_int();
+        for (int j=0; j<nb_inputs[i]; j++) {
+            fullinputs[index_param_inv[i]+j] = inputs[i];
+            fullinputs_aff[index_param_inv[i]+j] = inputs[i];
+        }
     }
     // ****************** end  for piecewise constant inputs
     
@@ -2114,8 +2056,10 @@ void init_utils_inputs()
     
     
     // common to EDO and DDE
-    center_initial_values = vector<AAF>(sysdim);
-    center_fullinputs = vector<AAF>(fullinputsdim);
+    center_initial_values = vector<interval>(sysdim);
+    center_initial_values_aff = vector<AAF>(sysdim);
+    center_fullinputs = vector<interval>(fullinputsdim);
+    center_fullinputs_aff = vector<AAF>(fullinputsdim);
     
     Jac_param_inputs = vector<vector<interval>>(inputsdim,vector<interval>(sysdim));
     
@@ -2124,8 +2068,9 @@ void init_utils_inputs()
     eps = vector<interval>(jacdim);
     for (int i=0 ; i<sysdim ; i++)
     {
-        temp = initial_values[i].convert_int();
+        temp = initial_values[i];
         center_initial_values[i] = mid(temp);
+        center_initial_values_aff[i] = center_initial_values[i];
         eps[i] = temp-mid(temp);
         //   cout << "initial_values[i] = " << initial_values[i] << endl;
     }
@@ -2138,8 +2083,9 @@ void init_utils_inputs()
     }
     for (int i=0 ; i<fullinputsdim ; i++)
     {
-        temp = fullinputs[i].convert_int();
+        temp = fullinputs[i];
         center_fullinputs[i] = mid(temp);
+        center_fullinputs_aff[i] = center_fullinputs[i];
         eps[i+sysdim] = temp-mid(temp);
     }
     
@@ -2160,14 +2106,14 @@ void init_utils_inputs()
 
 
 
-void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide)
+void init_subdiv(int current_subdiv, vector<interval> initial_values_save, vector<interval> inputs_save, int param_to_subdivide)
 {
  //   center_inputs = vector<AAF>(jacdim);
  //   eps = vector<interval>(jacdim);
     
     if (param_to_subdivide < sysdim)
     {
-        interval save = initial_values_save[param_to_subdivide].convert_int();
+        interval save = initial_values_save[param_to_subdivide];
         double delta = (save.sup()-save.inf())/nb_subdiv_init;
         if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
             initial_values[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
@@ -2176,14 +2122,15 @@ void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF
         else if (current_subdiv == nb_subdiv_init)
             initial_values[param_to_subdivide] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
  //       cout << "initial_values_save[param_to_subdivide] " << inputs[param_to_subdivide] << endl;
+        initial_values_aff[param_to_subdivide] = initial_values[param_to_subdivide];
         
-        interval temp = initial_values[param_to_subdivide].convert_int();
-        center_initial_values[param_to_subdivide] = mid(temp);
-        eps[param_to_subdivide] = temp-mid(temp);
+        center_initial_values[param_to_subdivide] = mid(initial_values[param_to_subdivide]);
+        center_initial_values_aff[param_to_subdivide] = center_initial_values[param_to_subdivide];
+        eps[param_to_subdivide] = initial_values[param_to_subdivide]-center_initial_values[param_to_subdivide];
     }
     else
     {
-        interval save = inputs_save[param_to_subdivide-sysdim].convert_int();
+        interval save = inputs_save[param_to_subdivide-sysdim];
         double delta = (save.sup()-save.inf())/nb_subdiv_init;
         if ((current_subdiv > 1) && (current_subdiv < nb_subdiv_init))
             fullinputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv+recovering));
@@ -2192,10 +2139,11 @@ void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF
         else if (current_subdiv == nb_subdiv_init)
             fullinputs[param_to_subdivide-sysdim] = interval(save.inf()+delta*(current_subdiv-1-recovering),save.inf()+delta*(current_subdiv));
       //  cout << "inputs[param_to_subdivide] " << inputs[param_to_subdivide-sysdim] << endl;
-    
-         interval temp = fullinputs[param_to_subdivide-sysdim].convert_int();
-            center_fullinputs[param_to_subdivide-sysdim] = mid(temp);
-            eps[param_to_subdivide-sysdim] = temp-mid(temp);
+        fullinputs_aff[param_to_subdivide-sysdim] = fullinputs[param_to_subdivide-sysdim];
+        
+        center_fullinputs[param_to_subdivide-sysdim] = mid(fullinputs[param_to_subdivide-sysdim]);
+        center_fullinputs_aff[param_to_subdivide-sysdim] = center_fullinputs[param_to_subdivide-sysdim];
+        eps[param_to_subdivide-sysdim] = fullinputs[param_to_subdivide-sysdim]-center_fullinputs[param_to_subdivide-sysdim];
     }
 }
 
@@ -2328,14 +2276,14 @@ vector<interval> AnalyticalSol(vector<interval> &initial_values, double d0, doub
 
 // Old version - kept in case for subdivisions...
 // analytical solution if any (for comparison purpose)
-void AnalyticalSol(vector<AAF> &initial_values, double d0, int current_iteration)
+void AnalyticalSol(vector<interval> &initial_values, double d0, int current_iteration)
 {
   //  vector<interval> res(sysdim);
     vector<interval> Xouter_min(sysdim), Xouter_max(sysdim);
     
     double t = t_print[current_iteration];
-    double beta_inf = initial_values[0].convert_int().inf();
-    double beta_sup = initial_values[0].convert_int().sup();
+    double beta_inf = initial_values[0].inf();
+    double beta_sup = initial_values[0].sup();
     
     // running example
     //res[0] = (1+beta[0]*t)*(1+beta[0]*t);  // ix[0] = beta
@@ -2386,13 +2334,13 @@ void AnalyticalSol(vector<AAF> &initial_values, double d0, int current_iteration
         // example 5.15
         if (t <0)
         {
-            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int()*exp(t);
-            Xexact_print[0][current_iteration][1] = initial_values[1].convert_int()*(1-exp(-1.));
+            Xexact_print[0][current_iteration][0] = initial_values[0]*exp(t);
+            Xexact_print[0][current_iteration][1] = initial_values[1]*(1-exp(-1.));
         }
         else
         {
-            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int()*exp(t);
-            Xexact_print[0][current_iteration][1] = initial_values[1].convert_int()*(exp(t)-exp(t-1.));
+            Xexact_print[0][current_iteration][0] = initial_values[0]*exp(t);
+            Xexact_print[0][current_iteration][1] = initial_values[1]*(exp(t)-exp(t-1.));
         }
     }
     }
@@ -2402,34 +2350,34 @@ void AnalyticalSol(vector<AAF> &initial_values, double d0, int current_iteration
     else if ((systype == 0) && ((syschoice == 19) || (syschoice == 20)|| (syschoice == 21)))
     {
         if (current_iteration == 0)
-            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
+            Xexact_print[0][current_iteration][0] = initial_values[0];
         else {
             if (jacdim>sysdim+inputsdim) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
-                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[0].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + inputs[0]*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
             else {
                 double delta_t = t_print[current_iteration]-t_print[0];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
-                Xexact_print[0][current_iteration][0] = initial_values[0].convert_int() + inputs[0].convert_int()*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = initial_values[0] + inputs[0]*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
         }
     }
     else if ((systype == 0) && ((syschoice == 22)))
     {
         if (current_iteration == 0)
-            Xexact_print[0][current_iteration][0] = initial_values[0].convert_int();
+            Xexact_print[0][current_iteration][0] = initial_values[0];
         else {
             if (jacdim>sysdim+inputsdim) {
                 double delta_t = t_print[current_iteration]-t_print[current_iteration-1];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[current_iteration-1]*t_print[current_iteration-1];
-                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[0].convert_int()+inputs[0].convert_int()*inputs[0].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = Xexact_print[0][current_iteration-1][0] + (inputs[0]+inputs[0]*inputs[0])*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
             else {
                 double delta_t = t_print[current_iteration]-t_print[0];
                 double delta_t_sq = t_print[current_iteration]*t_print[current_iteration]-t_print[0]*t_print[0];
-                Xexact_print[0][current_iteration][0] = initial_values[0].convert_int() + (inputs[0].convert_int()+inputs[0].convert_int()*inputs[0].convert_int())*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
+                Xexact_print[0][current_iteration][0] = initial_values[0] + (inputs[0]+inputs[0]*inputs[0])*(2*delta_t-delta_t_sq) + 2*delta_t + delta_t_sq/2;
             }
         }
     }

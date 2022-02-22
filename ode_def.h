@@ -35,25 +35,37 @@ extern int Taylor_order;
 extern double delay; // = 1;   // delay in DDE
 extern int nb_subdiv_delay; // = 10;   // number of Taylor models on [0,delay]
 
-extern vector<interval> params_int; // constant params of the ODE  (don't appear in the Jacobian) 
-extern vector<AAF> params;          // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
+extern vector<interval> params; // constant params of the ODE  (don't appear in the Jacobian)
+extern vector<AAF> params_aff;          // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
 extern vector<AAF> nncontrol;
 extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
 extern vector<vector<AAF>> Jac_params_order2;   // (\partial u) / (partial x)
  
-extern vector<AAF> initial_values; // uncertain initial conditions
-extern vector<AAF> center_initial_values;
+extern vector<interval> initial_values; // initial values
+extern vector<AAF> initial_values_aff; // uncertain initial conditions
+extern vector<interval> center_initial_values;
+extern vector<AAF> center_initial_values_aff;
 
-extern vector<AAF> inputs;   // uncertain inputs and parameters
-extern vector<AAF> fullinputs; // uncertain inputs and parameters
+
+extern vector<interval> inputs; // uncertain inputs and parameters
+extern vector<AAF> inputs_aff;   // uncertain inputs and parameters
+extern vector<interval> fullinputs; // uncertain inputs and parameters
+extern vector<AAF> fullinputs_aff; // uncertain inputs and parameters
 extern vector<int> nb_inputs; // piecewise constant input changes value every t_end/nb_inputs[i] seconds
 
-extern vector<AAF> center_fullinputs;
+extern vector<interval> center_fullinputs;
+extern vector<AAF> center_fullinputs_aff;
+
 extern vector<int> index_param;
 extern vector<int> index_param_inv;
 extern vector<interval> eps;
 
 extern vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,...xn): we give the jacobian
+
+// to save initial_values and fullinputs when subdivisions
+extern vector<interval> initial_values_save;
+extern vector<interval> fullinputs_save;
+
 
 //  extern vector<F<AAF>> nn_outputs; // result of NN evaluation
 
@@ -97,7 +109,7 @@ void init_system();
 void init_utils_inputs();
 
 // specific to subdivisions
-void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide);
+void init_subdiv(int current_subdiv, vector<interval> initial_values_save, vector<interval> inputs_save, int param_to_subdivide);
 
 // maps the ODE sys coordinates to the neural network inputs
 //vector<AAF> sys_to_nn(vector<AAF> &sysval);
@@ -1765,7 +1777,7 @@ public:
         else if (syschoice == 6)  // self-driving car: parameters are not in the Jacobian
         {
             yp[0] = y[1];
-            yp[1] = -params[0] *(y_prev[0] - 1.0) - params[1]*y_prev[1];   // pr = 1 is the reference position
+            yp[1] = -params_aff[0] *(y_prev[0] - 1.0) - params_aff[1]*y_prev[1];   // pr = 1 is the reference position
         }
         else if (syschoice == 8)  // self-driving car with uncertain (but constant) coefficients
         {
@@ -1904,8 +1916,8 @@ public:
         {
             Jp[0][0] = J[1][0];
             Jp[0][1] = J[1][1];
-            Jp[1][0] = - params[0]*J_prev[0][0] - params[1]*J_prev[1][0];
-            Jp[1][1] = - params[0]*J_prev[0][1] - params[1]*J_prev[1][1];
+            Jp[1][0] = - params_aff[0]*J_prev[0][0] - params_aff[1]*J_prev[1][0];
+            Jp[1][1] = - params_aff[0]*J_prev[0][1] - params_aff[1]*J_prev[1][1];
         }
         else if (syschoice == 7)  // self-driving car with uncertain (but constant) coefficients
         {
@@ -1929,10 +1941,10 @@ public:
             Jp[0][1] = J[1][1];
             Jp[0][2] = J[1][2];
             Jp[0][3] = J[1][3];
-            Jp[1][0] = - fullinputs[0]*J_prev[0][0]   - fullinputs[1]*J_prev[1][0];
-            Jp[1][1] = - fullinputs[0]*J_prev[0][1]   - fullinputs[1]*J_prev[1][1];
-            Jp[1][2] = -x_prev[0] - fullinputs[0]*J_prev[0][2] + 1 - fullinputs[1]*J_prev[1][2];
-            Jp[1][3] = - fullinputs[0]*J_prev[0][3] - x_prev[1] - fullinputs[1]*J_prev[1][3];
+            Jp[1][0] = - fullinputs_aff[0]*J_prev[0][0]   - fullinputs_aff[1]*J_prev[1][0];
+            Jp[1][1] = - fullinputs_aff[0]*J_prev[0][1]   - fullinputs_aff[1]*J_prev[1][1];
+            Jp[1][2] = -x_prev[0] - fullinputs_aff[0]*J_prev[0][2] + 1 - fullinputs_aff[1]*J_prev[1][2];
+            Jp[1][3] = - fullinputs_aff[0]*J_prev[0][3] - x_prev[1] - fullinputs_aff[1]*J_prev[1][3];
         }
         else if (syschoice == 9) // Ex 4 of Zou CAV 2015
         {
@@ -2073,7 +2085,9 @@ public:
 };
 
 
-
+extern OdeFunc obf;  // for odes: contains the differential system - defined in ode_def.h
+extern DdeFunc bf;    // for ddes: contains the differential system - defined in ode_def.h
+extern DdeJacFunc bbf; // for ddes
 
 
 

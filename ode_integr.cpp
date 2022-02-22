@@ -691,9 +691,11 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
 {
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     
-    if (syschoice == 491)
+    // ne compile plus: TODO a remplacer par l'expression comme ci-dessous et/ou comprendre
+   /* if (syschoice == 491)
         nncontrol = NH.eval_network(syst_to_nn(x));
-    else if (nn_analysis)
+    else*/
+        if (nn_analysis)
         nncontrol = NH.eval_network(x);
     
     
@@ -747,7 +749,7 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
         for (int i=0; i<sysdim; i++)
             J[i][i] = 1.0;
-        res.eval_valandJacobian_nn(x,inputs,0,tau,J);
+        res.eval_valandJacobian_nn(x,inputs_aff,0,tau,J);
     }
     
     return res;
@@ -1148,17 +1150,16 @@ ReachSet HybridStep_ode::TM_evalandprint_solutionstep(vector<interval> &eps, dou
 
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
-vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_values, vector<interval> &params, vector<AAF> &param_inputs, double t_begin, double t_end, double tau, int discr)
+vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr)
 {
     int n = (t_end - t_begin)/tau + 1;
    // int discr = 2;
     int nb_points = discr+1;
     
-   
     
     vector<interval> xinit(sysdim);
     for (int i=0 ; i<sysdim ; i++)
-        xinit[i] = initial_values[i].convert_int();
+        xinit[i] = initial_values[i];
     
     // limit the number of sampled points
     for (int i=1; i < min(sysdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
@@ -1294,7 +1295,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
             // taking a new value for time-varying inputs
             for (int j = 0; j < inputsdim ; j++) {
                 if (iter == 1 || (iter % (n/nb_inputs[j]) == 0)) {
-                    sampled_inputs[j] = param_inputs[j].convert_int().inf() + (param_inputs[j].convert_int().sup()-param_inputs[j].convert_int().inf())*((double) rand() / (RAND_MAX));
+                    sampled_inputs[j] = inputs[j].inf() + (inputs[j].sup()-inputs[j].inf())*((double) rand() / (RAND_MAX));
                 }
             }
         //    cout << "param_inputs=" << param_inputs << endl;
@@ -1345,11 +1346,11 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, vector<AAF> &initial_va
     }
     
     // resetting nncontrol to initial condition
-
-    if (syschoice == 491)
-        nncontrol = NH.eval_network(syst_to_nn(initial_values));
-    else if (nn_analysis)
-        nncontrol = NH.eval_network(initial_values);
+   // TODO. A comprendr epourquoi ne compile plus et remplacer
+/*    if (syschoice == 491)
+        nncontrol = NH.eval_network(syst_to_nn(initial_values_aff));
+    else */if (nn_analysis)
+        nncontrol = NH.eval_network(initial_values_aff);
     
     out_samples << YAML::EndSeq;
     out_samples << YAML::EndMap;

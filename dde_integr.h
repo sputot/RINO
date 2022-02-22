@@ -144,13 +144,13 @@ public:
         {
             if (innerapprox == 0)
             {
-                dde_x[i] = Dde(bf, prev_dde_x[i].x,fullinputs);
-                dde_g[i] = Dde(bf, prev_dde_g[i].x,fullinputs);
+                dde_x[i] = Dde(bf, prev_dde_x[i].x,fullinputs_aff);
+                dde_g[i] = Dde(bf, prev_dde_g[i].x,fullinputs_aff);
             }
             else
             {
-                dde_x[i] = Dde(bf, prev_dde_x[i].x,center_fullinputs);
-                dde_g[i] = Dde(bf, prev_dde_g[i].x,center_fullinputs);
+                dde_x[i] = Dde(bf, prev_dde_x[i].x,center_fullinputs_aff);
+                dde_g[i] = Dde(bf, prev_dde_g[i].x,center_fullinputs_aff);
             }
         }
     }
@@ -206,8 +206,8 @@ public:
         // Taylor Models
         for (int i=0; i<p+1 ; i++)
         {
-            ddeVAR_x[i] = Dde(_bf, prev_ddeVAR_x[i].x,inputs);
-            ddeVAR_g[i] = Dde(_bf, prev_ddeVAR_g[i].x,inputs);
+            ddeVAR_x[i] = Dde(_bf, prev_ddeVAR_x[i].x,inputs_aff);
+            ddeVAR_g[i] = Dde(_bf, prev_ddeVAR_g[i].x,inputs_aff);
             ddeJAC_x[i] = Dde_Jac(_bjf, prev_ddeJAC_x[i].J, ddeVAR_x[i].x, prev_ddeVAR_x[i].x);
             ddeJAC_g[i] = Dde_Jac(_bjf, prev_ddeJAC_g[i].J, ddeVAR_g[i].x, prev_ddeVAR_g[i].x);
         }

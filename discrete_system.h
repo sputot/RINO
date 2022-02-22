@@ -33,7 +33,6 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 extern int nb_discr, nb_discr1, nb_discr2;
 
 
-
 class DiscreteFunc {
 public:
     
@@ -212,6 +211,8 @@ public:
         return z;
     }
 };
+
+extern DiscreteFunc f;
 
 
 

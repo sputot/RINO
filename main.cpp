@@ -47,17 +47,23 @@ using namespace std;
 //int systype; // 0 is ODE, 1 is DDE
 //int syschoice; // choice of system to analyze
 
+DiscreteFunc f; // for discrete systems - defined in discrete_system.h
+OdeFunc obf;    // for odes: contains the differential system - defined in ode_def.h
+DdeFunc bf;    // for ddes: contains the differential system - defined in ode_def.h
+DdeJacFunc bbf; // for ddes
 
+void read_system(int argc, char* argv[]);
 
 
 int main(int argc, char* argv[])
 {
-    // all these parameters in initialization functions defined in ode_def.cpp
-    double tn;    // current time
+/*    DiscreteFunc f; // for discrete systems - defined in discrete_system.h
+    OdeFunc obf;    // for odes: contains the differential system - defined in ode_def.h
+    DdeFunc bf;    // for ddes: contains the differential system - defined in ode_def.h
+    DdeJacFunc bbf; // for ddes
+*/
     
     vector<vector<interval>> sampled_reachset;
-    
-    
     
     ReachSet RS;
    
@@ -69,34 +75,27 @@ int main(int argc, char* argv[])
     exit(0); */
     
     
-    /********* DEFINING SYSTEM *******************/
-    
-    char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
-    
     // reading system choices and parameters
     read_system(argc,argv);
    
-    
     open_outputfiles();
     
     clock_t begin, end; //  = clock();
     begin = clock();
     
+    
+    
+    
+    
+    
+    
     /*******************************************************************************************/
    /************* Discrete Systems ************/
     if (systype == 2) {
         
-        DiscreteFunc f;
        
-      
-                
-        init_discrete_system(config_filename); // reading initial condition in xinit and parameters: config file erase hard-coded conditions
-        
-    
-
         sampled_reachset = estimate_reachset(f, xinit, nb_sample_per_dim);
         end = clock();
-        
         elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
         
         begin = clock();
@@ -113,38 +112,12 @@ int main(int argc, char* argv[])
        
     }
     
-    else if (systype == 0 || systype == 1)
+    else if (systype == 1) // DDE
     {
-    // *************** ODEs or DDEs *******************
-    
-    
-    define_system_dim(); // defines value of sysdim: depends on syschoice --
-    init_system(); // initializes param from hard-coded values
-    if (config_filename) // called with configuration file: we overwrite the initialization of init_system
-        read_parameters(config_filename);
-    
-    init_utils_inputs();
-    
-    vector<AAF> initial_values_save(sysdim);
-    vector<AAF> fullinputs_save(fullinputsdim);
-    for (int i=0 ; i<sysdim; i++)
-        initial_values_save[i] = initial_values[i];
-    for (int i=0 ; i<fullinputsdim; i++)
-        fullinputs_save[i] = fullinputs[i];
-    
-    DdeFunc bf;    // contains the differential system - defined in ode_def.h
-    DdeJacFunc bbf;
-    OdeFunc obf;    // contains the differential system - defined in ode_def.h
-    
-    /*************************************************************************** DDE ************************************************************/
-    if (systype == 1) // DDE
-    {
-        // printing exact solution if any for comparison
-        
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset_dde(bf,initial_values,t_begin,t_end,delay, nb_subdiv_delay, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset_dde(bf,initial_values_aff,t_begin,t_end,delay, nb_subdiv_delay, nb_sample_per_dim);
         
         // ecrire ici un estimate_reachset_dde qui retourne soit sampled_reachset soit exact set quand il existe et qui afffiche les samples + la solution exacte en XML.
         
@@ -160,10 +133,8 @@ int main(int argc, char* argv[])
             
             // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
             current_iteration = 0;
-            
-            tn = t_begin;
-            
-            HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,tn,tau,delay,nb_subdiv_delay);
+                        
+            HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,t_begin,tau,delay,nb_subdiv_delay);
             prev_step.init_dde(sampled_reachset[0]);
             
             HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
@@ -198,6 +169,7 @@ int main(int argc, char* argv[])
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
     {
+
         vector<vector<AAF>> J(jacdim, vector<AAF>(jacdim));
         vector<AAF> x(sysdim);
         vector<AAF> param_inputs(jacdim-sysdim);
@@ -210,7 +182,7 @@ int main(int argc, char* argv[])
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset(obf,initial_values,params_int,inputs,t_begin,t_end,tau, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset(obf,nb_sample_per_dim);
         
         end = clock();
         elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
@@ -224,8 +196,7 @@ int main(int argc, char* argv[])
             
             set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
             
-            tn = t_begin;
-            print_initstats(initial_values,param_inputs);  // print initial conditions and init XML
+            print_initstats(initial_values_aff,param_inputs);  // print initial conditions and init XML
             
             // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
         //    vector<AAF> yp(sysdim);
@@ -244,15 +215,15 @@ int main(int argc, char* argv[])
             
            
             current_iteration = 1;
-            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,Taylor_order);
+            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,t_begin,tau,Taylor_order);
            
             int iter = 1;
             while (cur_step.tn < t_end-0.0001*t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                cur_step.TM_build(params,param_inputs,param_inputs_center);
+                cur_step.TM_build(params_aff,param_inputs,param_inputs_center);
                 RS = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
-                cur_step.init_nextstep(params,param_inputs,tau);
+                cur_step.init_nextstep(params_aff,param_inputs,tau);
                 
                 if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
                     printf("Terminated due to too large overestimation.\n");
@@ -269,7 +240,7 @@ int main(int argc, char* argv[])
             print_finalsolution(ceil((t_end-t_begin)/tau), delay);
         
     }
-    }
+    
     
     out_approx << YAML::EndSeq;
     out_approx << YAML::EndMap;
@@ -387,7 +358,7 @@ int main(int argc, char* argv[])
         summaryfile << "                Initial conditions │ " << initial_values << std::endl;
         summaryfile << "                            Inputs │ ";
         for (int i=0; i<inputsdim; i++)
-            summaryfile <<"("<<inputs[i].convert_int()<<","<<nb_inputs[i]<<") ";
+            summaryfile <<"("<<inputs[i]<<","<<nb_inputs[i]<<") ";
         summaryfile << std::endl;
         summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
         summaryfile << "                      Control step │ " << control_period << std::endl;
@@ -497,7 +468,139 @@ int main(int argc, char* argv[])
 
 
 
+void read_system(int argc, char* argv[])
+{
+  //  char sfx_filename[LINESZ]={0};
+  //  char onnx_filename[LINESZ]={0};
+    
+    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2, DNN = 3
+    syschoice = 1;
+    nb_sample_per_dim = 20;
+    
+    char * str_systype = getCmdOption(argv, argv + argc, "-systype");
+    if (str_systype)
+    {
+        if (strcmp(str_systype,"ode")==0)
+            systype = 0;
+        else if (strcmp(str_systype,"dde")==0)
+            systype = 1;
+        else if (strcmp(str_systype,"discrete")==0)
+            systype = 2;
+    }
+    
+    char * str_syschoice = getCmdOption(argv, argv + argc, "-syschoice");
+    if (str_syschoice)
+        syschoice = atoi(str_syschoice);
+  //  cout << "syschoice= " << syschoice << endl;
+    
+    
+    
+    
+    char* sfx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-sfx");
+    char* onnx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-onnx");
+    
+    char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
+    
+    if (config_filename)
+        readfromfile_syschoice(config_filename,sfx_filename,onnx_filename);
+    
+    if ((!str_systype && !config_filename) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
+    {
+        cout << "Usage is: " << endl;
+        cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems" << endl;
+        cout << "-nnfile-sfx xxx or -nnfile-onnx xxx: in case systype is nn, then you should enter the name of file that contains the network, either in old sherlock-like format (sfx) or onnx format" << endl;
+        cout << "-syschoice x: integer setting the predefined system ID" << endl;
+        cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
+        cout << "-AEextension_order x: for discrete systems only, (optional) order of AE-extensions (1 or 2) - default value is 1" << endl;
+        cout << "-iter_method x: for discrete systems only, (optional) choice of iterating method (1 or 2) - default value is 1" << endl;
+        cout << "-skew x: for discrete systems only, (optional) skewing/preconditioning for joint range (0 is false or 1 is true) - default value is 1" << endl;
+        cout << "-configfile xxx: name of the (optional) config file " << endl;
+        exit(0);
+    }
+    
+    
+    // parsing neural network
+    if (sfx_filename && (sfx_filename[0] != 0)) {// read from config file
+        cout << "reading network from" << sfx_filename << endl;
+        NH = network_handler(sfx_filename);
+        nn_analysis = true;
+    }
+    else if (sfx_filename_temp) { // read from command-line
+        cout << "reading network from" << sfx_filename_temp << endl;
+        NH = network_handler(sfx_filename_temp);
+        nn_analysis = true;
+    }
+    else if (onnx_filename && (onnx_filename[0] != 0)) // read from config file
+    {
+#if ONNX_active
+        onnx_parser my_parser(onnx_filename);
+        map<string, ParameterValues <uint32_t> > tensor_mapping;
+        my_parser.build_graph(CG, tensor_mapping);
+        nn_analysis = true;
+#endif
+    }
+    else if (onnx_filename_temp) // read from command-line
+    {
+#if ONNX_active
+        onnx_parser my_parser(onnx_filename_temp);
+        map<string, ParameterValues <uint32_t> > tensor_mapping;
+        my_parser.build_graph(CG, tensor_mapping);
+        nn_analysis = true;
+#endif
+    }
+    
+    
+    /*----- begin parameters for discrete systems -----*/
+    char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
+    if (str_nbsteps)
+        nb_steps = atoi(str_nbsteps);
+    
+    char * str_AEextension_order = getCmdOption(argv, argv + argc, "-AEextension_order");
+    if (str_AEextension_order)
+        AEextension_order = atoi(str_AEextension_order);
+    
+    char * str_method = getCmdOption(argv, argv + argc, "-iter_method");
+    if (str_method)
+        iter_method = atoi(str_method); //
+    char * str_skew = getCmdOption(argv, argv + argc, "-skew");
+    if (str_skew)
+        skewing = atoi(str_skew); //
+    
+    /*----- end parameters for discrete systems -----*/
 
+    if (systype == 2) // discrete systems
+    {
+        init_discrete_system(config_filename); // reading initial condition in xinit and parameters: config file erase hard-coded conditions
+    }
+    else if (systype == 0 || systype == 1) // odes or ddes
+    {
+        define_system_dim(); // defines value of sysdim: depends on syschoice --
+        init_system(); // initializes param from hard-coded values
+        if (config_filename) // called with configuration file: we overwrite the initialization of init_system
+            read_parameters(config_filename);
+        init_utils_inputs();
+
+    }
+    
+    // moving old output results directory and creating new one
+    system("mv output output_sauv");
+    system("rm -r output");
+    system("mkdir output");
+    
+    
+    if (systype == 0 || systype == 1)
+    {
+        // for subdivisions: saving the full ranges
+        initial_values_save = vector<interval>(sysdim);
+        fullinputs_save = vector<interval>(fullinputsdim);
+        for (int i=0 ; i<sysdim; i++)
+            initial_values_save[i] = initial_values[i];
+        for (int i=0 ; i<fullinputsdim; i++)
+            fullinputs_save[i] = fullinputs[i];
+    
+    }
+    
+}
 
 
 

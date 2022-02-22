@@ -88,7 +88,7 @@ extern bool recompute_control;
 char* getCmdOption(char ** begin, char ** end, const std::string & option);
 bool cmdOptionExists(char** begin, char** end, const std::string& option);
 
-void read_system(int argc, char* argv[]);
+//void read_system(int argc, char* argv[]);
 
 void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename);
 
