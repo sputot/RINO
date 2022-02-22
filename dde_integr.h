@@ -25,7 +25,7 @@
 
 using namespace std;
 
-vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, vector<AAF> &initial_values, double t_begin, double t_end, double d0, int nb_subdiv, int discr);
+vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, int discr);
 
 // class used for computation of Taylor coefficients and Jacobian with FADBAD++
 class DdeVar

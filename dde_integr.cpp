@@ -28,17 +28,17 @@ using namespace std;
 
 
 // TODO. A REPRENDRE COMPLETEMENT SUR LE MODELE DES EDO
-vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, vector<AAF> &initial_values, double t_begin, double t_end, double d0, int nb_subdiv, int discr)
+vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, int discr)
 {
     double aux, sum, rel_sum;
     double tn;
-    int n = (t_end - t_begin)/d0 * nb_subdiv+1;
+    int n = (t_end - t_begin)/delay * nb_subdiv_delay+1;
     
     vector<vector<interval>> range(n+1,vector<interval>(sysdim));
     
     vector<interval> val(sysdim);
     for (int i= 0 ; i<sysdim ; i++)
-        val[i] = initial_values[i].convert_int();
+        val[i] = initial_values[i];
     //  vector<interval> Xexact(sysdim);
 
  //   out_approx << YAML::Key << "tn";
@@ -48,12 +48,12 @@ vector<vector<interval>> estimate_reachset_dde(DdeFunc &bf, vector<AAF> &initial
     while (tn <= t_end)
     {
       //  cout << "tn=" << tn;
-        range[iter] = AnalyticalSol(val, d0, tn);
+        range[iter] = AnalyticalSol(val, delay, tn);
        // cout << "range=" << range[iter];
         tn += (t_end - t_begin)/n;
         iter++;
     }
-    range[iter] = AnalyticalSol(val, d0, tn);
+    range[iter] = AnalyticalSol(val, delay, tn);
    // cout << "tn=" << tn;
    // cout << "range=" << range[iter];
    // cout << "iter=" << iter;

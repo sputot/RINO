@@ -53,7 +53,7 @@ DdeFunc bf;    // for ddes: contains the differential system - defined in ode_de
 DdeJacFunc bbf; // for ddes
 
 void read_system(int argc, char* argv[]);
-
+vector<vector<interval>> estimate_reachset();
 
 int main(int argc, char* argv[])
 {
@@ -67,6 +67,7 @@ int main(int argc, char* argv[])
     
     ReachSet RS;
    
+    clock_t begin, end; //  = clock();
     double elapsed_secs_sampling;
     
 /*    essai_sherlock();
@@ -80,26 +81,19 @@ int main(int argc, char* argv[])
    
     open_outputfiles();
     
-    clock_t begin, end; //  = clock();
+    
     begin = clock();
+    sampled_reachset = estimate_reachset();
+    end = clock();
+    elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
     
-    
-    
-    
-    
-    
+    begin = clock();
     
     /*******************************************************************************************/
    /************* Discrete Systems ************/
-    if (systype == 2) {
+    if (systype == 2)
+    {
         
-       
-        sampled_reachset = estimate_reachset(f, xinit, nb_sample_per_dim);
-        end = clock();
-        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
-        
-        begin = clock();
-
         print_init_discrete(xinit,skewing);
         if (nb_steps == 1)
             RS = function_range(f,xinit,sampled_reachset[1]);
@@ -114,25 +108,11 @@ int main(int argc, char* argv[])
     
     else if (systype == 1) // DDE
     {
-        cout << "params=" << params;
-        cout << "Estimate reachset:" << endl;
-        nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset_dde(bf,initial_values_aff,t_begin,t_end,delay, nb_subdiv_delay, nb_sample_per_dim);
-        
-        // ecrire ici un estimate_reachset_dde qui retourne soit sampled_reachset soit exact set quand il existe et qui afffiche les samples + la solution exacte en XML.
-        
-        end = clock();
-        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
-        begin = clock();
-        
         
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
-            
-            // a changer de 0 en 1 comme pour ODE (l'iteration 0 servant a stocker l'instant initial non stocke sinon - c'est du moins le cas en ODE, a verifier pour DDE)
-            current_iteration = 0;
                         
             HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,t_begin,tau,delay,nb_subdiv_delay);
             prev_step.init_dde(sampled_reachset[0]);
@@ -169,61 +149,23 @@ int main(int argc, char* argv[])
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
     {
-
-        vector<vector<AAF>> J(jacdim, vector<AAF>(jacdim));
-        vector<AAF> x(sysdim);
-        vector<AAF> param_inputs(jacdim-sysdim);
-        vector<AAF> param_inputs_center(jacdim-sysdim);
-        vector<AAF> xcenter(sysdim);
-        
-        for (int j = 0; j < jacdim-sysdim ; j++)
-             param_inputs[j] = fullinputs[j];
-        
-        cout << "params=" << params;
-        cout << "Estimate reachset:" << endl;
-        nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset(obf,nb_sample_per_dim);
-        
-        end = clock();
-        elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
-        begin = clock();
-        
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
-           
+            // resets initial_values, fullinputs and eps from saved values and current subdivisiion
             if (nb_subdiv_init > 1)
                 init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
+                        
+            print_initstats(initial_values_aff,fullinputs_aff);  // print initial conditions and init XML
             
-            set_initialconditions(param_inputs,param_inputs_center,x,xcenter,J);  //            setId(J0);
-            
-            print_initstats(initial_values_aff,param_inputs);  // print initial conditions and init XML
-            
-            // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
-        //    vector<AAF> yp(sysdim);
-        //    yp[0] = -(5.0*cos(x[2].convert_int()) + param_inputs[0].convert_int());        // px' = v.cos(theta) + b1
-        //    yp[1] = -(5.0*sin(x[2].convert_int()) + param_inputs[1].convert_int());        // py' = v.sin(theta) + b2
-        //    yp[2] = -(param_inputs[3] + param_inputs[2]);    // theta' = a + b3
-        //    for (int i=0 ; i<sysdim ; i++)
-        //        cout << "yp[i]=" <<yp[i].convert_int() << " ";
-        //    cout << endl;
-            
-            vector<F<AAF>> temp(sysdim);
-            for (int j=0 ; j<sysdim; j++)
-                temp[j] = x[j];
-            
-            //cout << "indice initial values[0]=" << x[0].getFirstIndex() << " coeff=" << x[0].at(x[0].getFirstIndex()) << endl; cout << "indice initial values[1]" << x[1].getFirstIndex() << " coeff=" << x[1].at(x[1].getFirstIndex()) << endl;
-            
-           
-            current_iteration = 1;
-            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,t_begin,tau,Taylor_order);
+            HybridStep_ode cur_step = init_ode(obf,center_initial_values_aff,initial_values_aff,t_begin,tau,Taylor_order);
            
             int iter = 1;
             while (cur_step.tn < t_end-0.0001*t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                cur_step.TM_build(params_aff,param_inputs,param_inputs_center);
+                cur_step.TM_build(params_aff,fullinputs_aff,center_fullinputs_aff);
                 RS = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
-                cur_step.init_nextstep(params_aff,param_inputs,tau);
+                cur_step.init_nextstep(params_aff,fullinputs_aff,tau);
                 
                 if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
                     printf("Terminated due to too large overestimation.\n");
@@ -240,6 +182,16 @@ int main(int argc, char* argv[])
             print_finalsolution(ceil((t_end-t_begin)/tau), delay);
         
     }
+    
+    // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
+//    vector<AAF> yp(sysdim);
+//    yp[0] = -(5.0*cos(x[2].convert_int()) + fullinputs[0].convert_int());        // px' = v.cos(theta) + b1
+//    yp[1] = -(5.0*sin(x[2].convert_int()) + fullinputs[1].convert_int());        // py' = v.sin(theta) + b2
+//    yp[2] = -(param_inputs[3] + fullinputs[2]);    // theta' = a + b3
+//    for (int i=0 ; i<sysdim ; i++)
+//        cout << "yp[i]=" <<yp[i].convert_int() << " ";
+//    cout << endl;
+    
     
     
     out_approx << YAML::EndSeq;
@@ -480,12 +432,18 @@ void read_system(int argc, char* argv[])
     char * str_systype = getCmdOption(argv, argv + argc, "-systype");
     if (str_systype)
     {
-        if (strcmp(str_systype,"ode")==0)
+        if (strcmp(str_systype,"ode")==0) {
             systype = 0;
-        else if (strcmp(str_systype,"dde")==0)
+            nb_sample_per_dim = 3;
+        }
+        else if (strcmp(str_systype,"dde")==0) {
             systype = 1;
-        else if (strcmp(str_systype,"discrete")==0)
+            nb_sample_per_dim = 3;
+        }
+        else if (strcmp(str_systype,"discrete")==0) {
             systype = 2;
+            nb_sample_per_dim = 20;
+        }
     }
     
     char * str_syschoice = getCmdOption(argv, argv + argc, "-syschoice");
@@ -603,7 +561,16 @@ void read_system(int argc, char* argv[])
 }
 
 
-
+vector<vector<interval>> estimate_reachset()
+{
+    cout << "Estimate reachset:" << endl;
+    if (systype == 2)
+        return estimate_reachset_discrete(f, nb_sample_per_dim);
+    else if (systype == 0)
+        return estimate_reachset(obf,nb_sample_per_dim);
+    else if (systype == 1)
+        return estimate_reachset_dde(bf,nb_sample_per_dim);
+}
 
 
 

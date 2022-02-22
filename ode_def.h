@@ -73,10 +73,6 @@ extern vector<interval> fullinputs_save;
 void define_system_dim();  // define the dimensions of your system (ODE or DDE)
 
 
-
-// for ODEs : initialize the state variable (and center for inner-approximation)
-void set_initialconditions(vector<AAF> &params_inputs, vector<AAF> &param_inputs_center, vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J);
-
 // for DDEs : functions that initialize the DDE on first time period
 vector<T<AAF>> Initfunc(const T<AAF>& t, vector<AAF> &beta_initial, vector<AAF> &beta_inputs);
 vector <T<F<AAF>>> Initfunc(const  T<F<AAF>> &t, vector<T<F<AAF>>> &beta_initial, vector<T<F<AAF>>> &beta_inputs);

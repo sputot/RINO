@@ -687,7 +687,7 @@ void fixpoint(vector<vector<AAF>> &y0, vector<vector<AAF>> &Jac1_g_rough, vector
 
 
 
-HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vector<AAF>> &J0, double tn, double tau, int order)
+HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x,  double tn, double tau, int order)
 {
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     
@@ -737,6 +737,9 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x, vector<vect
         for (int k = 0; k<sysdim+inputsdim; k++)
             odeVAR_x[k] = OdeVar(bf,nncontrolf);
     }
+    
+    vector<vector<AAF>> J0(jacdim, vector<AAF>(jacdim));
+    setId(J0);
     TM_Jac TMJac = TM_Jac(odeVAR_x, odeVAR_g, order, x, init_x, J0, tn, tau);
     
     

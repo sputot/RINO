@@ -299,7 +299,7 @@ public:
 
 };
 
-HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &x0,  vector<AAF> &x, vector<vector<AAF>> &J0, double _tn, double _tau, int _order);
+HybridStep_ode init_ode(OdeFunc _bf, vector<AAF> &x0,  vector<AAF> &x, double _tn, double _tau, int _order);
 
 // estimate the range of the n iterates (same stepsize as for reachability analysis)
 vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr);

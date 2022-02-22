@@ -479,32 +479,6 @@ void define_system_dim()
 }
 
 
-// for ODEs : initialize the state variable (and center for inner-approximation)
-void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_center, vector<AAF> &x, vector<AAF> &xcenter, vector<vector<AAF>> &J)
-{
-    assert(systype == 0); // ODE
-   
-    // par défaut
-    for (int i=0 ; i<sysdim ; i++) {
-        x[i] = initial_values[i];
-        xcenter[i] = center_initial_values[i];
-    }
-    
-    // param_inputs between 0 and jacdim-sysdim, inputs between 0 and inputsdim
-        for (int j = 0; j < fullinputsdim ; j++) {
-            
-            param_inputs[j] = fullinputs[j]; // inputs[sysdim+i].convert_int(); // create a new independent AAF ?
-            if (innerapprox == 1)
-                param_inputs_center[j] = center_fullinputs[j]; // center_inputs[sysdim+i].convert_int();
-            else
-                param_inputs_center[j] = fullinputs[j]; // inputs[sysdim+i].convert_int();
-        }
-    
-    setId(J);
-    
-}
-
-
 
 // d0 and t_begin are for DDEs only, rest are common to ODE and DDE
 void read_parameters(const char * params_filename)

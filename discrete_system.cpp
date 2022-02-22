@@ -3777,10 +3777,8 @@ void twodim_discretization_by_quadrant(vector<interval> &radx) {
 
 
 // estimate the range of the n iterates f(x) ... f^n(xn)
-vector<vector<interval>> estimate_reachset(DiscreteFunc &f, vector<interval> &xinit, int discr) {
-    
- 
-    
+vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f, int discr) {
+   
     // int discr = 20;
     int nb_points = discr+1;
     
