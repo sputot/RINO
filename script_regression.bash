@@ -21,7 +21,7 @@ yaml_bis() {
 examples_ode=(cfg_ode_2.txt cfg_ode_6.txt cfg_ode_18.txt cfg_ode_50.txt)
 examples_ode_nn=(cfg_B1_sigmoid.txt cfg_B1_tanh.txt cfg_B2_sigmoid.txt cfg_B2_tanh.txt cfg_B3_sigmoid.txt cfg_B3_tanh.txt cfg_B4_sigmoid.txt cfg_B4_tanh.txt cfg_B5_sigmoid.txt cfg_B5_tanh.txt cfg_acc_tanh.txt cfg_tora_sigmoid.txt cfg_tora_tanh.txt)
 examples_dde=(cfg_dde_1.txt cfg_dde_3.txt cfg_dde_6.txt cfg_dde_8.txt cfg_dde_10.txt cfg_dde_11.txt)
-examples_discrete=(cfg_discrete_15.txt cfg_discrete_16_1.txt cfg_discrete_16_2.txt cfg_discrete_17.txt)
+examples_discrete=(cfg_discrete_15.txt cfg_discrete_16_1.txt cfg_discrete_16_2.txt cfg_discrete_17.txt cfg_discrete_18.txt)
 
 
 #UnixShell=("${Unix[@]}" "${Shell[@]}")

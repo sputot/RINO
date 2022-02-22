@@ -47,51 +47,15 @@ using namespace std;
 //int systype; // 0 is ODE, 1 is DDE
 //int syschoice; // choice of system to analyze
 
-// for command line options
-char* getCmdOption(char ** begin, char ** end, const std::string & option)
-{
-    char ** itr = std::find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return *itr;
-    }
-    return 0;
-}
-
-// for command line options
-bool cmdOptionExists(char** begin, char** end, const std::string& option)
-{
-    return std::find(begin, end, option) != end;
-}
 
 
 
 int main(int argc, char* argv[])
 {
     // all these parameters in initialization functions defined in ode_def.cpp
-    const int LINESZ = 2048;
     double tn;    // current time
-    double tau;   // integration time step (fixed step for now)
-    int order;    // order of Taylor expansion
     
-    double d0; // = 1;   // delay in DDE
-    int nb_subdiv; // = 10;   // number of Taylor models on [0,d0]
-    char sfx_filename[LINESZ]={0};
-    char onnx_filename[LINESZ]={0};
-    //const char* onnx_filename;
-    
-    // for ODEs only
     vector<vector<interval>> sampled_reachset;
-    
-    // for discrete systems only
-    int nb_steps = 1;
-    int AEextension_order = 1;
-    int iter_method = 1;
-    bool skew = true; // compute skewboxes or regular boxes approx
-    vector<interval> xinit;
-    // end discrete systems only
-    
-    int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
     
     
     
@@ -102,87 +66,16 @@ int main(int argc, char* argv[])
 /*    essai_sherlock();
     syschoice = 101;
     function_range(NULL);
-    
     exit(0); */
     
     
     /********* DEFINING SYSTEM *******************/
-    // default is running example of CAV 2018 paper
-    systype = 1; // EDO = 0, DDE = 1, discrete systems = 2, DNN = 3
-    syschoice = 1;
-    
-    nb_sample_per_dim = 20;
-    
-    char * str_systype = getCmdOption(argv, argv + argc, "-systype");
-    if (str_systype)
-    {
-        if (strcmp(str_systype,"ode")==0)
-            systype = 0;
-        else if (strcmp(str_systype,"dde")==0)
-            systype = 1;
-        else if (strcmp(str_systype,"discrete")==0)
-            systype = 2;
-    }
-    
-    char * str_syschoice = getCmdOption(argv, argv + argc, "-syschoice");
-    if (str_syschoice)
-        syschoice = atoi(str_syschoice);
-  //  cout << "syschoice= " << syschoice << endl;
-    
-    char* sfx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-sfx");
-    char* onnx_filename_temp = getCmdOption(argv, argv + argc, "-nnfile-onnx");
     
     char * config_filename = getCmdOption(argv, argv + argc, "-configfile");
     
-    if (config_filename)
-        readfromfile_syschoice(config_filename,sfx_filename,onnx_filename,nb_sample_per_dim);
-    
-    if ((!str_systype && !config_filename) || cmdOptionExists(argv, argv + argc, "-help")  || cmdOptionExists(argv, argv + argc, "-h"))
-    {
-        cout << "Usage is: " << endl;
-        cout << "-systype xxx: ode for ODE, dde for DDE, discrete for discrete-time systems" << endl;
-        cout << "-nnfile-sfx xxx or -nnfile-onnx xxx: in case systype is nn, then you should enter the name of file that contains the network, either in old sherlock-like format (sfx) or onnx format" << endl;
-        cout << "-syschoice x: integer setting the predefined system ID" << endl;
-        cout << "-nbsteps x: for discrete systems only, (optional) number of steps - default value is 1" << endl;
-        cout << "-AEextension_order x: for discrete systems only, (optional) order of AE-extensions (1 or 2) - default value is 1" << endl;
-        cout << "-iter_method x: for discrete systems only, (optional) choice of iterating method (1 or 2) - default value is 1" << endl;
-        cout << "-skew x: for discrete systems only, (optional) skewing/preconditioning for joint range (0 is false or 1 is true) - default value is 1" << endl;
-        cout << "-configfile xxx: name of the (optional) config file " << endl;
-        exit(0);
-    }
-    
-    
-    // parsing neural network
-    if (sfx_filename && (sfx_filename[0] != 0)) {// read from config file
-        cout << "reading network from" << sfx_filename << endl;
-        NH = network_handler(sfx_filename);
-        nn_analysis = true;
-    }
-    else if (sfx_filename_temp) { // read from command-line
-        cout << "reading network from" << sfx_filename_temp << endl;
-        NH = network_handler(sfx_filename_temp);
-        nn_analysis = true;
-    }
-    else if (onnx_filename && (onnx_filename[0] != 0)) // read from config file
-    {
-#if ONNX_active
-        onnx_parser my_parser(onnx_filename);
-        map<string, ParameterValues <uint32_t> > tensor_mapping;
-        my_parser.build_graph(CG, tensor_mapping);
-        nn_analysis = true;
-#endif
-    }
-    else if (onnx_filename_temp) // read from command-line
-    {
-#if ONNX_active
-        onnx_parser my_parser(onnx_filename_temp);
-        map<string, ParameterValues <uint32_t> > tensor_mapping;
-        my_parser.build_graph(CG, tensor_mapping);
-        nn_analysis = true;
-#endif
-    }
-    
-    
+    // reading system choices and parameters
+    read_system(argc,argv);
+   
     
     open_outputfiles();
     
@@ -195,40 +88,27 @@ int main(int argc, char* argv[])
         
         DiscreteFunc f;
        
-        char * str_nbsteps = getCmdOption(argv, argv + argc, "-nbsteps");
-        if (str_nbsteps)
-            nb_steps = atoi(str_nbsteps);
-        char * str_AEextension_order = getCmdOption(argv, argv + argc, "-AEextension_order");
-        if (str_AEextension_order)
-            AEextension_order = atoi(str_AEextension_order);
-        char * str_method = getCmdOption(argv, argv + argc, "-iter_method");
-        if (str_method)
-            iter_method = atoi(str_method); //
-        char * str_skew = getCmdOption(argv, argv + argc, "-skew");
-        if (str_skew)
-            skew = atoi(str_skew); //
+      
                 
-        xinit = init_discrete_system(); // reading hard-coded initial condition and reading config file
+        init_discrete_system(config_filename); // reading initial condition in xinit and parameters: config file erase hard-coded conditions
         
-        // reading initial conditions from config file if any
-        if (config_filename)
-            read_parameters_discrete(config_filename,xinit,nb_steps,order,AEextension_order,iter_method,skew);
+    
 
-        sampled_reachset = estimate_reachset(f, nb_steps, xinit, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset(f, xinit, nb_sample_per_dim);
         end = clock();
         
         elapsed_secs_sampling = double(end - begin) / CLOCKS_PER_SEC;
         
         begin = clock();
 
-        print_init_discrete(xinit,skew);
+        print_init_discrete(xinit,skewing);
         if (nb_steps == 1)
-            function_range(f,xinit,sampled_reachset[1]);
+            RS = function_range(f,xinit,sampled_reachset[1]);
         else {
             if (iter_method == 1)
-                RS = discrete_dynamical(f,xinit,sampled_reachset,nb_steps,AEextension_order,skew);
+                RS = discrete_dynamical(f,xinit,sampled_reachset,AEextension_order,skewing);
             else // (iter_method == 2)
-                RS = discrete_dynamical_method2(f,xinit,sampled_reachset,nb_steps,skew);
+                RS = discrete_dynamical_method2(f,xinit,sampled_reachset,skewing);
         }
        
     }
@@ -238,14 +118,12 @@ int main(int argc, char* argv[])
     // *************** ODEs or DDEs *******************
     
     
-    define_system_dim(); // defines value of sysdim: depends on syschoice -- reads from file if input at command-line
+    define_system_dim(); // defines value of sysdim: depends on syschoice --
+    init_system(); // initializes param from hard-coded values
     if (config_filename) // called with configuration file: we overwrite the initialization of init_system
-           readfromfile_nbsubdiv(config_filename, nb_subdiv_init);
-    init_system(t_begin,t_end,tau,d0,nb_subdiv,order); // initializes param from hard-coded values
-    if (config_filename) // called with configuration file: we overwrite the initialization of init_system
-        read_parameters(config_filename, tau, t_end, d0, t_begin, order, nb_subdiv);
+        read_parameters(config_filename);
     
-    init_utils_inputs(t_begin,t_end,tau,d0,nb_subdiv);
+    init_utils_inputs();
     
     vector<AAF> initial_values_save(sysdim);
     vector<AAF> fullinputs_save(fullinputsdim);
@@ -266,7 +144,7 @@ int main(int argc, char* argv[])
         cout << "params=" << params;
         cout << "Estimate reachset:" << endl;
         nb_sample_per_dim = 2;
-        sampled_reachset = estimate_reachset_dde(bf,initial_values,t_begin,t_end,d0, nb_subdiv, nb_sample_per_dim);
+        sampled_reachset = estimate_reachset_dde(bf,initial_values,t_begin,t_end,delay, nb_subdiv_delay, nb_sample_per_dim);
         
         // ecrire ici un estimate_reachset_dde qui retourne soit sampled_reachset soit exact set quand il existe et qui afffiche les samples + la solution exacte en XML.
         
@@ -285,24 +163,24 @@ int main(int argc, char* argv[])
             
             tn = t_begin;
             
-            HybridStep_dde prev_step = HybridStep_dde(bf,bbf,order,tn,tau,d0,nb_subdiv);
+            HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,tn,tau,delay,nb_subdiv_delay);
             prev_step.init_dde(sampled_reachset[0]);
             
             HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
             
             //******** Integration loop ************************
-            int iter = nb_subdiv+1;
-            while (cur_step.tn+d0 <= t_end)
+            int iter = nb_subdiv_delay+1;
+            while (cur_step.tn+delay <= t_end)
             {
                 // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                for (int j=0 ; j<nb_subdiv ; j++)
+                for (int j=0 ; j<nb_subdiv_delay ; j++)
                 {
                     cur_step.TM_build(j);  // j-th Taylor model valid on [tn+j*d0,tn+(j+1)*d0]
                     // eval at tn+tau
                     RS = cur_step.TM_evalandprint_solutionstep(j,eps,sampled_reachset[iter]); // cur_step.tn+(j+1)*tau/nb_subdiv);
                     cout << endl;
                     
-                    if (j < nb_subdiv-1)
+                    if (j < nb_subdiv_delay-1)
                         cur_step.init_nextsmallstep(j);
                     iter++;
                 }
@@ -315,7 +193,7 @@ int main(int argc, char* argv[])
         }
         
         if (nb_subdiv_init > 1)
-            print_finalsolution(ceil((t_end-t_begin)*nb_subdiv/d0), d0);  // a verifier cf def nb_points dans ode_def.cpp
+            print_finalsolution(ceil((t_end-t_begin)*nb_subdiv_delay/delay), delay);  // a verifier cf def nb_points dans ode_def.cpp
     }
      /*************************************************************************** EDO ************************************************************/
     else // systype == 0: EDO
@@ -362,12 +240,11 @@ int main(int argc, char* argv[])
             for (int j=0 ; j<sysdim; j++)
                 temp[j] = x[j];
             
-            cout << "indice initial values[0]=" << x[0].getFirstIndex() << " coeff=" << x[0].at(x[0].getFirstIndex()) << endl; cout << "indice initial values[1]" << x[1].getFirstIndex() << " coeff=" << x[1].at(x[1].getFirstIndex()) << endl;
-            cout <<x[0];
-            cout <<x[1];
+            //cout << "indice initial values[0]=" << x[0].getFirstIndex() << " coeff=" << x[0].at(x[0].getFirstIndex()) << endl; cout << "indice initial values[1]" << x[1].getFirstIndex() << " coeff=" << x[1].at(x[1].getFirstIndex()) << endl;
+            
            
             current_iteration = 1;
-            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,order);
+            HybridStep_ode cur_step = init_ode(obf,xcenter,x,J,tn,tau,Taylor_order);
            
             int iter = 1;
             while (cur_step.tn < t_end-0.0001*t_end)
@@ -389,7 +266,7 @@ int main(int argc, char* argv[])
         }
         
         if (nb_subdiv_init > 1)
-            print_finalsolution(ceil((t_end-t_begin)/tau), d0);
+            print_finalsolution(ceil((t_end-t_begin)/tau), delay);
         
     }
     }
@@ -424,7 +301,7 @@ int main(int argc, char* argv[])
     out_summary << YAML::Key << "nb_sample_per_dim";
     out_summary << YAML::Value << nb_sample_per_dim;
     out_summary << YAML::Key << "skew";
-    out_summary << YAML::Value << skew;
+    out_summary << YAML::Value << skewing;
     out_summary << YAML::Key << "iter_method";
     out_summary << YAML::Value << iter_method;
     
@@ -516,7 +393,7 @@ int main(int argc, char* argv[])
         summaryfile << "                      Control step │ " << control_period << std::endl;
         summaryfile << "                         Time step │ " << tau << std::endl;
         summaryfile << "                  System dimension │ " << sysdim << std::endl;
-        summaryfile << "               Taylor Models order │ " << order << std::endl;
+        summaryfile << "               Taylor Models order │ " << Taylor_order << std::endl;
         if (nb_subdiv_init >1)
             summaryfile << "     #subdivisions of input domain │ " << nb_subdiv_init << std::endl;
         if (sfx_filename)
@@ -535,10 +412,10 @@ int main(int argc, char* argv[])
         summaryfile << "                          Dynamics │ " << syschoice << std::endl;
         summaryfile << "                Initial conditions │ " << initial_values << std::endl;
         summaryfile << "                     Time interval │ " << "[" << t_begin << "," << t_end << "]" << std::endl;
-        summaryfile << "                             Delay │ " << d0 << std::endl;
+        summaryfile << "                             Delay │ " << delay << std::endl;
         summaryfile << "                         Time step │ " << tau << std::endl;
         summaryfile << "                  System dimension │ " << sysdim << std::endl;
-        summaryfile << "               Taylor Models order │ " << order << std::endl;
+        summaryfile << "               Taylor Models order │ " << Taylor_order << std::endl;
         if (nb_subdiv_init >1)
             summaryfile << "     #subdivisions of input domain │ " << nb_subdiv_init << std::endl;
         summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
@@ -553,7 +430,7 @@ int main(int argc, char* argv[])
         summaryfile << "                  #samples per dim │ " << nb_sample_per_dim << std::endl;
         summaryfile << "                 AEextension order │ " << AEextension_order << std::endl;
         summaryfile << "                  Iteration method │ " << iter_method << std::endl;
-        summaryfile << " Skewing/preconditiong joint range │ " << skew << std::endl;
+        summaryfile << " Skewing/preconditiong joint range │ " << skewing << std::endl;
         if (sfx_filename)
             summaryfile << "               Neural network file │ " << sfx_filename << std::endl;
         else if (onnx_filename)

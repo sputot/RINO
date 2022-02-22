@@ -20,6 +20,20 @@
 #include "utils.h"
 //#include "ode_def.h"
 
+
+extern vector<interval> xinit; // initial conditions for discrete systems
+
+extern vector<vector<vector<interval>>> constr_eps;  // constraints on noise symbols
+extern vector<vector<vector<interval>>> eps_loc;     // consequence on eps=[x]-x0
+
+extern vector<vector<vector<vector<interval>>>> constr_eps_discr;  // same but with additional discretization in each direction
+extern vector<vector<vector<vector<interval>>>> eps_loc_discr;     // consequence on [x]-x0  when partitioning 2D region in 4
+extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
+
+extern int nb_discr, nb_discr1, nb_discr2;
+
+
+
 class DiscreteFunc {
 public:
     
@@ -199,7 +213,6 @@ public:
     }
 };
 
-void read_parameters_discrete(const char * params_filename, vector<interval> &res, int &nb_steps, int &order, int &AEextension_order, int &iter_method,bool &skew);
 
 
 //template <class C>
@@ -227,19 +240,12 @@ struct FDiff
     }
 };
 
-extern vector<vector<vector<interval>>> constr_eps;  // constraints on noise symbols
-extern vector<vector<vector<interval>>> eps_loc;     // consequence on eps=[x]-x0
 
-extern vector<vector<vector<vector<interval>>>> constr_eps_discr;  // same but with additional discretization in each direction
-extern vector<vector<vector<vector<interval>>>> eps_loc_discr;     // consequence on [x]-x0  when partitioning 2D region in 4
-extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
-
-extern int nb_discr, nb_discr1, nb_discr2;
-
-vector<interval> init_discrete_system(); // (char * config_filename);
-ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew);
-ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew);
-void function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range);
+void init_discrete_system(const char * config_filename);
+void read_parameters_discrete(const char * params_filename);
+ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int order, bool skew);
+ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, bool skew);
+ReachSet function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range);
 void nn_range(char * config_filename);
 
 void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);
@@ -289,7 +295,7 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
 void twodim_discretization_by_quadrant(vector<interval> &radx);
 
 // estimation of exact image by sampling
-vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit, int discr);
+vector<vector<interval>> estimate_reachset(DiscreteFunc &f, vector<interval> &xinit, int discr);
 
 
 // for discrete-time dynamical systems

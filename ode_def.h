@@ -27,9 +27,15 @@ using namespace std;
  
 extern double t_end; // ending time of integration
 extern double t_begin; // starting time of initialization
+extern double tau;  // integration time step (fixed step for now)
 extern double control_period;
 
-extern vector<interval> params_int; // constant params of the ODE
+extern int Taylor_order;
+
+extern double delay; // = 1;   // delay in DDE
+extern int nb_subdiv_delay; // = 10;   // number of Taylor models on [0,delay]
+
+extern vector<interval> params_int; // constant params of the ODE  (don't appear in the Jacobian) 
 extern vector<AAF> params;          // constant params of the ODE (don't appear in the Jacobian) - same as params but aff form
 extern vector<AAF> nncontrol;
 extern vector<vector<AAF>> Jac_params;   // (\partial u) / (partial x)
@@ -52,33 +58,6 @@ extern vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,
 //  extern vector<F<AAF>> nn_outputs; // result of NN evaluation
 
 
-// for subdivisions of the initial domain to refine precision
-extern int nb_subdiv_init; // number of subdivisiions
-extern int component_to_subdiv, component_to_subdiv2;
-
-extern double recovering; // percentage of recovering between subdivisions
-extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xexact_print; // store results of subdivision
-extern vector<double> t_print; // times where results are stored
-extern int current_subdiv;
-extern int current_iteration;
-
-// for robust inner-approximations
-extern int uncontrolled;  // number of uncontrolled parameters (forall params)
-extern int controlled;  // number of controlled parameters (forall params)
-extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
-//extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
-//extern int variable;  // number of non constant parameters
-//extern vector<bool> is_variable; // for each parameter, constant or variable
-
-extern vector<interval> target_set;
-extern vector<interval> unsafe_set;
-
-extern bool refined_mean_value;
-
-extern bool print_debug;
-
-extern bool recompute_control;
-
 void define_system_dim();  // define the dimensions of your system (ODE or DDE)
 
 
@@ -95,11 +74,9 @@ vector<interval> AnalyticalSol(vector<interval> &initial_values, double d0, doub
 // defining analytical solution if any for comparison
 void AnalyticalSol(int current_iteration, double d0);
 
-// reading sysdim, jacdim, etc
-void readfromfile_nbsubdiv(const char * params_filename, int &nb_subdiv_init);
 
 // d0 and t_begin and nb_subdiv are for DDEs only, rest are common to ODE and DDE
-void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv);
+void read_parameters(const char * params_filename);
 
 //vector<F<AAF>> syst_to_nn(vector<F<AAF>> &sysval);
 template <class C> vector<C> syst_to_nn(vector<C> &sysval);
@@ -115,9 +92,9 @@ template <class C> vector<C> nn_to_control(vector<C> nnoutput);
 
 
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order);
+void init_system();
 
-void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv);
+void init_utils_inputs();
 
 // specific to subdivisions
 void init_subdiv(int current_subdiv, vector<AAF> initial_values_save, vector<AAF> inputs_save, int param_to_subdivide);
@@ -1737,6 +1714,17 @@ public:
           {
               yp[0] = y[1]*y[1]+2;
               yp[1] = y[0];
+          }
+          else if (syschoice == 52)
+          {
+              yp[0] = y[0]*y[0];
+          }
+          else if (syschoice == 53)
+          {
+              //yp[0] = y[0]*y[0];
+              //yp[1] = y[1]*y[1];
+              yp[0] = y[1]*y[1]; // + 2*y[1]*(y[0]-y[1]);
+              yp[1] = y[0]*y[0] + 2*y[1]*(y[1]-y[0]);
           }
     }
 };

@@ -23,16 +23,17 @@ The place to define initial conditions and parameters the systems of ODEs or DDE
 
 using namespace std;
 
-int sysdim; // dimension of system of ODE/DDE
-int inputsdim; // dimension of the uncertain inputs and parameters of the system
-int fullinputsdim; // full dimension of the uncertain inputs and parameters of the system: taking into account variable inputs
-int jacdim;  //  Jacobian will be dimension sysdim * jacdim, for ODEs jacdim = sysdim + fullinputsdim
-int paramsdim; // dimension of the vector of parameters params that do not appear in Jacobian
-int nncontroldim;  // dimension of the neural network control - does not appear in Jacobian
+
 
 double t_end; // ending time of integration
 double t_begin; // starting time of initialization
+double tau; // integration time step (fixed step for now)
 double control_period = 0.0;
+
+int Taylor_order;
+
+double delay; // = 1;   // delay in DDE
+int nb_subdiv_delay; // = 10;   // number of Taylor models on [0,delay]
 
 // parameters of the system of the ODEs
 vector<interval> params_int; // constant params of the ODE
@@ -58,33 +59,7 @@ vector<vector<interval>> Jac_param_inputs; // for inputs defined as g(x1,...xn):
 
 //vector<F<AAF>> nn_outputs; // result of NN evaluation
 
-// for subdivisions of the initial domain to refine precision
-int nb_subdiv_init = 1; // number of subdivisiions
-int component_to_subdiv = -1;
-int component_to_subdiv2 = -1;
 
-double recovering = 0.0; // percentage of recovering between subdivisions
-vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xexact_print; // store results of subdivision
-vector<double> t_print; // times where results are stored
-int current_subdiv;
-int current_iteration;
-
-// for robust inner-approximations
-int uncontrolled; // number of uncontrolled parameters (forall params)
-int controlled; // number of controlled parameters (forall params)
-vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
-//vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
-//int variable; // number of non constant parameters
-//vector<bool> is_variable;  // for each parameter, constant or variable
-
-vector<interval> target_set;
-vector<interval> unsafe_set;
-
-bool refined_mean_value;
-
-bool print_debug = true;
-
-bool recompute_control = true;
 
 // define the dimensions of your system (ODE or DDE) and if we want initial subdivisions
 void define_system_dim()
@@ -426,6 +401,16 @@ void define_system_dim()
             sysdim = 2;
             inputsdim = 0;
         }
+        else if (syschoice == 52) //
+        {
+            sysdim = 1;
+            inputsdim = 0;
+        }
+        else if (syschoice == 53) //
+        {
+            sysdim = 2;
+            inputsdim = 0;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -510,26 +495,10 @@ void set_initialconditions(vector<AAF> &param_inputs, vector<AAF> &param_inputs_
     
 }
 
-void readfromfile_nbsubdiv(const char * params_filename, int &nb_subdiv_init)
-{
-    const int LINESZ = 2048;
-    char buff[LINESZ];
-    
-    cout << "****** Reading system dimensions from file " <<  params_filename << " ******" << endl;
-    FILE *params_file = fopen(params_filename,"r");
-    if (params_file == NULL)
-        cout << "Error reading " << params_filename << ": file not found" << endl;
-    while (fgets(buff,LINESZ,params_file)) {
-//        sscanf(buff, "system-dimension = %d\n", &sysdim);
-//        sscanf(buff, "inputs-dimension = %d\n", &inputsdim);
-//        sscanf(buff, "sys-parameters-dimension = %d\n", &paramsdim);
-        sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
-    }
-    fclose(params_file);
-}
+
 
 // d0 and t_begin are for DDEs only, rest are common to ODE and DDE
-void read_parameters(const char * params_filename, double &tau, double &t_end, double &d0, double &t_begin, int &order, int &nb_subdiv)
+void read_parameters(const char * params_filename)
 {
     const int LINESZ = 2048;
     char buff[LINESZ];
@@ -552,10 +521,10 @@ void read_parameters(const char * params_filename, double &tau, double &t_end, d
         sscanf(buff, "integration-step = %lf\n", &tau);
         sscanf(buff, "control-step = %lf\n", &control_period);
         //      sscanf(buff, "output-variables = %[^\n]\n", output_variables);
-        sscanf(buff, "delay = %lf\n", &d0);               // for DDEs
+        sscanf(buff, "delay = %lf\n", &delay);               // for DDEs
         sscanf(buff, "starting-time = %lf\n", &t_begin);  // for DDEs
-        sscanf(buff, "nb-time-subdivisions = %d\n", &nb_subdiv); // for DDEs : subdiv of time interval d0 : tau is deduced
-        sscanf(buff, "order = %d\n", &order);
+        sscanf(buff, "nb-time-subdivisions = %d\n", &nb_subdiv_delay); // for DDEs : subdiv of time interval delay : tau is deduced
+        sscanf(buff, "order = %d\n", &Taylor_order);
         sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
         sscanf(buff, "refined-mean-value = %d\n", &refined_mean_value);
         if (sscanf(buff, "variables-to-display = %s\n", initialcondition) == 1)
@@ -726,7 +695,7 @@ template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
 
 // the main function to define the system
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)
-void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv, int &order /*, vector<interval> &ix*/)
+void init_system()
 {    
     // inputs
     cout << "inputsdim=" << inputsdim << "sysdim=" << sysdim << endl;
@@ -768,7 +737,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 2.;
-            order = 3;
+            Taylor_order = 3;
             
             initial_values[0] = interval(0.9,1);
             params_int[0] = 1.0;
@@ -779,7 +748,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.05;
             t_end = 10.;
-            order = 4;
+            Taylor_order = 4;
             
             initial_values[0] = interval(0.9,1);
             initial_values[1] = interval(0,0.1);
@@ -791,7 +760,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.1;
             t_end = 4.;
-            order = 3;
+            Taylor_order = 3;
             
             initial_values[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
@@ -804,7 +773,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.1;
             t_end = 1.4;
-            order = 3;
+            Taylor_order = 3;
             
             initial_values[0] = interval(181.,185.); // velocity // interval(175.0,190.0); pour Eric
             // ix[1] = 3.14159/180*interval(2.5,3.5);  // angle   // interval(0,5) pour Eric
@@ -823,7 +792,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.05;
             t_end = 5.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
@@ -835,7 +804,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.02;
             t_end = 5.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
@@ -851,7 +820,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.02;
             t_end = 5.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
@@ -869,14 +838,14 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 5.;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.4,0.5);
         }
         else if (syschoice == 9) // acrobatic quadrotor
         {
             tau = 0.01;
             t_end = 0.5;
-            order = 4;
+            Taylor_order = 4;
             initial_values[0] = interval(-1.,1.);       // px
             initial_values[1] = interval(-0.1,0.1);        // vx
             initial_values[2] = interval(-1.,1.);       // py
@@ -890,7 +859,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 0.5;
-            order = 4;
+            Taylor_order = 4;
             initial_values[0] = interval(-1.,1.);       // px
             initial_values[1] = interval(-0.1,0.1);        // vx
             initial_values[2] = interval(-1.,1.);       // py
@@ -908,7 +877,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 0.3;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-1.,1.);       // px
             initial_values[1] = interval(-0.1,0.1);     // vx
             initial_values[2] = interval(-0.1,0.1);     // thetax
@@ -930,7 +899,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 1.;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.5,0.5);       // px
             initial_values[1] = interval(-0.5,0.5);     // py
             initial_values[2] = interval(-0.1,0.1);     // theta
@@ -943,7 +912,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 1.;
             t_end = 2.;
-            order = 4;
+            Taylor_order = 4;
             initial_values[0] = 1;
             initial_values[1] = 0;
             inputs[0] = interval(0,0.1);
@@ -955,7 +924,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.1;
             t_end = 20.;
-            order = 3;
+            Taylor_order = 3;
             interval W = interval(-0.05,0.05);
             // to express that it is the same interval: use params[0] = interval(-0.1,0.1) and inputs[0] = 1.2 + params[0]; etc
             initial_values[0] = 1.2 + W;
@@ -970,7 +939,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.01;
             t_end = 6.;
-            order = 10;
+            Taylor_order = 10;
             // for mu = 1
             initial_values[0] = interval(1.25,1.55);
             initial_values[1] = interval(2.35,2.45);
@@ -982,7 +951,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.005;
             t_end = 3.15;
-            order = 10;
+            Taylor_order = 10;
             // for mu = 1
             initial_values[0] = interval(1.23,1.57);
             initial_values[1] = interval(2.34,2.46);
@@ -994,7 +963,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {
             tau = 0.1;
             t_end = 5;
-            order = 3;
+            Taylor_order = 3;
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
             // positions
@@ -1010,7 +979,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.01;
             t_end = 5.;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1052,7 +1021,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.02;
             t_end = 2.;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1106,9 +1075,9 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 182) // crazyflie HSCC 2019 paper with neural network controller and agressive PID
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-	  tau = 0.03; // PB : dt_commands=0.03s it this OK still for integration?
+            tau = 0.03; // PB : dt_commands=0.03s it this OK still for integration?
             t_end = 1.;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1168,9 +1137,9 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 183) // crazyflie HSCC 2019 paper with neural network controller and agressive PID
         {   // do not forget to initialize the setpoints in the ode_def.h file...
-	  tau = 0.02; // PB : dt_commands=0.03s it this OK still for integration?
+            tau = 0.02; // PB : dt_commands=0.03s it this OK still for integration?
             t_end = 2.;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1226,7 +1195,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 19) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
@@ -1236,7 +1205,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 21) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.0;
             t_end = 2;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
@@ -1246,7 +1215,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 22) {  // academic example, time-varying (piecewise constant) parameters
             tau = 1.;
             t_end = 2;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = 0;
             initial_values[1] = 0;
             inputs[0] = interval(0,1.);
@@ -1257,7 +1226,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 23) {   // pursuer-evader example Mitchell
             tau = 0.1;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-5,5);
             initial_values[1] = interval(-5,5);
             initial_values[2] = interval(-1,1);
@@ -1268,7 +1237,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 24) { // [Franzle et al.]
             tau = 0.1;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.8,0.8);
             initial_values[1] = interval(-0.8,0.8);
             inputs[0] = interval(-0.01,0.01);
@@ -1278,7 +1247,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 25) { // [Franzle et al.] reversed time van der pol oscillator with uncertainty
             tau = 0.01;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.5,0.5);
             initial_values[1] = interval(-0.5,0.5);
             inputs[0] = interval(-0.01,0.01);
@@ -1288,7 +1257,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 26) { // [Franzle et al.] 7-d biological system
             tau = 0.1;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.25,0.25);
             initial_values[1] = interval(-0.45,0.05);
             initial_values[2] = interval(-0.25,0.25);
@@ -1303,7 +1272,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 27) { // [Franzle et al.] 7-d biological system but with sharing
             tau = 0.01;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.25,0.25);
             initial_values[1] = interval(-0.45,0.05);
             initial_values[2] = interval(-0.25,0.25);
@@ -1318,7 +1287,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 28) { // [Franzle et al.] 7-d biological system without disturbance
             tau = 0.01;
             t_end = 1;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.25,0.25);
             initial_values[1] = interval(-0.45,0.05);
             initial_values[2] = interval(-0.25,0.25);
@@ -1330,7 +1299,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 29) { // EX_10 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.01;
             t_end = 0.2;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(9.5,9.55);
             initial_values[1] = interval(-4.5,-4.45);
             initial_values[2] = interval(2.1,2.11);
@@ -1341,7 +1310,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 30) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.05;
             t_end = 0.05*30;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.5,0.9);
             initial_values[1] = interval(0.5,0.9);
             inputs[0] = interval(0.0,0.0);
@@ -1351,7 +1320,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 301) { // EX_1 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.05;
             t_end = 0.05*30;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.5,0.9);
             initial_values[1] = interval(0.5,0.9);
             //inputs[0] = interval(0.0,0.0);
@@ -1372,7 +1341,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.0005;
             t_end = 20*tau*10;
-            order = 3;
+            Taylor_order = 3;
             
            for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1394,7 +1363,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.0005;
             t_end = 20*tau*10;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1416,7 +1385,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 32) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.7,0.9);
             initial_values[1] = interval(0.42,0.58);
             inputs[0] = interval(0.0,0.0);
@@ -1426,7 +1395,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 33) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.1*100;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.8,0.9);
             initial_values[1] = interval(0.4,0.5);
             inputs[0] = interval(0.0,0.0);
@@ -1436,7 +1405,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 34) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.35,0.45);
             initial_values[1] = interval(0.25,0.35);
             initial_values[2] = interval(0.35,0.45);
@@ -1447,7 +1416,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 35) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.3,0.4);
             initial_values[1] = interval(0.3,0.4);
             initial_values[2] = interval(-0.4,-0.3);
@@ -1458,7 +1427,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 36) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.35,0.4);
             initial_values[1] = interval(-0.35,-0.3);
             initial_values[2] = interval(0.35,0.4);
@@ -1469,7 +1438,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 37) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.05;
             t_end = 0.5*20;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.35,0.45);
             initial_values[1] = interval(0.45,0.55);
             initial_values[2] = interval(0.25,0.35);
@@ -1480,7 +1449,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 38) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;
             t_end = 0.2*25;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.5,0.6);
             initial_values[1] = interval(0.5,0.6);
             initial_values[2] = interval(0.5,0.6);
@@ -1492,7 +1461,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 381) { // EX_8 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference - EX 19 dnas le repository
             tau = 0.02;
             t_end = 0.2*25;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.5,0.501); //interval(0.5,0.6);
             initial_values[1] = interval(0.5,0.501); //interval(0.5,0.6);
             initial_values[2] = interval(0.5,0.501); //interval(0.5,0.6);
@@ -1506,7 +1475,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 382) { // Ex 12 in sherlock/systems_with_networks
             tau = 0.01;
             t_end = 6;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.5,0.55);  // interval(0.5,0.9);
             initial_values[1] = interval(0.5,0.55);   // interval(0.5,0.9);
             params= NH.eval_network(initial_values);
@@ -1515,7 +1484,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 383) { // EX_2 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;                 // Ex 13 in sherlock/systems_with_networks
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.7,0.9); // interval(0.7,0.9);
             initial_values[1] = interval(0.42,0.5); // interval(0.42,0.58);
             params= NH.eval_network(initial_values);
@@ -1524,7 +1493,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 384) { // EX_3 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;              // Ex 14 in sherlock/systems_with_networks
             t_end = 0.1*100;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.8,0.9); // interval(0.8,0.9);
             initial_values[1] = interval(0.4,0.5); // interval(0.4,0.5);
             params= NH.eval_network(initial_values);
@@ -1533,7 +1502,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 385) { // EX_4 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;                 // Ex 15 in sherlock/systems_with_networks
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.35,0.45);
             initial_values[1] = interval(0.25,0.35);
             initial_values[2] = interval(0.35,0.45);
@@ -1543,7 +1512,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 386) { // EX_5 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;             // Ex 16 in sherlock/systems_with_networks
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.3,0.4);
             initial_values[1] = interval(0.3,0.4);
             initial_values[2] = interval(-0.4,-0.3);
@@ -1553,7 +1522,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 387) { // EX_6 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.02;             // Ex 17 in sherlock/systems_with_networks
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.35,0.4);
             initial_values[1] = interval(-0.35,-0.3);
             initial_values[2] = interval(0.35,0.4);
@@ -1563,7 +1532,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 388) { // EX_7 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.05;
             t_end = 0.5*20;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.39,0.41); // interval(0.35,0.45);
             initial_values[1] = interval(0.49,0.51); // interval(0.45,0.55);
             initial_values[2] = interval(0.29,0.31); // interval(0.25,0.35);
@@ -1573,7 +1542,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 39) { // EX_9 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.1;
             t_end = 20;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.6,0.7);
             initial_values[1] = interval(-0.7,-0.6);
             initial_values[2] = interval(-0.4,-0.3);
@@ -1585,7 +1554,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 40) { // EX_10 Reachability for Neural Feedback Systems using Regressive Polynomial Rule Inference
             tau = 0.01;
             t_end = 0.2*50;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(9.5,9.55);
             initial_values[1] = interval(-4.5,-4.45);
             initial_values[2] = interval(2.1,2.11);
@@ -1600,7 +1569,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         else if (syschoice == 41) { // essai sys couple
             tau = 0.1;
             t_end = 0.1*5;
-            order = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(0.,1.);
             initial_values[1] = interval(1.,2.);
             inputs[0] = interval(0.0,0.0);
@@ -1611,7 +1580,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.01;
             t_end = 2.5;
-            order = 5;
+            Taylor_order = 5;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1648,7 +1617,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.01;
             t_end = 5;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1686,7 +1655,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         {   // do not forget to initialize the setpoints in the ode_def.h file...
             tau = 0.01;
             t_end = 3;
-            order = 3;
+            Taylor_order = 3;
             
             for (int j=0 ; j<sysdim; j++)
                 initial_values[j] = 0;
@@ -1723,7 +1692,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 45) { // Mountain car Verisig
            tau = 0.1;
            t_end = 15.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(-0.5,-0.48);
            initial_values[1] = interval(0.,0.001);
            //inputs[0] = interval(0.0,0.0);
@@ -1737,7 +1706,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 451) { // Mountain car Verisig
            tau = 0.5;
            t_end = 71.; // t_end = 115.;
-           order = 3;
+           Taylor_order = 3;
       //     initial_values[0] = interval(-0.41,-0.4);  // interval(-0.53,-0.5); // interval(-0.53,-0.5);  // interval(-0.5,-0.48);
            initial_values[0] = interval(-0.53,-0.5);
            initial_values[1] = interval(0.,0.);   // interval(0.,0.001);
@@ -1755,7 +1724,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 46) {  // Tora Heterogeneous ARCH-COMP 2020 - NNV (avec RNN format sfx obtenu a partir du .mat),
            tau = 0.1;
            t_end = 5.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(-0.77,-0.75);
            initial_values[1] = interval(-0.45,-0.43);
            initial_values[2] = interval(0.51,0.54);
@@ -1769,7 +1738,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            // values coming from https://github.com/verivital/ARCH-COMP2020/blob/master/benchmarks/Tora_Heterogeneous/reachTora_sigmoid.m
            tau = 0.05;
            t_end = 5.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(-0.77,-0.75);
            initial_values[1] = interval(-0.45,-0.43);
            initial_values[2] = interval(0.51,0.54);
@@ -1786,7 +1755,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            tau = 0.05; // a bit strange, is more precise with 0.01 or 0.02 this way (and satisfies the spec) than when tau = 0.005
            t_end = 7.;  // 35 control steps
           //  t_end = 6.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
            nncontrol= NH.eval_network(initial_values);
@@ -1800,7 +1769,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 1111) {  //toy example
            tau = 0.01; //
            t_end = 1.0;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
            nncontrol= NH.eval_network(initial_values);
@@ -1809,7 +1778,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        else if (syschoice == 1113) {  //toy example
            tau = 0.01; //
            t_end = 1.0;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.5,0.6);
            control_period = 0.2; // 0.01; // control_period = 0.2;
@@ -1818,7 +1787,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            tau = 0.05; //
            t_end = 1.8;  // 9 control steps
            //  t_end = 6.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.7,0.9);
            initial_values[1] = interval(0.7,0.9);
            nncontrol= NH.eval_network(initial_values);
@@ -1829,7 +1798,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            tau = 0.05; //
            t_end = 6.0;  // 60 control steps
            //  t_end = 6.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.8,0.9);
            initial_values[1] = interval(0.4,0.5);
            nncontrol= NH.eval_network(initial_values);
@@ -1840,7 +1809,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            tau = 0.05; //
            t_end = 1.0;  // 10 control steps
            //  t_end = 6.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.25,0.27);
            initial_values[1] = interval(0.08,0.1);
            initial_values[2] = interval(0.25,0.27);
@@ -1852,7 +1821,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            tau = 0.05; //
            t_end = 2.0;  // 10 control steps
            //  t_end = 6.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.38,0.4);
            initial_values[1] = interval(0.45,0.47);
            initial_values[2] = interval(0.25,0.27);
@@ -1864,7 +1833,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        {
            tau = 0.05; //
            t_end = 5.0;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(90.0,91.0);
            initial_values[1] = interval(32,32.05);
            initial_values[2] = interval(0,0);
@@ -1880,7 +1849,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        {
            tau = 0.01; //
            t_end = 5.0; // ? a voir
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(0.025,0.05);
            initial_values[1] = interval(0,0.025);
            initial_values[2] = interval(0,0);
@@ -1897,7 +1866,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        {
            tau = 0.1;
            t_end = 0.75;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(-0.5,0.5); // x1_0
            initial_values[1] = interval(-0.5,0.5); // x2_0
            initial_values[2] = interval(-0.5,0.5); // x3_0
@@ -1914,7 +1883,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
        {
            tau = 0.1;
            t_end = 1.;
-           order = 3;
+           Taylor_order = 3;
            initial_values[0] = interval(-0.5,0.5); // x1_0
            initial_values[1] = interval(-0.5,0.5); // x2_0
            //inputs[0] = interval(-2,2);  // w1
@@ -1922,6 +1891,21 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
            //nb_inputs[0] = 5;
       //     is_variable[0] = true; // piecewise constant
       //     is_variable[1] = true; // piecewise constant
+       }
+       else if (syschoice == 52) //
+       {
+           tau = 0.1;
+           t_end = 1.;
+           Taylor_order = 3;
+           initial_values[0] = interval(0,1); // x1_0
+       }
+       else if (syschoice == 53) //
+       {
+           tau = 0.1;
+           t_end = 1.;
+           Taylor_order = 5;
+           initial_values[0] = interval(0,0); // x1_0
+           initial_values[1] = interval(1,1); // x1_0
        }
 //        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
  //       for (int i=0; i<sysdim; i++)
@@ -1932,36 +1916,36 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
     {
         if (syschoice == 1)  // running example
         {
-            d0 = 1; // delay in DDE
+            delay = 1; // delay in DDE
             // nb_subdiv = 50;
-             nb_subdiv = 20;  // number of Taylor models on [0,d0] - defines the timestep here
-            t_begin = -d0;  // starting time is -d0 (delay)
+            nb_subdiv_delay = 20;  // number of Taylor models on [0,d0] - defines the timestep here
+            t_begin = -delay;  // starting time is -d0 (delay)
             // t_end = 15;
             t_end = 2.;  // final time
             // order = 3;
-            order = 2;  // order of Taylor Models
+            Taylor_order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(0.33,1.0);
             // nb_subdiv_init = 5;
         }
         else if (syschoice == 2)
         {
-            d0 = 1; // delay in DDE
-            nb_subdiv = 33;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
+            delay = 1; // delay in DDE
+            nb_subdiv_delay = 33;  // number of Taylor models on [0,d0]
+            t_begin = -delay;  // starting time is -d0 (delay)
             t_end = 10.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(0.9,1.1);
             initial_values[1] = interval(0.9,1.1);
         }
         else if (syschoice == 3)  // Xue 2017 (Ex 3)
         {
-            d0 = 0.01; // delay in DDE
-            nb_subdiv = 1;  // number of Taylor models on [0,d0]
+            delay = 0.01; // delay in DDE
+            nb_subdiv_delay = 1;  // number of Taylor models on [0,d0]
             t_begin = 0.0;  // starting time is 0 (delay)
             t_end = 0.1;
-            order = 2;  // order of Taylor Models
+            Taylor_order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(1.1,1.2); // et non (1.1,1.3) comme indique dans le papier
             initial_values[1] = interval(0.95,1.15);
@@ -1973,31 +1957,31 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 4)  // Szczelina 1  2014
         {
-            d0 = 1.0;
-            nb_subdiv = 10;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
+            delay = 1.0;
+            nb_subdiv_delay = 10;  // number of Taylor models on [0,d0]
+            t_begin = -delay;  // starting time is -d0 (delay)
             t_end = 2.;
-            order = 2;  // order of Taylor Models
+            Taylor_order = 2;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(0.9,1.1);
         }
         else if (syschoice == 5) // Szczelina 2  2014
         {
-            d0 = 1.0;
-            nb_subdiv = 10;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
+            delay = 1.0;
+            nb_subdiv_delay = 10;  // number of Taylor models on [0,d0]
+            t_begin = -delay;  // starting time is -d0 (delay)
             t_end = 2.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(0.9,1.1);
         }
         else if (syschoice == 6) // self-driving car; sysdim = 2, jacdim = 2
         {
-            d0 = 0.2;
-            nb_subdiv = 5;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
+            delay = 0.2;
+            nb_subdiv_delay = 5;  // number of Taylor models on [0,d0]
+            t_begin = -delay;  // starting time is -d0 (delay)
             t_end = 5.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
@@ -2006,11 +1990,11 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 8) // self-driving car bt with coeff in interv; sysdim = 2; jacdim = 4
         {
-            d0 = 0.2;
-            nb_subdiv = 5;  // number of Taylor models on [0,d0]
-            t_begin = -d0;  // starting time is -d0 (delay)
+            delay = 0.2;
+            nb_subdiv_delay = 5;  // number of Taylor models on [0,d0]
+            t_begin = -delay;  // starting time is -d0 (delay)
             t_end = 5.;
-            order = 3;  // order of Taylor Models
+            Taylor_order = 3;  // order of Taylor Models
             // uncertain parameter occurring in initial condition
             initial_values[0] = interval(-0.1,0.1);
             initial_values[1] = interval(0,0.1);
@@ -2021,20 +2005,20 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 9) // Zou CAV 2015
         {
-            d0 = 1.;
-            nb_subdiv = 20;
+            delay = 1.;
+            nb_subdiv_delay = 20;
             t_begin = 0;
             t_end = 2;
-            order = 5;
+            Taylor_order = 5;
             initial_values[0] = interval(3.,6.);
         }
         else if (syschoice == 10)  // platoon of 5 vehicles
         {
-            d0 = 0.3;
-            t_begin = -d0;
+            delay = 0.3;
+            t_begin = -delay;
             t_end = 10;
-            nb_subdiv = 3;
-            order = 3;
+            nb_subdiv_delay = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.01,0.01);
             initial_values[1] = interval(-1.2,-0.8);
             initial_values[2] = interval(1.99,2.01);
@@ -2047,11 +2031,11 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
         }
         else if (syschoice == 11)  // platoon of 10 vehicles
         {
-            d0 = 0.3;
-            t_begin = -d0;
+            delay = 0.3;
+            t_begin = -delay;
             t_end = 10;
-            nb_subdiv = 3;
-            order = 3;
+            nb_subdiv_delay = 3;
+            Taylor_order = 3;
             initial_values[0] = interval(-0.01,0.01);
             initial_values[1] = interval(-1.2,-0.8);
             initial_values[2] = interval(1.99,2.01);
@@ -2085,7 +2069,7 @@ void init_system(double &t_begin, double &t_end, double &tau, double &d0, int &n
 
 
 
-void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, int &nb_subdiv)
+void init_utils_inputs()
 {
     interval temp;
     int nb_points;
@@ -2124,8 +2108,8 @@ void init_utils_inputs(double &t_begin, double &t_end, double &tau, double &d0, 
     }
     else // systype == 1
     {
-        tau = d0/nb_subdiv;
-        nb_points = (ceil((t_end-t_begin)/d0+2))*(nb_subdiv+1);
+        tau = delay/nb_subdiv_delay;
+        nb_points = (ceil((t_end-t_begin)/delay+2))*(nb_subdiv_delay+1);
     }
     
     

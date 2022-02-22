@@ -31,27 +31,7 @@ extern int nncontroldim;  // dimension of the neural network control - does not 
 
 extern bool create_png; // whether or not the python script is called to create the .png result files
 
-class ReachSet
-{
-public:
-    vector<interval> Xsampled;
-    vector<interval> Xouter;        // maximal outer-approx
-    vector<interval> Xouter_rob;    // robust outer-approx
-    vector<interval> Xinner;        // maximal inner-approx
-    vector<interval> Xinner_rob;    // robust inner-approx
-    
-    
-    ReachSet() : Xsampled(sysdim), Xouter(sysdim), Xouter_rob(sysdim), Xinner(sysdim), Xinner_rob(sysdim) {}
-    ReachSet(vector<interval> &Xs, vector<interval> &Xo, vector<interval> &Xor, vector<interval> &Xi, vector<interval> &Xir) : Xsampled(Xs), Xouter(Xo), Xouter_rob(Xor), Xinner(Xi), Xinner_rob(Xir) {}
-};
-
-
-void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename, int &nb_sample_per_dim);
-
-void open_outputfiles();
-
-extern ofstream approxreachsetfile;
-extern YAML::Emitter out_approx;
+extern int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
 
 extern int points_per_graph; // number of steps in time printed on each graphs (and in yaml files)
 extern int printing_period; // deduced from nb of steps and points per graph
@@ -60,6 +40,64 @@ extern int printing_period; // deduced from nb of steps and points per graph
 
 extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
+
+/*----- begin parameters for discrete systems -----*/
+extern int nb_steps;  // nb of discrete time steps
+extern int AEextension_order;
+extern int iter_method;
+extern bool skewing; // compute skewboxes or regular boxes approx
+/*----- end parameters for discrete systems -----*/
+
+extern const int LINESZ;
+extern char sfx_filename[];
+extern char onnx_filename[];
+
+
+
+
+// for subdivisions of the initial domain to refine precision
+extern int nb_subdiv_init; // number of subdivisiions
+extern int component_to_subdiv, component_to_subdiv2;
+
+extern double recovering; // percentage of recovering between subdivisions
+extern vector<vector<vector<interval>>> Xouter_print, Xouter_robust_print, Xinner_print, Xinner_joint_print, Xinner_robust_print, Xexact_print; // store results of subdivision
+extern vector<double> t_print; // times where results are stored
+extern int current_subdiv;
+extern int current_iteration;
+
+// for robust inner-approximations
+extern int uncontrolled;  // number of uncontrolled parameters (forall params)
+extern int controlled;  // number of controlled parameters (forall params)
+extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
+//extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
+//extern int variable;  // number of non constant parameters
+//extern vector<bool> is_variable; // for each parameter, constant or variable
+
+extern vector<interval> target_set;
+extern vector<interval> unsafe_set;
+
+extern bool refined_mean_value;
+
+extern bool print_debug;
+
+extern bool recompute_control;
+
+
+
+
+char* getCmdOption(char ** begin, char ** end, const std::string & option);
+bool cmdOptionExists(char** begin, char** end, const std::string& option);
+
+void read_system(int argc, char* argv[]);
+
+void readfromfile_syschoice(const char * params_filename, char* sfx_filename, char* onnx_filename);
+
+void open_outputfiles();
+
+extern ofstream approxreachsetfile;
+extern YAML::Emitter out_approx;
+
+
 
 
 // print initial conditions and init XML in the discrete systems case
@@ -79,5 +117,22 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T<AAF>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<T<F<AAF>>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<vector<double>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<vector<vector<double>>> &input);
+
+
+
+class ReachSet
+{
+public:
+    vector<interval> Xsampled;
+    vector<interval> Xouter;        // maximal outer-approx
+    vector<interval> Xouter_rob;    // robust outer-approx
+    vector<interval> Xinner;        // maximal inner-approx
+    vector<interval> Xinner_rob;    // robust inner-approx
+    
+    
+    ReachSet() : Xsampled(sysdim), Xouter(sysdim), Xouter_rob(sysdim), Xinner(sysdim), Xinner_rob(sysdim) {}
+    ReachSet(vector<interval> &Xs, vector<interval> &Xo, vector<interval> &Xor, vector<interval> &Xi, vector<interval> &Xir) : Xsampled(Xs), Xouter(Xo), Xouter_rob(Xor), Xinner(Xi), Xinner_rob(Xir) {}
+};
+
 
 #endif

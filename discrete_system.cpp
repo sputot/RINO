@@ -20,6 +20,7 @@
 #include <cstring>
 using namespace std;
 
+vector<interval> xinit; // initial conditions for discrete systems
 
 vector<vector<vector<interval>>> constr_eps;  // constraints on noise symbols when partitioning 2D region in 4
 vector<vector<vector<interval>>> eps_loc;     // consequence on [x]-x0  when partitioning 2D region in 4
@@ -31,7 +32,7 @@ vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 int nb_discr, nb_discr1, nb_discr2;
 
 
-vector<interval> init_discrete_system() // (char * config_filename)
+void init_discrete_system(const char * config_filename)
 {
     
     if (syschoice == 1) {
@@ -145,126 +146,126 @@ vector<interval> init_discrete_system() // (char * config_filename)
 #endif
     }
     
-    vector<interval> res(jacdim);
+    xinit = vector<interval>(jacdim);
     
     if (syschoice == 1) {
-        res[0] = interval(2,3);
+        xinit[0] = interval(2,3);
     }
     else if (syschoice == 111) { // test sigmoide
-        res[0] = interval(-0.5,0.5);
+        xinit[0] = interval(-0.5,0.5);
     }
     else if (syschoice == 2) {
-        res[0] = interval(2,3);
-        res[1] = interval(2,3);
+        xinit[0] = interval(2,3);
+        xinit[1] = interval(2,3);
     }
     else if (syschoice == 3) { // example 3.5 Goldztejn
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
     }
     else if (syschoice == 4) { // example 3 CDC
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
     }
     else if (syschoice == 5) { // example 5.1 Goldstzjen
-        res[0] = interval(0.9,1.1); // interval(0.99,1.01);
-        res[1] = interval(0.9,1.1); // interval(0.99,1.01);
+        xinit[0] = interval(0.9,1.1); // interval(0.99,1.01);
+        xinit[1] = interval(0.9,1.1); // interval(0.99,1.01);
     }
     else if (syschoice == 6) { //
-        res[0] = interval(0.9,1.5);
-        res[1] = interval(0.9,1.5);
+        xinit[0] = interval(0.9,1.5);
+        xinit[1] = interval(0.9,1.5);
     }
     else if (syschoice == 7) { //
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
     }
     else if (syschoice == 8) { //
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
     }
     else if (syschoice == 9) { //
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
     }
     else if (syschoice == 10) {
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
-        res[2] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
+        xinit[2] = interval(0.9,1.1);
     }
     else if (syschoice == 11) {
-        res[0] = interval(0.9,1.1);
-        res[1] = interval(0.9,1.1);
-        res[2] = interval(0.9,1.1);
+        xinit[0] = interval(0.9,1.1);
+        xinit[1] = interval(0.9,1.1);
+        xinit[2] = interval(0.9,1.1);
     }
     else if (syschoice == 12) {
-        res[0] = interval(-1.0,1.0);
-        res[1] = interval(-1.0,1.0);
-        res[2] = interval(-1.0,1.0);
+        xinit[0] = interval(-1.0,1.0);
+        xinit[1] = interval(-1.0,1.0);
+        xinit[2] = interval(-1.0,1.0);
     }
     else if (syschoice == 13) {
-        res[0] = interval(0,1.0);
-        res[1] = interval(0.9,1.1);
-        res[2] = interval(-0.25,0.25);
+        xinit[0] = interval(0,1.0);
+        xinit[1] = interval(0.9,1.1);
+        xinit[2] = interval(-0.25,0.25);
     }
     else if (syschoice == 14) {
-        res[0] = interval(-0.25,0.25);
+        xinit[0] = interval(-0.25,0.25);
     }
     else if (syschoice == 15) {  // test model parallelotope bundles HSCC 2016 p 303
         
-        res[0] = interval(0.05,0.1);
-        res[1] = interval(0.99,1.0);
+        xinit[0] = interval(0.05,0.1);
+        xinit[1] = interval(0.99,1.0);
     //    nb_steps = 25;
     }
     else if (syschoice == 16) {  // SIR epidemic model  - parallelotope bundles HSCC 2016 p 303
-        res[0] = interval(0.79,0.80);
-        res[1] = interval(0.19,0.20);
-        res[2] = interval(0.,0.1);
+        xinit[0] = interval(0.79,0.80);
+        xinit[1] = interval(0.19,0.20);
+        xinit[2] = interval(0.,0.1);
     //    nb_steps = 20; // 60;
     }
     else if (syschoice == 17) {  // Honeybees model  - parallelotope bundles HSCC 2016 p 303-304
-        res[0] = interval(500.0,500.0); // interval(500.0,510.0);
-        res[1] = interval(390.0,400.0);
-        res[2] = interval(90.0,100.0);
-       res[3] = interval(0.0,0.0);// res[3] = interval(-0.1,0.1);
-       res[4] =  interval(0.0,0.0);// res[4] = interval(-0.1,0.1);
+        xinit[0] = interval(500.0,500.0); // interval(500.0,510.0);
+        xinit[1] = interval(390.0,400.0);
+        xinit[2] = interval(90.0,100.0);
+        xinit[3] = interval(0.0,0.0);// res[3] = interval(-0.1,0.1);
+        xinit[4] =  interval(0.0,0.0);// res[4] = interval(-0.1,0.1);
       //  nb_steps = 15;
     }
     else if (syschoice == 18) {         // SIR epidemic model  - Parameter Synthesis for Polynomial Biological Models HSCC 2014 p 239
-        res[0] = interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
-        res[1] = interval(0.19,0.20);
-        res[2] = interval(-0.,0.1);
-        res[3] = interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
-      //  nb_steps = 30;
+        xinit[0] = interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
+        xinit[1] = interval(0.19,0.20);
+        xinit[2] = interval(-0.,0.1);
+        xinit[3] = interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
+        nb_steps = 60;
     }
     else if (syschoice == 19) {  // SIR epidemic model (first 2 dimensions) - parallelotope bundles HSCC 2016 p 303
-        res[0] = interval(0.79,0.80);
-        res[1] = interval(0.19,0.20);
+        xinit[0] = interval(0.79,0.80);
+        xinit[1] = interval(0.19,0.20);
  //       nb_steps = 20; // 60;
     }
     else if (syschoice == 20) {         // SIR epidemic model (first 2 dimensions)  - Parameter Synthesis for Polynomial Biological Models HSCC 2014 p 239
-        res[0] = interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
-        res[1] = interval(0.19,0.20);
-        res[2] = interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
-        //  nb_steps = 30;
+        xinit[0] = interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
+        xinit[1] = interval(0.19,0.20);
+        xinit[2] = interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
+        nb_steps = 60;
     }
     else if (syschoice == 21) {         // SIR epidemic model (first 2 dimensions)  - Parameter Synthesis for Polynomial Biological Models HSCC 2014 p 239
-        res[0] = interval(1.,2.);  // interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
-        res[1] = interval(3.,4.); // interval(0.19,0.20);
-        res[2] = interval(0.,1.0); //interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
+        xinit[0] = interval(1.,2.);  // interval(0.79,0.80);   // identical to 16 except parameters - gamma is now uncertain (x[3])
+        xinit[1] = interval(3.,4.); // interval(0.19,0.20);
+        xinit[2] = interval(0.,1.0); //interval(0.05,0.0675);  //interval(0.05,0.0675); // parameter gamma
         //  nb_steps = 30;
     }
     else if (syschoice == 22) {  // DNN CAV-DINO
-        res[0] = interval(0.,0.1);
-        res[1] = interval(0.,0.1);
+        xinit[0] = interval(0.,0.1);
+        xinit[1] = interval(0.,0.1);
     }
     else if (syschoice == 23) {  // mountain car (avec RNN sfx format)
-        res[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
+        xinit[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48)xinit
        // res[1] = interval(0.,0.00);
-        res[1] = interval(0.,0.001);
+        xinit[1] = interval(0.,0.001);
     }
     else if (syschoice == 231) {  // mountain car (avec RNN onnx format)
-        res[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
+        xinit[0] = interval(-0.5,-0.48); // interval(-0.5,-0.48);
         // res[1] = interval(0.,0.00);
-        res[1] = interval(0.,0.001);
+        xinit[1] = interval(0.,0.001);
     }
     else if (syschoice == 100) { // neural network sfx format
         // should be read from config file
@@ -273,20 +274,20 @@ vector<interval> init_discrete_system() // (char * config_filename)
     }
     else if (syschoice == 101) { // neural network onnx format
         // should be read from config file
-        res[0] = interval(5,5.);
-        res[1] = interval(-2.,-2.);
+        xinit[0] = interval(5,5.);
+        xinit[1] = interval(-2.,-2.);
     }
     
-    // reading initial conditions from config file
-  /*  if (config_filename) {
-        read_initialconditions(config_filename,res);
-    } */
-    return res;
+    
+    // read parameters and initial conditions if any from config file
+    if (config_filename)
+        read_parameters_discrete(config_filename);
+    
 }
 
 
 // d0 and t_begin are for DDEs only, rest are common to ODE and DDE
-void read_parameters_discrete(const char * params_filename, vector<interval> &res, int &nb_steps, int &order, int &AEextension_order, int &iter_method,bool &skew)
+void read_parameters_discrete(const char * params_filename)
 {
     const int LINESZ = 2048;
     char buff[LINESZ];
@@ -303,7 +304,7 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
     
     while (fgets(buff,LINESZ,params_file)) {
         sscanf(buff, "interactive-visualization = %d\n", &interactive_visualization);
-        sscanf(buff, "order = %d\n", &order);
+        //sscanf(buff, "order = %d\n", &order);
         sscanf(buff, "nbsteps = %d\n", &nb_steps);
         sscanf(buff, "AEextension-order = %d\n", &AEextension_order);
         sscanf(buff, "iter-method = %d\n", &iter_method);
@@ -354,14 +355,14 @@ void read_parameters_discrete(const char * params_filename, vector<interval> &re
                 }
                 else
                     sscanf(token,"[%lf,%lf]",&a,&b);
-                res[i] = interval(a,b);
-                cout <<"initial_value="<<res[i]<<endl;
+                xinit[i] = interval(a,b);
+                cout <<"initial_value="<<xinit[i]<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
         }
     }
-    skew = (skew_int == 1);
+    skewing = (skew_int == 1);
     
     // we don't want to save and print too many points
     printing_period = 1;
@@ -403,7 +404,7 @@ void print_outer_range(vector<interval> &z_o, vector<interval> &range) {
 
 
 // same as discrete_dynamical but with skew box for joint range
-ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, int order, bool skew)
+ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int order, bool skew)
 {
     ReachSet res;
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);  // o for outer/over, i for inner/under
@@ -752,7 +753,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
 
 // computing at each step the sensitivity with respect to initial values
 // same method as discrete_dynamical_method2 but using preconditioning uniquely for printing
-ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int &nb_steps, bool skew)
+ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, bool skew)
 {
     vector<F<AAF>> x_o(jacdim), z_o(sysdim), x_i(jacdim), z_i(sysdim);
     vector<vector<AAF>> JacAff_o(sysdim,vector<AAF>(jacdim)), JacAff_i(sysdim,vector<AAF>(jacdim));
@@ -981,7 +982,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
 
 
 
-void function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range) {
+ReachSet function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range) {
     
     int nb_steps;
    // vector<interval> xinit = init_discrete_system(nb_steps, config_filename); // initial condition
@@ -1211,7 +1212,7 @@ evaluate_projections_order2(z0, radx, dfdx0, Hessf, estimated_range);
         preconditioned_joint_ranges_discretize_simultaneous(z0,radx,JacAff,dfdx0,HessAff,0,1);
     }
    
-    if (systype == 3) {
+    if (nn_analysis) {
         
         cout << "Direct range evaluation for neural network: ";
         
@@ -1255,7 +1256,9 @@ evaluate_projections_order2(z0, radx, dfdx0, Hessf, estimated_range);
 #endif
     }
     
-
+    // TODO. A remplir !
+    ReachSet res; // = ReachSet(estimated_range,z_outer,z_outer,z_inner_proj,z_inner_proj_rob);
+    return res;
     
 //    system("cd GUI; python3 Visu_function.py; cd ..");
 }
@@ -3774,7 +3777,7 @@ void twodim_discretization_by_quadrant(vector<interval> &radx) {
 
 
 // estimate the range of the n iterates f(x) ... f^n(xn)
-vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interval> &xinit, int discr) {
+vector<vector<interval>> estimate_reachset(DiscreteFunc &f, vector<interval> &xinit, int discr) {
     
  
     
@@ -3789,9 +3792,9 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
     vector<vector<double>> input(nb_points,vector<double>(jacdim));  //  the iterates f^n(x_j)
     vector<vector<double>> output(nb_points,vector<double>(sysdim));
     
-    vector<vector<double>> max_output(n+1,vector<double>(sysdim));  // store the min and max for each iterate
-    vector<vector<double>> min_output(n+1,vector<double>(sysdim));
-    vector<vector<interval>> range(n+1,vector<interval>(sysdim));
+    vector<vector<double>> max_output(nb_steps+1,vector<double>(sysdim));  // store the min and max for each iterate
+    vector<vector<double>> min_output(nb_steps+1,vector<double>(sysdim));
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
     
     
     cout << "Initial condition x: " << xinit;
@@ -3865,7 +3868,7 @@ vector<vector<interval>> estimate_reachset(DiscreteFunc &f, int n, vector<interv
     out_samples << YAML::Value << YAML::BeginSeq;
     
     
-    for (int iter=1 ; iter <=n ; iter++)
+    for (int iter=1 ; iter <=nb_steps ; iter++)
     {
         for (int i=0; i < sysdim ; i++) {
             max_output[iter] = f(input[0]);
