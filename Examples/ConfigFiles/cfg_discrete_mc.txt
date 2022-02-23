@@ -1,0 +1,14 @@
+# Discrete-time Mountain-Car
+
+systype = discrete
+syschoice = 23
+nnfile-sfx = Examples/Networks/MC_sigmoid.sfx
+nbsteps = 75
+samples-per-dim = 5
+points-per-graph = 50
+iter-method = 1
+skew = 1
+AEextension-order = 1
+initial-values = [-0.5,-0.48] [0.,0.001]
+interactive-visualization = 0
+create-png = 1
