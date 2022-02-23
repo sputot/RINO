@@ -105,49 +105,7 @@ int main(int argc, char* argv[])
         }
        
     }
-    
-    else if (systype == 1) // DDE
-    {
-        
-        for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
-        {
-            if (nb_subdiv_init > 1)
-                init_subdiv(current_subdiv, initial_values_save, fullinputs_save, component_to_subdiv);
-                        
-            HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,t_begin,tau,delay,nb_subdiv_delay);
-            prev_step.init_dde(sampled_reachset[0]);
-            
-            HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
-            
-            //******** Integration loop ************************
-            int iter = nb_subdiv_delay+1;
-            while (cur_step.tn+delay <= t_end)
-            {
-                // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                for (int j=0 ; j<nb_subdiv_delay ; j++)
-                {
-                    cur_step.TM_build(j);  // j-th Taylor model valid on [tn+j*d0,tn+(j+1)*d0]
-                    // eval at tn+tau
-                    RS = cur_step.TM_evalandprint_solutionstep(j,eps,sampled_reachset[iter]); // cur_step.tn+(j+1)*tau/nb_subdiv);
-                    cout << endl;
-                    
-                    if (j < nb_subdiv_delay-1)
-                        cur_step.init_nextsmallstep(j);
-                    iter++;
-                }
-                cur_step = cur_step.init_nextbigstep(tau);
-                
-            }
-            
-            // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
-            // removed when passed to yaml but not tested since => check
-        }
-        
-        if (nb_subdiv_init > 1)
-            print_finalsolution(ceil((t_end-t_begin)*nb_subdiv_delay/delay), delay);  // a verifier cf def nb_points dans ode_def.cpp
-    }
-     /*************************************************************************** EDO ************************************************************/
-    else // systype == 0: EDO
+    else if (systype == 0 || systype == 1) // ODE or DDE
     {
         for (current_subdiv=1 ; current_subdiv<=nb_subdiv_init; current_subdiv++)
         {
@@ -157,31 +115,64 @@ int main(int argc, char* argv[])
                         
             print_initstats(initial_values_aff,fullinputs_aff);  // print initial conditions and init XML
             
-            HybridStep_ode cur_step = init_ode(obf,center_initial_values_aff,initial_values_aff,t_begin,tau,Taylor_order);
-           
-            int iter = 1;
-            while (cur_step.tn < t_end-0.0001*t_end)
+            if (systype == 0) // ODEs
             {
-                // build Taylor model for Value and Jacobian and deduce guards for each active mode
-                cur_step.TM_build(params_aff,fullinputs_aff,center_fullinputs_aff);
-                RS = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
-                cur_step.init_nextstep(params_aff,fullinputs_aff,tau);
+                HybridStep_ode cur_step = init_ode(obf,center_initial_values_aff,initial_values_aff,t_begin,tau,Taylor_order);
+           
+                int iter = 1;
+                while (cur_step.tn < t_end-0.0001*t_end)
+                {
+                    // build Taylor model for Value and Jacobian and deduce guards for each active mode
+                    cur_step.TM_build(params_aff,fullinputs_aff,center_fullinputs_aff);
+                    RS = cur_step.TM_evalandprint_solutionstep(eps,cur_step.tn+tau,sampled_reachset[iter],current_subdiv);
+                    cur_step.init_nextstep(params_aff,fullinputs_aff,tau);
                 
-                if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
-                    printf("Terminated due to too large overestimation.\n");
-                    break;
+                    if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
+                        printf("Terminated due to too large overestimation.\n");
+                        break;
+                    }
+                    iter++;
                 }
-                iter++;
+            }
+            else if (systype == 1) // DDEs
+            {
+                HybridStep_dde prev_step = HybridStep_dde(bf,bbf,Taylor_order,t_begin,tau,delay,nb_subdiv_delay);
+                prev_step.init_dde(sampled_reachset[0]);
+                
+                HybridStep_dde cur_step = prev_step.init_nextbigstep(tau);
+                
+                //******** Integration loop ************************
+                int iter = nb_subdiv_delay+1;
+                while (cur_step.tn+delay <= t_end)
+                {
+                    // build Taylor model for Value and Jacobian and deduce guards for each active mode
+                    for (int j=0 ; j<nb_subdiv_delay ; j++)
+                    {
+                        cur_step.TM_build(j);  // j-th Taylor model valid on [tn+j*d0,tn+(j+1)*d0]
+                        // eval at tn+tau
+                        RS = cur_step.TM_evalandprint_solutionstep(j,eps,sampled_reachset[iter]); // cur_step.tn+(j+1)*tau/nb_subdiv);
+                        
+                        if ((RS.Xouter[0] == interval::EMPTY()) || (RS.Xouter[0] == interval::ENTIRE())) {
+                            printf("Terminated due to too large overestimation.\n");
+                            break;
+                        }
+                        
+                        if (j < nb_subdiv_delay-1)
+                            cur_step.init_nextsmallstep(j);
+                        iter++;
+                    }
+                    cur_step = cur_step.init_nextbigstep(tau);
+                }
             }
             // adding a white line separator between subdivisions in the output result (except for maximal outer approx which is computed by union of all subdivisions)
             // removed when passed to yaml but not tested since => check
-            
         }
         
         if (nb_subdiv_init > 1)
             print_finalsolution(ceil((t_end-t_begin)/tau), delay);
-        
     }
+
+  
     
     // pb sur les fonctiosn trigos en formes affines a corriger a l'occasion ci-dessous:
 //    vector<AAF> yp(sysdim);
@@ -539,6 +530,8 @@ void read_system(int argc, char* argv[])
         init_utils_inputs();
 
     }
+    if (systype == 1)
+        tau = delay/nb_subdiv_delay;
     
     // moving old output results directory and creating new one
     system("mv output output_sauv");

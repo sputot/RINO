@@ -420,6 +420,10 @@ void define_system_dim()
             sysdim = 2;
             inputsdim = 0;
         }
+        else if (syschoice == 54) //
+        {
+            sysdim = 3;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -1810,6 +1814,15 @@ void init_system()
            Taylor_order = 5;
            initial_values[0] = interval(0,0); // x1_0
            initial_values[1] = interval(1,1); // x1_0
+       }
+       else if (syschoice == 54) //
+       {
+           tau = 0.1;
+           t_end = 20.;
+           Taylor_order = 3;
+           initial_values[0] = interval(-1,1); //
+           initial_values[1] = interval(-1,1); //
+           initial_values[2] = interval(-1.0471975512,0);
        }
 //        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
  //       for (int i=0; i<sysdim; i++)

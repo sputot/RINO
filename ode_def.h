@@ -1734,6 +1734,14 @@ public:
               yp[0] = y[1]*y[1]; // + 2*y[1]*(y[0]-y[1]);
               yp[1] = y[0]*y[0] + 2*y[1]*(y[1]-y[0]);
           }
+          else if (syschoice == 54) // unicycle
+          {
+              double v = 5;
+              double w = -0.5;
+              yp[0] = v*cos(y[2]);
+              yp[1] = v*sin(y[2]);
+              yp[2] = w;
+          }
     }
 };
 
