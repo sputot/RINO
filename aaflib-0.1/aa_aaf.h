@@ -204,6 +204,7 @@ unsigned sumup(unsigned);
   friend AAF atan(const AAF &);
   friend AAF tanh(const AAF &);
   friend AAF inv(const AAF &);
+  friend AAF original_sin(const AAF &);
   friend AAF sin(const AAF &);
   friend AAF cos(const AAF &);
   friend AAF tan(const AAF &);

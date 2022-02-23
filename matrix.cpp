@@ -510,7 +510,7 @@ void build_2dpreconditionner(vector<vector<double>> &A, vector<vector<double>> &
     
     // C is inverse of A
     determinant = 1.0/(A[i][i]*A[k][k]-A[i][k]*A[k][i]);
-    cout << "determinant=" << 1.0/determinant << endl;
+    //cout << "determinant=" << 1.0/determinant << endl;
     
     if (1.0/determinant < 0.005)
     {

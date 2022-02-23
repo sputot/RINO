@@ -10,3 +10,4 @@ control-step = 0.1
 integration-step = 0.05
 order = 3
 initial-values = [-0.77,-0.75] [-0.45,-0.43] [0.51,0.54] [-0.3,-0.28]
+samples-per-dim = 3

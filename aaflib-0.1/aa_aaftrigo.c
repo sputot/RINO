@@ -52,7 +52,10 @@
  ************************************************************/
 AAF sin(const AAF & P)
 {
+    // coming back to (almost) the original sinus function
+    return original_sin(P);
 
+    // deactavate the below function by Franck for now
   double a, b;
   double fa, fb;
   double alpha, dzeta, delta;
@@ -121,99 +124,6 @@ AAF sin(const AAF & P)
   dzeta = 0.5 * (fa + fb - alpha * (a + b));
   delta = 0.5 * (fb - fa - alpha * (b - a));*/
 
-  /*AAInterval i = P.convert();
-
-  double w = i.width();
-
-  //i = mintrigo(i); // no more needed
-
-  a = i.getlo();
-  b = i.gethi();
-
-
-  // y' = alpha*x+dzeta , the regression line
-  // approximate y = sin(x)
-
-  double x[NPTS];
-  double y[NPTS];
-  double r[NPTS]; // residues, r[i] = y[i]-y'[i]
-
-  double xm = 0;
-  double ym = 0;
-
-  // the trivial case, the interval is larger than 2*PI
-  if (w >= 2*PI ) 
-  {
-    // y' = 0 , delta = 1 cause -1 <= sin(x) <= +1
-    alpha = 0.0;
-    dzeta = 0.0;
-    delta = 1.0;
-  }
-  else // case of the least squares
-  {
-    x[0]=a;
-    y[0]=sin(a);
-    x[NPTS-1]=b;
-    y[NPTS-1]=sin(b);
-    
-    double pas=w/(NPTS-1);
-    
-    for (unsigned j=1; j< NPTS-1; j++)
-    {
-      x[j]=x[j-1]+pas;
-      y[j]=sin(x[j]);
-    }
-    
-    
-    // Calculation of xm and ym , averages of x and y
-    
-    for (unsigned j=0; j<NPTS; j++)
-    {
-      xm=xm+x[j];
-      ym=ym+y[j];
-    }
-    
-    xm=xm/NPTS;
-    ym=ym/NPTS;
-    
-    // Calculation of alpha and dzeta
-    
-    double temp1;
-    double temp2=0;
-    alpha = 0;
-    
-    for (unsigned j=0; j<NPTS; j++)
-    {
-      temp1=x[j]-xm;
-      alpha+=y[j]*temp1;
-      temp2+=temp1*temp1;
-    }    
-    
-    alpha=alpha/temp2;  // final alpha
-    dzeta=ym-alpha*xm; // final dzeta
-    
-    
-    // Calculation of the residues
-    // We use the absolute value of the residues!
-    
-    for (unsigned j=0; j<NPTS; j++)
-    {
-      r[j]=fabs(y[j]-(dzeta+alpha*x[j]));
-    }
-    
-    
-    // The error delta is the maximum
-    // of the residues (in absolute values)
-    
-    double *ptr;
-    
-    ptr = std::max_element(r, r+NPTS);
-    
-    delta = *ptr;
-    
-  }*/
-    
-  // z0 = alpha*x0 + dzeta
   
   AAF Temp(alpha*(P.cvalue)+dzeta);
   
@@ -237,6 +147,127 @@ AAF sin(const AAF & P)
   
   return Temp;
 }
+
+
+AAF original_sin(const AAF & P )
+{
+    double a, b;
+        double alpha, dzeta, delta;
+
+    // Sylvie addition of the 2nd condition
+        if (P.length == 0 || (P.length == 1 && P.deviations[0] == 0.)) {
+            AAF Temp(sin(P.cvalue));
+            return Temp;
+        }
+
+        AAInterval i = P.convert();
+
+        double w = i.width();
+
+        //i = mintrigo(i); // no more needed
+
+        a = i.getlo();
+        b = i.gethi();
+
+
+    
+        // y' = alpha*x+dzeta , the regression line
+        // approximate y = sin(x)
+
+        double x[NPTS];
+        double y[NPTS];
+        double r[NPTS]; // residues, r[i] = y[i]-y'[i]
+
+        double xm = 0;
+        double ym = 0;
+
+        // the trivial case, the interval is larger than 2*PI
+        if (w >= 2 * PI) {
+            // y' = 0 , delta = 1 cause -1 <= sin(x) <= +1
+            alpha = 0.0;
+            dzeta = 0.0;
+            delta = 1.0;
+        } else // case of the least squares
+        {
+            x[0] = a;
+            y[0] = sin(a);
+            x[NPTS - 1] = b;
+            y[NPTS - 1] = sin(b);
+
+            double pas = w / (NPTS - 1);
+
+            for (unsigned j = 1; j < NPTS - 1; j++) {
+                x[j] = x[j - 1] + pas;
+                y[j] = sin(x[j]);
+            }
+
+            // Calculation of xm and ym , averages of x and y
+
+            for (unsigned j = 0; j < NPTS; j++) {
+                xm = xm + x[j];
+                ym = ym + y[j];
+            }
+
+            xm = xm / NPTS;
+            ym = ym / NPTS;
+
+            // Calculation of alpha and dzeta
+
+            double temp1;
+            double temp2 = 0;
+            alpha = 0;
+
+            for (unsigned j = 0; j < NPTS; j++) {
+                temp1 = x[j] - xm;
+                alpha += y[j] * temp1;
+                temp2 += temp1 * temp1;
+            }
+
+            alpha = alpha / temp2; // final alpha
+            dzeta = ym - alpha * xm; // final dzeta
+
+            // Calculation of the residues
+            // We use the absolute value of the residues!
+
+            for (unsigned j = 0; j < NPTS; j++) {
+                r[j] = fabs(y[j] - (dzeta + alpha * x[j]));
+            }
+
+            // The error delta is the maximum
+            // of the residues (in absolute values)
+
+            double* ptr;
+
+            ptr = std::max_element(r, r + NPTS);
+
+            delta = *ptr;
+        }
+
+        // z0 = alpha*x0 + dzeta
+
+        AAF Temp(alpha * (P.cvalue) + dzeta);
+
+        Temp.length = (P.length) + 1;
+        Temp.size = Temp.length;
+        Temp.deviations = new double[Temp.size];
+        Temp.indexes = new unsigned[Temp.size];
+
+        // zi = alpha*xi
+
+        for (unsigned j = 0; j < P.length; j++) {
+            Temp.indexes[j] = P.indexes[j];
+            Temp.deviations[j] = alpha * (P.deviations[j]);
+        }
+
+        // zk = delta
+
+        Temp.indexes[P.length] = Temp.inclast(); // the error indx
+        Temp.deviations[P.length] = delta;
+
+    
+        return Temp;
+}
+
 
 
 /************************************************************
