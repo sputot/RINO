@@ -53,7 +53,9 @@
 AAF sin(const AAF & P)
 {
     // coming back to (almost) the original sinus function
-    return original_sin(P);
+    AAF Pb(P);
+    Pb.compact();
+    return original_sin(Pb);
 
     // deactavate the below function by Franck for now
   double a, b;
@@ -154,6 +156,7 @@ AAF original_sin(const AAF & P )
     double a, b;
         double alpha, dzeta, delta;
 
+  //  P.compact(); // removes 0 deviations
     // Sylvie addition of the 2nd condition
         if (P.length == 0 || (P.length == 1 && P.deviations[0] == 0.)) {
             AAF Temp(sin(P.cvalue));
@@ -264,7 +267,6 @@ AAF original_sin(const AAF & P )
         Temp.indexes[P.length] = Temp.inclast(); // the error indx
         Temp.deviations[P.length] = delta;
 
-    
         return Temp;
 }
 

@@ -578,6 +578,7 @@ vector<AAF> fixpoint(OdeFunc bf, vector<AAF> &params, vector<AAF> &param_inputs,
     
     while (iter <=1 || !subseteq(y1,y0))
     {
+        //cout << "fixpoint iter " << iter << " y1=" << y1 << " y0=" << y0 << endl;
         if (iter > 25)
             coeff = 1;
         else if (iter > 20)

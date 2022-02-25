@@ -45,6 +45,9 @@ then
   elif [ "$1" == "discrete" ]
   then
     examples=(${examples_discrete[@]})
+  elif [ "$1" == "discrete_nn" ]
+  then
+    examples=(${examples_discrete_nn[@]})
   else
     examples=($1)
   fi
@@ -54,7 +57,7 @@ fi
 
 
 # when true, compare to results stored in output_0_xx ; when false, run and store results of ref_version (=> set to false when new ref version, true otherwise)
-compare_to_ref=true
+compare_to_ref=false
 
 
  echo "******* Running RINO regression on ${examples[@]} **************"
