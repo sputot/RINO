@@ -1613,11 +1613,11 @@ void init_system()
        }
        else if (syschoice == 451) { // Mountain car Verisig
            tau = 0.5;
-           t_end = 71.; // t_end = 115.;
+           t_end = 115.; // t_end = 115.;
            Taylor_order = 3;
       //     initial_values[0] = interval(-0.41,-0.4);  // interval(-0.53,-0.5); // interval(-0.53,-0.5);  // interval(-0.5,-0.48);
-           initial_values[0] = interval(-0.53,-0.5);
-           initial_values[1] = interval(0.,0.);   // interval(0.,0.001);
+           initial_values[0] = interval(-0.5,-0.48);
+           initial_values[1] = interval(0.,0.001);   // interval(0.,0.001);
            
            // nncontrol= NH.eval_network(initial_values);
            //inputs[0] = interval(0.0,0.0);
