@@ -220,6 +220,12 @@ B5:
   
 ACC:
 ./rino -configfile Examples/ConfigFiles/cfg_acc_tanh.txt
+
+Continuous-time Mountain Car
+./rino -configfile Examples/ConfigFiles/cfg_MC_sigmoid.txt
+
+Discrete-time Mountain Car
+./rino -configfile Examples/ConfigFiles/cfg_discrete_mc.txt
 ```
 
 

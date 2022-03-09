@@ -1,0 +1,10 @@
+# MC sigmoid (sys 451)
+
+systype = ode
+syschoice = 451
+nnfile-sfx = Examples/Networks/MC_sigmoid.sfx
+time-horizon = 115.
+integration-step = 0.5
+control-step = 1.
+order = 3
+initial-values = [-0.5,-0.48] [0.,0.001]
