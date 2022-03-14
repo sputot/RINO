@@ -135,4 +135,18 @@ public:
 };
 
 
+class NQuant
+{
+public:
+    vector<int> var_id;   // variable id (from 0 to jacdim-1)
+    vector<bool> exists;  // true for existential quantification, false for universal
+    
+    int uncontrolled; // number of uncontrolled parameters (forall params)
+    
+    NQuant() {}
+     NQuant(int n) : var_id(n), exists(n) {}
+};
+
+extern NQuant nquant;
+
 #endif

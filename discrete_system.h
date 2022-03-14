@@ -207,6 +207,9 @@ public:
                 z[i] = out[out_nodes[i]];
 #endif
         }
+        else if (syschoice == 24) {
+            z[0] = x[0]*x[0]/4. + (x[1]+1.)*(x[2]+2.) + (x[2]+3.)*(x[2]+3.);
+        }
             
         return z;
     }
@@ -246,7 +249,7 @@ void init_discrete_system(const char * config_filename);
 void read_parameters_discrete(const char * params_filename);
 ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, int order, bool skew);
 ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range, bool skew);
-ReachSet function_range(DiscreteFunc &f, vector<interval> &xinit, vector<interval> &estimated_range);
+ReachSet function_range(DiscreteFunc &f, vector<interval> &xinit, vector<vector<interval>> &estimated_range);
 void nn_range(char * config_filename);
 
 void constraint_eps(vector<vector<interval>> &Jac_m, vector<vector<AAF>> &JacAff, int m);
@@ -296,8 +299,8 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
 void twodim_discretization_by_quadrant(vector<interval> &radx);
 
 // estimation of exact image by sampling
-vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f, int discr);
-
+vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f);
+vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f);
 
 // for discrete-time dynamical systems
 void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range);

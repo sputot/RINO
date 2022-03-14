@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
         
         print_init_discrete(xinit,skewing);
         if (nb_steps == 1)
-            RS = function_range(f,xinit,sampled_reachset[1]);
+            RS = function_range(f,xinit,sampled_reachset);
         else {
             if (iter_method == 1)
                 RS = discrete_dynamical(f,xinit,sampled_reachset,AEextension_order,skewing);
@@ -390,10 +390,10 @@ int main(int argc, char* argv[])
     //begin = clock();
     if (print_debug)
     {
-        if (systype == 0 || systype == 1 || (systype == 2 && nb_steps>1))
+      //  if (systype == 0 || systype == 1 || (systype == 2 && nb_steps>1))
             run_pythonscript_visualization();
-        else if (systype == 2) // nb_steps = 1
-            system("cd GUI; python3 Visu_function.py; cd ..");
+     //   else if (systype == 2) // nb_steps = 1
+     //       system("cd GUI; python3 Visu_function.py; cd ..");
     }
     //end = clock();
     //double elapsed_printing = double(end - begin) / CLOCKS_PER_SEC;
@@ -557,8 +557,9 @@ void read_system(int argc, char* argv[])
 vector<vector<interval>> estimate_reachset()
 {
     cout << "Estimate reachset:" << endl;
-    if (systype == 2)
-        return estimate_reachset_discrete(f, nb_sample_per_dim);
+    if (systype == 2) {
+        return estimate_robust_reachset_discrete(f);
+    }
     else if (systype == 0)
         return estimate_reachset(obf,nb_sample_per_dim);
     else if (systype == 1)

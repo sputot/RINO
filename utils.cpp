@@ -93,7 +93,8 @@ bool print_debug = true;
 
 bool recompute_control = true;
 
-
+// defines quantifier alternation for robust reachability
+NQuant nquant;
 
 
 
