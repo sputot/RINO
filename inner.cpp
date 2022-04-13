@@ -107,7 +107,7 @@ void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector
     if (skewed) {
         compute_print_skewbox(max_i,max_k,A,i,k,"maxskew");
         
-        if (uncontrolled > 0)
+        if (uncontrolled > 0 || nquant.uncontrolled > 0)
             compute_print_skewbox(robust_i,robust_k,A,i,k,"robskew");
     }
     else
@@ -116,7 +116,7 @@ void compute_print_jointinnerranges(interval &range_i, interval &range_k, vector
         out_approx << YAML::Key << "maxbox";
         out_approx << YAML::Value << temp;
     
-        if (uncontrolled > 0) {
+        if (uncontrolled > 0 || nquant.uncontrolled > 0) {
             temp[0] = inf(robust_i); temp[1] = sup(robust_i); temp[2] = inf(robust_k); temp[3] = sup(robust_k);
             out_approx << YAML::Key << "robbox";
             out_approx << YAML::Value << temp;
@@ -177,7 +177,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
         aux_impro = initialcondition_impro + controlled_impro;
         Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro + uncontrolled_impro);
 
-        if (uncontrolled > 0)
+        if (uncontrolled > 0 || nquant.uncontrolled > 0)
         {
             Xinner_robust[i]  = ix0[i] + uncontrolled_pro;
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro);
@@ -306,7 +306,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                 
                 //compute_print_outerskewbox(range, CJac, eps, i, k, A);
                 
-                if (uncontrolled > 0)
+                if (uncontrolled > 0 || nquant.uncontrolled > 0)
                 {
                     vector<interval> robust(2);
                     vector<interval> initialcondition_pro(2), uncontrolled_impro(2), controlled_pro(2);
@@ -455,7 +455,7 @@ void InnerOuter(vector<interval> &Xinner, vector<interval> &Xinner_robust, vecto
                         out_approx << YAML::Value << temp3d;
                         
                         
-                        if (uncontrolled > 0) {
+                        if (uncontrolled > 0 || nquant.uncontrolled > 0) {
                             temp3d[0] = inf(robust_i); temp3d[1] = sup(robust_i); temp3d[2] = inf(robust_k); temp3d[3] = sup(robust_k); temp3d[4] = inf(robust_l); temp3d[5] = sup(robust_l);
                             out_approx << YAML::Key << "robbox";
                             out_approx << YAML::Value << temp3d;
@@ -607,7 +607,7 @@ void InnerOuter_discretize(vector<interval> &Xinner, vector<interval> &Xinner_ro
         aux_impro[i] = initialcondition_impro[i] + controlled_impro[i];
         Xinner[i] = Kaucher_add_pro_impro(ix0[i] , aux_impro[i] + uncontrolled_impro[i]);
         
-        if (uncontrolled > 0)
+        if (uncontrolled > 0 || nquant.uncontrolled > 0)
         {
             Xinner_robust[i]  = ix0[i] + uncontrolled_pro[i];
             Xinner_robust[i] = Kaucher_add_pro_impro(Xinner_robust[i], aux_impro[i]);

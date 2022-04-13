@@ -105,6 +105,9 @@ void print_init_discrete(vector<interval> &x, bool skew);
 // print initial conditions and init XML in the ODE case
 void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs);
 
+void print_projections(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &sampled_reachset);
+
+
 void run_pythonscript_visualization();
 
 void print_finalsolution(int max_it, double d0);

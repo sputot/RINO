@@ -223,7 +223,7 @@ void print_init_discrete(vector<interval> &x, bool skew)
     out_approx << YAML::Key << "inner";
     out_approx << YAML::Value << temp; //
     
-    if (uncontrolled > 0) {
+    if (uncontrolled > 0 || nquant.uncontrolled > 0) {
         out_approx << YAML::Key << "innerrobust";
         out_approx << YAML::Value << temp; //
         out_approx << YAML::Key << "outerrobust";
@@ -288,7 +288,7 @@ if (sysdim >= 2)
             out_approx << YAML::Key << "maxskew";
             out_approx << YAML::Value << tempskew;
             
-            if (uncontrolled > 0) {
+            if (uncontrolled > 0 || nquant.uncontrolled > 0) {
                 out_approx << YAML::Key << "robskew";
                 out_approx << YAML::Value << tempskew;
             }
@@ -335,7 +335,7 @@ if (sysdim >= 2)
             out_approx << YAML::Value << tempskew;
             
             
-            if (uncontrolled > 0) {
+            if (uncontrolled > 0 || nquant.uncontrolled > 0) {
                 out_approx << YAML::Key << "robbox";
                 out_approx << YAML::Value << temp2d;
                 
@@ -440,13 +440,13 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
     out_approx << YAML::Key << "inner";
     out_approx << YAML::Value << temp; //
     
-    if (uncontrolled > 0) {
+    if (uncontrolled > 0 || nquant.uncontrolled > 0) {
         out_approx << YAML::Key << "innerrobust";
         out_approx << YAML::Value << temp; //
         out_approx << YAML::Key << "outerrobust";
         out_approx << YAML::Value << temp; //
     }
-    if (controlled > 0 || uncontrolled > 0) {
+    if (controlled > 0 || uncontrolled > 0 || nquant.uncontrolled > 0) {
         out_approx << YAML::Key << "innerminimal";
         out_approx << YAML::Value << temp;
         out_approx << YAML::Key << "outerminimal";
@@ -506,7 +506,7 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
             out_approx << YAML::Key << "maxskew";
             out_approx << YAML::Value << tempskew;
             
-            if (uncontrolled > 0) {
+            if (uncontrolled > 0 || nquant.uncontrolled > 0) {
                 out_approx << YAML::Key << "robskew";
                 out_approx << YAML::Value << tempskew;
             }
@@ -557,7 +557,7 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
             out_approx << YAML::Value << tempskew;
             
             
-            if (uncontrolled > 0) {
+            if (uncontrolled > 0 || nquant.uncontrolled > 0) {
                 out_approx << YAML::Key << "robskew";
                 out_approx << YAML::Value << tempskew;
             }
@@ -619,6 +619,102 @@ void print_initstats(vector<AAF> &x, vector<AAF> &param_inputs)
     cout << endl;
      
 }
+
+
+void print_projections(vector<interval> &Xouter, vector<interval> &Xouter_robust, vector<interval> &Xinner,  vector<interval> &Xinner_robust, vector<interval> &sampled_reachset)
+{
+    if (print_debug)
+    {
+        if (innerapprox == 0)
+        {
+            for (int i=0 ; i<sysdim ; i++)
+                cout << "Xouter_maximal[" << i <<"]=" << Xouter[i] << "\t";
+        }
+        else
+        {
+            for (int i=0 ; i<sysdim ; i++) {
+                cout.precision(6);
+                cout << "Xouter_maximal[" << i <<"]=[" << Xouter[i].inf() << ", " << Xouter[i].sup() << "] \t";
+                //printf("%.6f\t", Xouter[i]);
+                cout << "Xinner_maximal[" << i <<"]=[" << Xinner[i].inf() << ", " << Xinner[i].sup() << "] \t"; //<<"]=" << Xinner[i] << "\t";
+                cout << "Sampled estim.[" << i <<"]=[" << sampled_reachset[i].inf() << ", " << sampled_reachset[i].sup() << "] \t"; //<<"]=" << sampled_reachset[i] << "\t";
+                cout << " eta_o["<<i<<"]=" << (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf()) << "\t";
+                cout << " eta_i[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf()) << "\t";
+                cout << " gamma[" << i << "]=" << (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
+                if (! subseteq(sampled_reachset[i],Xouter[i]))
+                    cout << "WARNING: problem with outer-estimated approximation!\n";
+                if (! subseteq(Xinner[i],sampled_reachset[i]))
+                    cout << "WARNING: problem with inner-estimated approximation!\n";
+                cout << endl;
+            }
+            cout << endl;
+            if (uncontrolled > 0 || nquant.uncontrolled > 0)
+            {
+                for (int i=0 ; i<sysdim ; i++) {
+                    cout << "Xouter_robust[" << i <<"]=" << Xouter_robust[i] << "\t";
+                    cout << "Xinner_robust[" << i <<"]=" << Xinner_robust[i] << "\t";
+                }
+                cout << endl;
+            }
+        }
+    }
+    
+    vector<double> temp(2*sysdim);
+    
+    if (nb_subdiv_init ==1) {
+        out_approx << YAML::Key << "outer";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xouter[i].inf();
+            temp[2*i+1] = Xouter[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xouter does not work because of interval type (I guess I could solve this but...)
+    }
+    
+    if (innerapprox == 1)
+    {
+        out_approx << YAML::Key << "inner";
+        for (int i=0 ; i<sysdim ; i++) {
+            temp[2*i] = Xinner[i].inf();
+            temp[2*i+1] = Xinner[i].sup();
+        }
+        out_approx << YAML::Value << temp; // Xinner;
+        
+        if (uncontrolled > 0 || nquant.uncontrolled > 0) {
+            out_approx << YAML::Key << "outerrobust";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xouter_robust[i].inf();
+                temp[2*i+1] = Xouter_robust[i].sup();
+            }
+            out_approx << YAML::Value << temp; // Xouter_robust;
+            out_approx << YAML::Key << "innerrobust";
+            for (int i=0 ; i<sysdim ; i++) {
+                temp[2*i] = Xinner_robust[i].inf();
+                temp[2*i+1] = Xinner_robust[i].sup();
+            }
+            out_approx << YAML::Value << temp; // Xinner_robust;
+        }
+        
+        // error measures
+        vector<double> temp2(sysdim);
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (sampled_reachset[i].sup() - sampled_reachset[i].inf())/ (Xouter[i].sup() - Xouter[i].inf());
+        out_approx << YAML::Key << "etaouter";
+        out_approx << YAML::Value << temp2;
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(sampled_reachset[i].sup() - sampled_reachset[i].inf());
+        out_approx << YAML::Key << "etainner";
+        out_approx << YAML::Value << temp2;
+        for (int i=0 ; i<sysdim ; i++)
+            temp2[i] = (Xinner[i].sup() - Xinner[i].inf())/(Xouter[i].sup() - Xouter[i].inf());
+        out_approx << YAML::Key << "gamma";
+        out_approx << YAML::Value << temp2;
+        
+        
+    }
+}
+
+
+
 
 
 void run_pythonscript_visualization()

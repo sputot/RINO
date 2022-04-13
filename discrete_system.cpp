@@ -16,6 +16,7 @@
 #include <ostream>
 #include <fstream>
 #include <ctime>
+#include <float.h>
 #include <assert.h>
 #include <cstring>
 using namespace std;
@@ -459,7 +460,7 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
     vector <F<interval>> x0ff_o(jacdim), x0ff_i(jacdim), z0ff_o(sysdim), z0ff_i(sysdim);
     /* end ORDER 2 */
     
-    vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer;
+    vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer, z_outer_rob;
     
     vector<int> aux;
     // for each input, index of the output in which it is existentially quantified
@@ -594,15 +595,21 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
         {
             z_outer = evaluate_outerrange(z0_o, radx_o, Jacf_o);
             z_inner_proj = evaluate_innerrange(z0_i, radx_i, Jacf_i, true, aux);
-            if (jacdim > sysdim)
-                z_inner_proj_rob = evaluate_innerrange_robust(z0_i, radx_i, Jacf_i, true, aux);
+            if (jacdim > sysdim || nquant.uncontrolled > 0) {
+                z_inner_proj_rob = evaluate_innerrange_robust(z0_i, radx_i, Jacf_i, nquant);
+                z_outer_rob = evaluate_outerrange_robust(z0_i, radx_i, Jacf_i, nquant);
+            }
+            // TODO. compute robust outer range
+            //z_outer_rob = z_outer;
         }
         else if (order == 2)
         {
             z_outer = evaluate_outerrange_order2(z0_o, radx_o, dfdx0_o, Hessf_o);
             z_inner_proj = evaluate_innerrange_order2(z0_i, radx_i, dfdx0_i, Hessf_i, true, aux);
-            if (jacdim > sysdim)
+            if (jacdim > sysdim || nquant.uncontrolled > 0)
                 z_inner_proj_rob = evaluate_innerrange_order2_robust(z0_i, radx_i, dfdx0_i,  Hessf_i, true, aux);
+            // TODO. compute robust outer range
+            z_outer_rob = z_outer;
         }
         else
             assert(false);
@@ -611,7 +618,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
         if (step % printing_period == 0)
-            print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
+            print_projections(z_outer,z_outer_rob,z_inner_proj,z_inner_proj_rob,estimated_range[step]);
+            //print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
         // TODO. Attention ici il faudrait calculer aussi le range surapproximé robuste !
         res = ReachSet(estimated_range[nb_steps],z_outer,z_outer,z_inner_proj,z_inner_proj_rob);
@@ -785,7 +793,7 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
     vector<vector<interval>> Jacf_o(sysdim,vector<interval>(jacdim)), Jacf_i(sysdim,vector<interval>(jacdim));
     vector<interval> x0_o(jacdim), radx_o(jacdim), x0_i(jacdim), radx_i(jacdim);    // center and radius x-x0;
     
-    vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer;
+    vector<interval> z_inner, z_inner_proj, z_inner_proj_rob, z_outer, z_outer_rob;
     
  //   DiscreteFunc f;
     FDiff FFunc;
@@ -857,14 +865,18 @@ ReachSet discrete_dynamical_method2(DiscreteFunc &f, vector<interval> &xinit, ve
         
         z_outer = evaluate_outerrange(z0_o, radx_o, Jacf_o);
         z_inner_proj = evaluate_innerrange(z0_o, radx_o, Jacf_o, true, aux);
-        if (jacdim > sysdim)
-            z_inner_proj_rob = evaluate_innerrange_robust(z0_o, radx_o, Jacf_o, true, aux);
+        if (jacdim > sysdim || nquant.uncontrolled > 0) {
+            z_inner_proj_rob = evaluate_innerrange_robust(z0_o, radx_o, Jacf_o, nquant);
+            z_outer_rob = evaluate_outerrange_robust(z0_o, radx_o, Jacf_o, nquant);
+        }
+        
         
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
         if (step % printing_period == 0)
-            print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
+            print_projections(z_outer,z_outer_rob,z_inner_proj,z_inner_proj_rob,estimated_range[step]);
+            //print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
         
         if (sysdim >= 2) {
@@ -1279,7 +1291,10 @@ evaluate_projections_order2(z0, radx, dfdx0, Hessf, estimated_range[1]);
     }
     
     // TODO. A remplir !
-    ReachSet res = discrete_dynamical(f, xinit, estimated_range, AEextension_order, skewing);
+    cout << endl;
+    cout << "Calling discrete_dynamical for 1 step" << endl;
+    //ReachSet res = discrete_dynamical(f, xinit, estimated_range, AEextension_order, skewing);
+    ReachSet res = discrete_dynamical_method2(f, xinit, estimated_range, skewing);
     return res;
     
 //    system("cd GUI; python3 Visu_function.py; cd ..");
@@ -1310,9 +1325,7 @@ void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<
   //      z_inner[i] = evaluate_innerrange_x(z0, Jacf, true, aux, i);
   //  }
     
-    vector<ofstream> outFile_outer_mean_value(sysdim);
-    vector<ofstream> outFile_inner(sysdim);
-    stringstream file_name;
+ 
     
     cout << "Outer range of f(x) by mean-value:                                           ";
   //  cout << z_outer;
@@ -1326,18 +1339,7 @@ void evaluate_projections(vector<interval> &z0, vector<interval> &radx,  vector<
         cout << " z_i[" << i << "]=" << z_inner[i] << " eta_i[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(range[i].sup() - range[i].inf()) << " gamma[" << i << "]=" << (z_inner[i].sup() - z_inner[i].inf())/(z_outer[i].sup() - z_outer[i].inf()) <<" "; // precision metric with respect to
     cout << endl;
     
-    for (int i=0; i < sysdim ; i++) {
-        file_name.str("");
-        file_name << "output/x" << i+1 << "outer_mean_value.out";
-        outFile_outer_mean_value[i].open(file_name.str().c_str(),fstream::app);
-        outFile_outer_mean_value[i] << inf(z_outer[i]) << "\t" << sup(z_outer[i]) << endl;
-        outFile_outer_mean_value[i].close();
-        file_name.str("");
-        file_name << "output/x" << i+1 << "inner.out";
-        outFile_outer_mean_value[i].open(file_name.str().c_str());
-        outFile_outer_mean_value[i] << inf(z_inner[i]) << "\t" << sup(z_inner[i]) << endl;
-        outFile_outer_mean_value[i].close();
-    }
+    
 }
 
 
@@ -2274,6 +2276,51 @@ vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interva
     
     return z_inner;
 }
+
+// New version using nquant
+vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, NQuant nquant) {
+    interval inner_impro, inner_pro;
+    vector<interval> z_inner(sysdim);
+    
+    for (int i=0 ; i<sysdim ; i++)
+    {
+        inner_impro = 0;
+        inner_pro = z0[i];
+        for (int j=0; j < jacdim ; j++) {
+            if (nquant.exists[j]) // existentially quantified
+                inner_impro += Kaucher_multeps(Jacf[i][nquant.var_id[j]],radx[nquant.var_id[j]]);
+            else
+                inner_pro += Jacf[i][nquant.var_id[j]]*radx[nquant.var_id[j]];
+        }
+        z_inner[i] = Kaucher_add_pro_impro(inner_pro,inner_impro);
+    }
+    
+    return z_inner;
+}
+
+// New version using nquant
+vector<interval> evaluate_outerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, NQuant nquant) {
+    interval outer_impro, outer_pro;
+    vector<interval> z_outer(sysdim);
+    
+    for (int i=0 ; i<sysdim ; i++)
+    {
+        outer_impro = 0;
+        outer_pro = z0[i];
+        for (int j=0; j < jacdim ; j++) {
+            if (nquant.exists[j]) // existentially quantified
+                outer_pro += Jacf[i][nquant.var_id[j]]*radx[nquant.var_id[j]];
+            else
+                outer_impro += Kaucher_multeps(Jacf[i][nquant.var_id[j]],radx[nquant.var_id[j]]);
+        }
+        z_outer[i] = Kaucher_add_pro_impro_resultpro(outer_pro,outer_impro);
+    }
+    
+    return z_outer;
+}
+
+
+
 
 
 // same that evaluate_innerrange but for preconditioner C
@@ -3795,19 +3842,32 @@ void twodim_discretization_by_quadrant(vector<interval> &radx) {
     }
 }
 
-
+// supposes jacdim = 2
 int global_id(int i1, int i2)
 {
     int cur_point;
     int id1 = nquant.var_id[0];
     int id2 = nquant.var_id[1];
     
-    if (id1 == 0)
+    /*if (id1 == 0)
         cur_point = i1*nb_sample_per_dim + i2;
     else
-        cur_point = i2*nb_sample_per_dim + i1;
+        cur_point = i2*nb_sample_per_dim + i1;*/
+    
+    cur_point = i1 * pow(nb_sample_per_dim,1-nquant.var_id[0]) + i2 * pow(nb_sample_per_dim,1-nquant.var_id[1]);
+    
+    
     return cur_point;
 }
+
+// supposes jacdim = 3
+int global_id(int i1, int i2, int i3)
+{
+    int cur_point;
+    cur_point = i1 * pow(nb_sample_per_dim,2-nquant.var_id[0]) + i2 * pow(nb_sample_per_dim,2-nquant.var_id[1]) + i3 * pow(nb_sample_per_dim,2-nquant.var_id[2]);
+    return cur_point;
+}
+
 
 
 // using nb_sample_per_dim and nquant
@@ -3835,6 +3895,7 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
     vector<vector<interval>> rob_range(nb_steps+1,vector<interval>(sysdim));
     
     vector<double> min_rob_temp(sysdim), max_rob_temp(sysdim);
+    vector<vector<double>> min_rob_by_dim(jacdim,vector<double>(sysdim)), max_rob_by_dim(jacdim,vector<double>(sysdim));
     
     cout << "Initial condition x: " << xinit;
 
@@ -3943,16 +4004,22 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
         }
         else if (nquant.uncontrolled > 0)
         {
-            for (int i=0; i < sysdim ; i++) {
-                min_output_rob[iter][i] = min_output[iter][i];
-                max_output_rob[iter][i] = max_output[iter][i];
+            // initialisation
+            if (nquant.exists[jacdim-1]) {
+                for (int i=0; i < sysdim ; i++) {
+                    min_output_rob[iter][i] = min_output[iter][i];
+                    max_output_rob[iter][i] = max_output[iter][i];
+                }
+            }
+            else {
+                for (int i=0; i < sysdim ; i++) {
+                    min_output_rob[iter][i] = DBL_MAX; // min_output[iter][i];
+                    max_output_rob[iter][i] = -DBL_MAX; // max_output[iter][i];
+                }
             }
             
             if (jacdim == 2)
             {
-                int id1 = nquant.var_id[0];
-                int id2 = nquant.var_id[1];
-                // suppose id1 == 0 id1 === 1
                 for (int i1=0; i1 <= nb_sample_per_dim ; i1++) {
                     cur_point = global_id(i1,0);
                     for (int i=0; i < sysdim ; i++) {
@@ -3974,30 +4041,183 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
                             }
                         }
                     }
-                    if (nquant.exists[0]) {
-                        for (int i=0; i < sysdim ; i++) {
-                            min_output_rob[iter][i] = min(min_output_rob[iter][i],max_rob_temp[i]);
-                            max_output_rob[iter][i] = max(max_output_rob[iter][i],min_rob_temp[i]);
+                    for (int i=0; i < sysdim ; i++) {
+                        //cout << "min_rob_temp " << min_rob_temp[i] << endl;
+                        //cout << "max_rob_temp " << max_rob_temp[i] << endl;
+                        if (min_rob_temp[i] > max_rob_temp[i]) {
+                            min_rob_temp[i] = DBL_MAX;
+                            max_rob_temp[i] = -DBL_MAX;
                         }
                     }
-                    else
+                    if (nquant.exists[0]) { // we supose that forall[1] => [min max, max min]
+                        for (int i=0; i < sysdim ; i++) {
+                            if (min_rob_temp[i] > max_rob_temp[i]) {
+                                min_output_rob[iter][i] = DBL_MAX;
+                                max_output_rob[iter][i] = -DBL_MAX;
+                            }
+                            else
+                            {
+                                min_output_rob[iter][i] = min(min_output_rob[iter][i],max_rob_temp[i]);
+                                max_output_rob[iter][i] = max(max_output_rob[iter][i],min_rob_temp[i]);
+                            }
+                        }
+                    }
+                    else // we supose that exists[1] => [max min, min max]
                     {
                         for (int i=0; i < sysdim ; i++) {
                             min_output_rob[iter][i] = max(min_output_rob[iter][i],min_rob_temp[i]);
                             max_output_rob[iter][i] = min(max_output_rob[iter][i],max_rob_temp[i]);
                         }
                     }
-                 /*   for (int i=0; i < sysdim ; i++) {
+                    for (int i=0; i < sysdim ; i++) {
                         cout << "min_output_rob " << min_output_rob[iter][i] << endl;
                         cout << "max_output_rob " << max_output_rob[iter][i] << endl;
-                    } */
+                    }
+                }
+            }
+            else if (jacdim == 3)
+            {
+                for (int i1=0; i1 <= nb_sample_per_dim ; i1++) {
+                    cur_point = global_id(i1,0,0);
+                    // initializing bounds before loop i2
+                    for (int i=0; i < sysdim ; i++) {
+                        min_rob_by_dim[0][i] = output[cur_point][i];
+                        max_rob_by_dim[0][i] = output[cur_point][i];
+                    }
+                    for (int i2=0; i2 <= nb_sample_per_dim ; i2++) {
+                        cur_point = global_id(i1,i2,0);
+                        
+                        // initializing bounds before loop i3
+                        for (int i=0; i < sysdim ; i++) {
+                            min_rob_by_dim[1][i] = output[cur_point][i];
+                            max_rob_by_dim[1][i] = output[cur_point][i];
+                        }
+                        // updating bounds in loop i3
+                        for (int i3=0; i3 <= nb_sample_per_dim ; i3++) {
+                            cur_point = global_id(i1,i2,i3);
+                            
+                            if (nquant.exists[2]) {
+                                for (int i=0; i < sysdim ; i++) {
+                                    min_rob_by_dim[1][i] = min(min_rob_by_dim[1][i],output[cur_point][i]);
+                                    max_rob_by_dim[1][i] = max(max_rob_by_dim[1][i],output[cur_point][i]);
+                                }
+                            }
+                            else {
+                                for (int i=0; i < sysdim ; i++) {
+                                    min_rob_by_dim[1][i] = max(min_rob_by_dim[1][i],output[cur_point][i]);
+                                    max_rob_by_dim[1][i] = min(max_rob_by_dim[1][i],output[cur_point][i]);
+                                }
+                            }
+                        }
+                        for (int i=0; i < sysdim ; i++) {
+                            //cout << "min_rob_temp " << min_rob_temp[i] << endl;
+                            //cout << "max_rob_temp " << max_rob_temp[i] << endl;
+                            if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
+                                min_rob_by_dim[1][i] = DBL_MAX;
+                                max_rob_by_dim[1][i] = -DBL_MAX;
+                            }
+                        }
+                        
+                        
+                        if (nquant.exists[1]) {
+                            if (nquant.exists[2]) {
+                                for (int i=0; i < sysdim ; i++) {
+                                    if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
+                                        min_rob_by_dim[0][i] = DBL_MAX;
+                                        max_rob_by_dim[0][i] = -DBL_MAX;
+                                    }
+                                    else {
+                                        min_rob_by_dim[0][i] = min(min_rob_by_dim[0][i],min_rob_by_dim[1][i]);
+                                        max_rob_by_dim[0][i] = max(max_rob_by_dim[0][i],max_rob_by_dim[1][i]);
+                                    }
+                                }
+                            }
+                            else {
+                                for (int i=0; i < sysdim ; i++) {
+                                    if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
+                                        min_rob_by_dim[0][i] = DBL_MAX;
+                                        max_rob_by_dim[0][i] = -DBL_MAX;
+                                    }
+                                    else {
+                                        min_rob_by_dim[0][i] = min(min_rob_by_dim[0][i],max_rob_by_dim[1][i]);
+                                        max_rob_by_dim[0][i] = max(max_rob_by_dim[0][i],min_rob_by_dim[1][i]);
+                                    }
+                                }
+                            }
+                        }
+                        else {
+                            if (nquant.exists[2]) {
+                                for (int i=0; i < sysdim ; i++) {
+                                    min_rob_by_dim[0][i] = max(min_rob_by_dim[0][i],min_rob_by_dim[1][i]);
+                                    max_rob_by_dim[0][i] = min(max_rob_by_dim[0][i],max_rob_by_dim[1][i]);
+                                }
+                            }
+                            else {
+                                for (int i=0; i < sysdim ; i++) {
+                                    min_rob_by_dim[0][i] = max(min_rob_by_dim[0][i],max_rob_by_dim[1][i]);
+                                    max_rob_by_dim[0][i] = min(max_rob_by_dim[0][i],min_rob_by_dim[1][i]);
+                                }
+                            }
+                        }
+                    }
+                    for (int i=0; i < sysdim ; i++) {
+                        //cout << "min_rob_temp " << min_rob_by_dim[0][i] << endl;
+                        //cout << "max_rob_temp " << max_rob_by_dim[0][i] << endl;
+                        if (min_rob_by_dim[0][i] > max_rob_by_dim[0][i]) {
+                            min_rob_by_dim[0][i] = DBL_MAX;
+                            max_rob_by_dim[0][i] = -DBL_MAX;
+                        }
+                            
+                    }
+                    if (nquant.exists[0]) {
+                        for (int i=0; i < sysdim ; i++) {
+                            if (min_rob_by_dim[0][i] > max_rob_by_dim[0][i]) {
+                                min_output_rob[iter][i] = DBL_MAX;
+                                max_output_rob[iter][i] = -DBL_MAX;
+                            }
+                            else if (nquant.exists[1])
+                            {
+                                min_output_rob[iter][i] = min(min_output_rob[iter][i],min_rob_by_dim[0][i]);
+                                max_output_rob[iter][i] = max(max_output_rob[iter][i],max_rob_by_dim[0][i]);
+                            }
+                            else
+                            {
+                                min_output_rob[iter][i] = min(min_output_rob[iter][i],max_rob_by_dim[0][i]);
+                                max_output_rob[iter][i] = max(max_output_rob[iter][i],min_rob_by_dim[0][i]);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (nquant.exists[1])
+                        {
+                            for (int i=0; i < sysdim ; i++) {
+                                min_output_rob[iter][i] = max(min_output_rob[iter][i],min_rob_by_dim[0][i]);
+                                max_output_rob[iter][i] = min(max_output_rob[iter][i],max_rob_by_dim[0][i]);
+                            }
+                        }
+                        else
+                        {
+                            for (int i=0; i < sysdim ; i++) {
+                                min_output_rob[iter][i] = max(min_output_rob[iter][i],max_rob_by_dim[0][i]);
+                                max_output_rob[iter][i] = min(max_output_rob[iter][i],min_rob_by_dim[0][i]);
+                            }
+                        }
+                    }
+                    for (int i=0; i < sysdim ; i++) {
+                        cout << "min_output_rob " << min_output_rob[iter][i] << endl;
+                        cout << "max_output_rob " << max_output_rob[iter][i] << endl;
+                    }
                 }
             }
             
             for (int i=0; i < sysdim ; i++) {
                 //cout << "min_output_rob " << min_output_rob[iter][i] << endl;
                 //cout << "max_output_rob " << max_output_rob[iter][i] << endl;
-                rob_range[iter][i] = interval(min_output_rob[iter][i],max_output_rob[iter][i]);
+                if (min_output_rob[iter][i] > max_output_rob[iter][i])
+                    rob_range[iter][i] = empty();
+                else
+                    rob_range[iter][i] = interval(min_output_rob[iter][i],max_output_rob[iter][i]);
             }
             
             for (cur_point=0 ; cur_point<nb_points; cur_point++)
@@ -4203,11 +4423,8 @@ vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f) {
 
 
 // for discrete dynamical systems
-void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range)
+/*void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range)
 {
-    vector<ofstream> outFile_outer_mean_value(sysdim);
-    vector<ofstream> outFile_inner(sysdim);
-    stringstream file_name;
     
     
     
@@ -4264,7 +4481,7 @@ void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob,
     out_approx << YAML::Key << "gamma";
     out_approx << YAML::Value << gamma;
     
-}
+}*/
 
 // for discrete dynamical systems
 void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int varx, int vary, int step)

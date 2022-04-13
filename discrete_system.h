@@ -277,6 +277,9 @@ interval evaluate_innerrange_x_subdiv(vector<interval> &z0, vector<interval> &ra
 interval evaluate_innerrange_x_subdiv_discretize(vector<interval> &z0, vector<interval> &radx, vector<vector<AAF>> &JacAff, bool maximal, vector<int> &exist_quantified, int i, int index1, int index2);
 vector<interval> evaluate_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, bool maximal, vector<int> &exist_quantified);
+// new version using nquant
+vector<interval> evaluate_innerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, NQuant nquant);
+vector<interval> evaluate_outerrange_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, NQuant nquant);
 vector<interval> evaluate_precond_innerrange(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<double>> C, int varx, int vary, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
 vector<interval> evaluate_innerrange_order2_robust(vector<interval> &z0, vector<interval> &radx, vector<vector<interval>> &Jacf, vector<vector<vector<interval>>> &Hessf, bool maximal, vector<int> &exist_quantified);
@@ -303,7 +306,7 @@ vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f);
 vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f);
 
 // for discrete-time dynamical systems
-void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range);
+//void print_projections(vector<interval> &z_inner, vector<interval> &z_inner_rob, vector<interval> &z_outer, int step, vector<interval> &range);
 void print_innerbox(vector<interval> &inner, vector<int> &exist_quantified, int varx, int vary, int step);
 
 #endif

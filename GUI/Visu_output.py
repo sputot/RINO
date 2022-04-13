@@ -6,7 +6,7 @@
 
 # ## Reading result files
 
-# In[1]:
+# In[2]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -73,6 +73,18 @@ if (path.isfile('samplesreachset.yaml')):
         sample_z = []
         for i in range(sysdim):
             sample_z.append([sample["sample"][i] for sample in samples])
+        # filtering robust samples
+        sample_robust_tn = []
+        sample_robust_z = []
+        for i in range(sysdim):
+            sample_robust_z.append([])
+        for sample in samples:
+            if 'robust_sample' in sample: 
+                sample_robust_tn.append(sample["tn"])
+                for i in range(sysdim):
+                    sample_robust_z[i].append(sample["robust_sample"][i])
+        print(len(sample_robust_tn))
+        print(len(sample_robust_z[0]))
         # plt.scatter(z[0],z[1],c='purple',alpha=1.,s=1.,label='estimated reachable states')
 else:
     samples_absent = True;
@@ -88,8 +100,8 @@ if (path.isfile('approxreachset.yaml')):
         zmax_outer = []
         zmin_inner = []
         zmax_inner = []
-        zmin_center = []
-        zmax_center = []
+        #zmin_center = []
+        #zmax_center = []
         zmin_exact = []
         zmax_exact = []
         zmin_outer_rob = []
@@ -119,10 +131,10 @@ if (path.isfile('approxreachset.yaml')):
             for i in range(sysdim):
                 gamma.append([app["gamma"][i] for app in approx])
         
-        if 'center' in approx[0]:
-            for i in range(sysdim):
-                zmin_center.append([app["center"][2*i+1] for app in approx])
-                zmax_center.append([app["center"][2*i+1] for app in approx])
+        #if 'center' in approx[0]:
+        #    for i in range(sysdim):
+        #        zmin_center.append([app["center"][2*i+1] for app in approx])
+        #        zmax_center.append([app["center"][2*i+1] for app in approx])
         if 'exact' in approx[0]:
             for i in range(sysdim):
                 zmin_exact.append([app["exact"][2*i+1] for app in approx])
@@ -215,7 +227,7 @@ if (path.isfile('approxreachset.yaml')):
                 no_iter = no_iter+1
 
 
-# In[2]:
+# In[3]:
 
 
 width_in_inches = 12
@@ -232,6 +244,8 @@ def print_xy(no_varx,no_vary,sample,approx,skew):
     
     if (sample and not(samples_absent)):
         plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='sampled states')
+        if (len(sample_robust_z) > 0):
+            plt.scatter(sample_robust_z[no_varx],sample_robust_z[no_vary],c='red',alpha=1.,s=1.,label='robust sampled states')
     
     if (approx):
         xi = np.zeros((8), float)
@@ -325,7 +339,7 @@ def print_xy(no_varx,no_vary,sample,approx,skew):
     plt.close()
 
 
-# In[3]:
+# In[4]:
 
 
 def print_finalstate_xy(no_varx,no_vary):
@@ -339,7 +353,9 @@ def print_finalstate_xy(no_varx,no_vary):
             if (sample_tn[no_iter] == approx_tn[len(approx_tn)-1]):
                 plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.)        
         plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.,label='sampled states')
-    
+        for no_iter in range(len(sample_robust_z[no_varx])):
+            if (sample_robust_tn[no_iter] == approx_tn[len(approx_tn)-1]):
+                plt.scatter(sample_robust_z[no_varx][no_iter],sample_robust_z[no_vary][no_iter],c='red',alpha=1.,s=1.)  
     xi = np.zeros((8), float)
     
     
@@ -416,7 +432,7 @@ def print_finalstate_xy(no_varx,no_vary):
     plt.close()
 
 
-# In[4]:
+# In[ ]:
 
 
 # print joint ranges and sampled joint range of variables to display
@@ -433,7 +449,7 @@ for vary in range(sysdim):
             print_finalstate_xy(varx,vary)
 
 
-# In[5]:
+# In[ ]:
 
 
 # 3D printing in continuous case  (ODEs)
@@ -556,7 +572,7 @@ def print_xyz(no_varx,no_vary,no_varz):
     plt.close()
 
 
-# In[6]:
+# In[ ]:
 
 
 # print joint outer and inner 3D ranges in continuous case (ODEs)
@@ -571,7 +587,7 @@ if (systype == 0):  # ODEs
                     print_xyz(varx,vary,varz)
 
 
-# In[7]:
+# In[ ]:
 
 
 # 3D printing in case of discrete-time systems - different from continuous case, x,y as a function of time...
@@ -643,7 +659,7 @@ def print3d_discrete_xyt(no_varx,no_vary):
     plt.close()
 
 
-# In[8]:
+# In[ ]:
 
 
 # 3D printing in discrete time systems - different from continuous case, x,y as a function of time...
@@ -657,7 +673,7 @@ if (systype == 2):
                   print3d_discrete_xyt(varx,vary)
 
 
-# In[9]:
+# In[ ]:
 
 
 # if print_robust = True: print robust approx
@@ -687,7 +703,9 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
     else:
         fig = plt.figure()
     
-    if (print_robust and print_maximal):
+    if (print_robust and print_maximal and print_sample):
+        extension = '_rob_max_sample.png'
+    elif (print_robust and print_maximal):
         extension = '_rob_max.png'
     elif (print_robust):
         extension = '_rob.png'
@@ -733,18 +751,22 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
             if (print_sample):
                 if (subplots):
                     ax.scatter(sample_tn,sample_z[k],c='purple',alpha=1.,s=1.,label='estimated reachable states')
+                    if (len(sample_robust_z) > 0):
+                        ax.scatter(sample_robust_tn,sample_robust_z[k],c='red',alpha=1.,s=1.,label='estimated robust reachable states')
                 else:
                     plt.scatter(sample_tn,sample_z[k],c='purple',alpha=1.,s=1.,label='estimated reachable states') 
-                
+                    if (len(sample_robust_z) > 0):
+                        plt.scatter(sample_robust_tn,sample_robust_z[k],c='red',alpha=1.,s=1.,label='estimated robust reachable states')
+                    
             if (print_robust and (len(zmin_outer_rob) > 0)):
                 if (subplots and print_robust):
                     ax.plot(approx_tn, zmax_outer_rob[k], color='green', label='robust outer approx')
                     ax.plot(approx_tn ,zmin_outer_rob[k], color='green')
-                    ax.fill_between(approx_tn,zmin_inner[k],zmax_inner[k], label='robust inner approx')
+                    ax.fill_between(approx_tn,zmin_inner_rob[k],zmax_inner_rob[k], label='robust inner approx')
                 elif (print_robust):
                     plt.plot(approx_tn, zmax_outer_rob[k], color='green', label='robust outer approx')
                     plt.plot(approx_tn ,zmin_outer_rob[k], color='green')
-                    plt.fill_between(approx_tn,zmin_inner[k],zmax_inner[k], label='robust inner approx')
+                    plt.fill_between(approx_tn,zmin_inner_rob[k],zmax_inner_rob[k], label='robust inner approx')
              
             
             if ((not only_one_graph) and (not subplots)):
@@ -769,7 +791,7 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
         plt.close()
 
 
-# In[10]:
+# In[ ]:
 
 
 print_robust = False
@@ -781,7 +803,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[11]:
+# In[ ]:
 
 
 if (not samples_absent):
@@ -793,7 +815,18 @@ if (not samples_absent):
     print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[12]:
+# In[ ]:
+
+
+print_robust = True
+print_sample = True
+only_one_graph = False
+subplots = False
+
+print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
+
+
+# In[ ]:
 
 
 print_robust = True
@@ -804,7 +837,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[13]:
+# In[ ]:
 
 
 print_robust = False
@@ -815,7 +848,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[14]:
+# In[ ]:
 
 
 print_robust = True
@@ -826,7 +859,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[15]:
+# In[ ]:
 
 
 print_robust = False
@@ -835,7 +868,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[16]:
+# In[ ]:
 
 
 print_robust = False
@@ -844,7 +877,7 @@ subplots = True
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[17]:
+# In[ ]:
 
 
 if 'etaouter' in approx[0]:
@@ -872,7 +905,7 @@ if 'gamma' in approx[0]:
     plt.close()
 
 
-# In[18]:
+# In[ ]:
 
 
 print_interactive = False
@@ -890,7 +923,7 @@ if (len(meanerrorinner) > 0):
     plt.close()
 
 
-# In[19]:
+# In[ ]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any
