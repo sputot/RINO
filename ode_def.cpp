@@ -557,7 +557,7 @@ void read_parameters(const char * params_filename)
                 else
                     sscanf(token,"[%lf,%lf]",&a,&b);
                 initial_values[i] = interval(a,b);
-                cout <<"intial_value="<<interval(a,b)<<endl;
+                cout <<"initial_value="<<interval(a,b)<<endl;
                 i++;
                 token = strtok(NULL,space);
             }
@@ -1979,6 +1979,28 @@ void init_system()
     for (int i=0; i< sysdim; i++)
         variables_to_display[i] = true;
     
+ /*   for (int i=0; i< paramsdim; i++)
+        params_aff[i] = params[i];
+    
+    for (int i=0; i< sysdim; i++)
+        initial_values_aff[i] = initial_values[i];
+    
+    for (int i=0; i< inputsdim; i++)
+        inputs_aff[i] = inputs[i];
+    
+    if (nn_analysis)
+        nncontrol= NH.eval_network(initial_values_aff);*/
+}
+
+
+
+
+void init_utils_inputs()
+{
+    interval temp;
+    int nb_points;
+    
+    
     for (int i=0; i< paramsdim; i++)
         params_aff[i] = params[i];
     
@@ -1990,15 +2012,8 @@ void init_system()
     
     if (nn_analysis)
         nncontrol= NH.eval_network(initial_values_aff);
-}
-
-
-
-
-void init_utils_inputs()
-{
-    interval temp;
-    int nb_points;
+    
+    
     
     // ******************* for piecewise constant inputs
     fullinputsdim = 0;
