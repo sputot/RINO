@@ -6,7 +6,7 @@
 
 # ## Reading result files
 
-# In[2]:
+# In[61]:
 
 
 # convert in python script by: jupyter nbconvert --to script Visu_output.ipynb
@@ -227,7 +227,7 @@ if (path.isfile('approxreachset.yaml')):
                 no_iter = no_iter+1
 
 
-# In[3]:
+# In[62]:
 
 
 width_in_inches = 12
@@ -244,7 +244,7 @@ def print_xy(no_varx,no_vary,sample,approx,skew):
     
     if (sample and not(samples_absent)):
         plt.scatter(sample_z[no_varx],sample_z[no_vary],c='purple',alpha=1.,s=1.,label='sampled states')
-        if (len(sample_robust_z) > 0):
+        if (len(sample_robust_tn) > 0):
             plt.scatter(sample_robust_z[no_varx],sample_robust_z[no_vary],c='red',alpha=1.,s=1.,label='robust sampled states')
     
     if (approx):
@@ -339,7 +339,7 @@ def print_xy(no_varx,no_vary,sample,approx,skew):
     plt.close()
 
 
-# In[4]:
+# In[63]:
 
 
 def print_finalstate_xy(no_varx,no_vary):
@@ -352,10 +352,11 @@ def print_finalstate_xy(no_varx,no_vary):
         for no_iter in range(len(sample_z[no_varx])):
             if (sample_tn[no_iter] == approx_tn[len(approx_tn)-1]):
                 plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.)        
-        plt.scatter(sample_z[no_varx][no_iter],sample_z[no_vary][no_iter],c='purple',alpha=1.,s=1.,label='sampled states')
-        for no_iter in range(len(sample_robust_z[no_varx])):
-            if (sample_robust_tn[no_iter] == approx_tn[len(approx_tn)-1]):
-                plt.scatter(sample_robust_z[no_varx][no_iter],sample_robust_z[no_vary][no_iter],c='red',alpha=1.,s=1.)  
+        #plt.scatter(sample_z[no_varx][len(sample_z[no_varx])-1],sample_z[no_vary][len(sample_z[no_varx])-1],c='purple',alpha=1.,s=1.,label='sampled states')
+        if (len(sample_robust_z[no_varx]) > 1):
+            for no_iter in range(len(sample_robust_z[no_varx])):
+                if (sample_robust_tn[no_iter] == approx_tn[len(approx_tn)-1]):
+                    plt.scatter(sample_robust_z[no_varx][no_iter],sample_robust_z[no_vary][no_iter],c='red',alpha=1.,s=1.)  
     xi = np.zeros((8), float)
     
     
@@ -432,7 +433,7 @@ def print_finalstate_xy(no_varx,no_vary):
     plt.close()
 
 
-# In[ ]:
+# In[64]:
 
 
 # print joint ranges and sampled joint range of variables to display
@@ -449,7 +450,7 @@ for vary in range(sysdim):
             print_finalstate_xy(varx,vary)
 
 
-# In[ ]:
+# In[65]:
 
 
 # 3D printing in continuous case  (ODEs)
@@ -572,7 +573,7 @@ def print_xyz(no_varx,no_vary,no_varz):
     plt.close()
 
 
-# In[ ]:
+# In[66]:
 
 
 # print joint outer and inner 3D ranges in continuous case (ODEs)
@@ -587,7 +588,7 @@ if (systype == 0):  # ODEs
                     print_xyz(varx,vary,varz)
 
 
-# In[ ]:
+# In[67]:
 
 
 # 3D printing in case of discrete-time systems - different from continuous case, x,y as a function of time...
@@ -659,7 +660,7 @@ def print3d_discrete_xyt(no_varx,no_vary):
     plt.close()
 
 
-# In[ ]:
+# In[68]:
 
 
 # 3D printing in discrete time systems - different from continuous case, x,y as a function of time...
@@ -673,7 +674,7 @@ if (systype == 2):
                   print3d_discrete_xyt(varx,vary)
 
 
-# In[ ]:
+# In[69]:
 
 
 # if print_robust = True: print robust approx
@@ -791,7 +792,7 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
         plt.close()
 
 
-# In[ ]:
+# In[70]:
 
 
 print_robust = False
@@ -803,7 +804,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[71]:
 
 
 if (not samples_absent):
@@ -815,7 +816,7 @@ if (not samples_absent):
     print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[72]:
 
 
 print_robust = True
@@ -826,7 +827,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[73]:
 
 
 print_robust = True
@@ -837,7 +838,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[74]:
 
 
 print_robust = False
@@ -848,7 +849,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[75]:
 
 
 print_robust = True
@@ -859,7 +860,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[76]:
 
 
 print_robust = False
@@ -868,7 +869,7 @@ subplots = False
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[77]:
 
 
 print_robust = False
@@ -877,7 +878,7 @@ subplots = True
 print_projections(print_robust,print_maximal,print_sample,only_one_graph,subplots,print_interactive,variables_to_display)
 
 
-# In[ ]:
+# In[78]:
 
 
 if 'etaouter' in approx[0]:
@@ -905,7 +906,7 @@ if 'gamma' in approx[0]:
     plt.close()
 
 
-# In[ ]:
+# In[79]:
 
 
 print_interactive = False
@@ -923,7 +924,7 @@ if (len(meanerrorinner) > 0):
     plt.close()
 
 
-# In[ ]:
+# In[80]:
 
 
 # mean on xi of error between outer-approx and analytical solution if any

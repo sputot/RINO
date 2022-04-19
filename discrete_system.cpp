@@ -4220,7 +4220,7 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
                     rob_range[iter][i] = interval(min_output_rob[iter][i],max_output_rob[iter][i]);
             }
             
-            for (cur_point=0 ; cur_point<nb_points; cur_point++)
+          /*  for (cur_point=0 ; cur_point<nb_points; cur_point++)
             {
                 if (iter % printing_period == 0)
                 {
@@ -4243,7 +4243,7 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
                     out_samples << YAML::EndMap;
                 }
             }
-            
+            */
             
             
         }
@@ -4251,6 +4251,32 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
             for (int i=0; i < sysdim ; i++)
                 rob_range[iter][i] = range[iter][i];
         }
+        
+        
+        for (cur_point=0 ; cur_point<nb_points; cur_point++)
+        {
+            if (iter % printing_period == 0)
+            {
+                out_samples << YAML::BeginMap;
+                out_samples << YAML::Key << "tn";
+                out_samples << YAML::Value << iter;
+                out_samples << YAML::Key << "sample";
+                out_samples << YAML::Value << output[cur_point];
+                bool is_robust = true;
+                for (int i=0; i < sysdim ; i++) {
+                    if (output[cur_point][i] < min_output_rob[iter][i] || output[cur_point][i] > max_output_rob[iter][i]) {
+                        is_robust = false;
+                        break;
+                    }
+                }
+                if (is_robust) {
+                    out_samples << YAML::Key << "robust_sample";
+                    out_samples << YAML::Value << output[cur_point];
+                }
+                out_samples << YAML::EndMap;
+            }
+        }
+        
         
         
         if (iter % printing_period == 0)
