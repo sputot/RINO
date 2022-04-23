@@ -111,6 +111,29 @@ class network_handler
     Layer build_layer(int no_layer);
     
     
+ /* pas terminé mais cf https://stackoverflow.com/questions/43045457/c-templated-class-with-different-behaviour-depending-on-type 
+  template <> vector<F<AAF>> eval_network(vector<F<AAF>> x) {
+     
+     if (testmode)
+     {
+         vector<F<AAF>> res(x.size());
+         for (int i=0 ; i<x.size(); i++)
+             res[i] = x[i];
+      //   cout << "res=" << res[0] << endl;
+         return res;
+     }
+     
+     vector<vector<F<AAF>> net_outputs(n_hidden_layers+2);
+     net_outputs[0] = x;
+     for (int i=0 ; i<n_hidden_layers+1 ; i++ ) {
+         net_outputs[i+1] = L[i].eval_layer(net_outputs[i]);
+     }
+     return net_outputs[n_hidden_layers+1];
+     
+    
+ }
+    */
+    
     template <class C> vector<C> eval_network(vector<C> x) {
         
         if (testmode)

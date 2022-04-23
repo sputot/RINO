@@ -500,6 +500,14 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             out_approx << YAML::Value << step;
         }
         
+   /*     cout << "x_o=" << x_o;
+        for (int i=0; i < jacdim ; i++) {
+            x_i[i].x().sumup(tol_noise);
+            x_o[i].x().sumup(tol_noise);
+        }
+        cout << "x_o="  << x_o;
+     */
+        
         for (int i=0; i < jacdim ; i++)
             x_i[i].diff(i,jacdim);
         multMiVi(x_i,A_i,x_i,varx,vary,varz,skew);   // x_i = A . x_i
@@ -512,6 +520,8 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
             x_o[i].diff(i,jacdim);
         multMiVi(x_o,A_o,x_o,varx,vary,varz,skew);
         z_o = f(x_o);
+        
+        
         for (int i=0; i < sysdim ; i++)
             for (int j=0; j < jacdim ; j++)
                 Jacf_o[i][j] = z_o[i].d(j).convert_int(); //JacAff_o[i][j].convert_int();
@@ -617,8 +627,10 @@ ReachSet discrete_dynamical(DiscreteFunc &f, vector<interval> &xinit, vector<vec
         for (int i=0; i < sysdim ; i++)
             z_outer[i] = intersect(z_outer[i],z_o[i].x().convert_int());
         
-        if (step % printing_period == 0)
+        if (step % printing_period == 0) {
+            cout << "State at step " << step << ":" << endl;
             print_projections(z_outer,z_outer_rob,z_inner_proj,z_inner_proj_rob,estimated_range[step]);
+        }
             //print_projections(z_inner_proj,z_inner_proj_rob,z_outer,step,estimated_range[step]);
         
         // TODO. Attention ici il faudrait calculer aussi le range surapproximé robuste !

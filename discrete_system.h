@@ -32,11 +32,23 @@ extern vector<vector<vector<vector<double>>>> extremity_eps_loc_discr;
 
 extern int nb_discr, nb_discr1, nb_discr2;
 
+template <class C>
+std::ostream& operator<<(std::ostream& os, vector<C> &input)  // calls the printing for element of each type in utils.h
+{
+    for (int i=0 ; i<input.size(); i++)
+        os << input[i] << " ";
+    os << "\n";
+    return os;
+}
+ 
 
 class DiscreteFunc {
 public:
     
   //  template <class C> C sigmoid(C x) { return 1./(1.+exp(-x));}
+    
+    
+    
     
     template <class C>
     vector<C> operator()(vector<C> x) {
@@ -171,7 +183,7 @@ public:
             }
             vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
             vector<C> u = NH.eval_network(x); // NN control
-            //cout << u << endl;
+            cout << "u= " << u;
             z[0] = x[0] + x[1];
             z[1] = x[1] - 0.0025*cos(3.0*x[0]) + 0.0015*u[0];
         }

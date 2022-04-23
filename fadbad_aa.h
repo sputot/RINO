@@ -18,8 +18,11 @@
 
 #include "aa_aaf.h"
 #include "fadiff.h"
+//#include "utils.h"
 
 using namespace fadbad;
+
+#define tol_noise 0.00001
 
 
 template <> struct Op<interval>
@@ -97,8 +100,8 @@ template <> struct Op<AAF>
   static Base myAcos(const Base& x) { return myInteger(0); throw std::invalid_argument( "acos non prevu"); }
   static Base myAtan(const Base& x) { return atan(x); }
     
-    static Base mySig(const Base& x) { /*cout << "est bien appele"; */return act_sigmoid(x); }// 1./(1.+exp(-x));} //act_sigmoid(x); }
-    static Base myTanh(const Base& x) { cout << "est bien appele aussi"; return act_tanh(x); return 2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
+    static Base mySig(const Base& x) { /*cout << "est bien appele"; */AAF y = x; y.sumup(tol_noise); return act_sigmoid(y); }// 1./(1.+exp(-x));} //act_sigmoid(x); }
+    static Base myTanh(const Base& x) { cout << "est bien appele aussi"; AAF y = x; y.sumup(tol_noise); return act_tanh(y); return 2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
   
   /*  static Base myPos(const Base& x) { return +x; }
   static bool myNe(const Base& x, const Base& y) { return x!=y; }

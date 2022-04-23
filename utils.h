@@ -36,7 +36,7 @@ extern int nb_sample_per_dim; // for range estimation by sampling: # of samples 
 extern int points_per_graph; // number of steps in time printed on each graphs (and in yaml files)
 extern int printing_period; // deduced from nb of steps and points per graph
 
-#define tol_noise 0.00001
+//#define tol_noise 0.00001
 
 extern int interactive_visualization; // 0 or 1
 extern vector<bool> variables_to_display;
@@ -120,6 +120,11 @@ std::ostream& operator<<(std::ostream& os, const std::vector<T<AAF>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<T<F<AAF>>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<vector<double>> &input);
 std::ostream& operator<<(std::ostream& os, const std::vector<vector<vector<double>>> &input);
+
+std::ostream& operator<<(std::ostream& os,  F<interval> &input);
+std::ostream& operator<<(std::ostream& os,  F<AAF> &input);
+std::ostream& operator<<(std::ostream& os,  F<F<AAF>> &input);
+
 
 
 

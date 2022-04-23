@@ -902,3 +902,31 @@ std::ostream& operator<<(std::ostream& os, const std::vector<vector<vector<doubl
     }
     return os;
 }
+
+std::ostream& operator<<(std::ostream& os,  F<interval> &input)
+{
+    os << input.x();
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os,  F<AAF> &input)
+{
+    os << input.x().convert_int();
+    return os;
+}
+
+std::ostream& operator<<(std::ostream& os,  F<F<AAF>> &input)
+{
+    os << input.x().x().convert_int();
+    return os;
+}
+
+
+/*
+std::ostream& operator<<(std::ostream& os,  F<AAF> &input)
+{
+    
+        os << input.x();
+    
+    return os;
+}*/
