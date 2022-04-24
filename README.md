@@ -1,7 +1,7 @@
 # ![RINO](https://github.com/cosynus-lix/RINO/blob/master/RINO2.jpg)
 
 
-# WARNING (January 22) - Documentation currently being updated 
+# WARNING - Documentation currently being updated 
 
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
@@ -24,7 +24,7 @@ Install the FILIB++ Interval Library, available from http://www2.math.uni-wupper
 
 Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME
 
-A modified of the third party package for Affine Arithmetic aaflib-0.1 (http://aaflib.sourceforge.net) has been included in the current directory, because some modifications were needed (additional functions and modifications of trigonometric functions). 
+A slightly modified of the third party package for Affine Arithmetic aaflib-0.1 (http://aaflib.sourceforge.net) has been included in the current directory. 
 Future plans include separating more cleanly the initial version and our modifications...
 
 Go to directory aaflib-0.1 within the current package and compile by "make static". 
@@ -36,7 +36,7 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 
 ### Running existing examples
 
-For now, the models of systems to analyse are defined in ode_def.h/ode_def.cpp, and given some fixed ids.
+For now, the models of systems to analyse are defined in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
 Running an existing example is then performed at command line, by 
 ```
 ./rino [-systype system_type -syschoice system_id] [-nnfile-sfx filename.sfx] [config_file.txt]
@@ -278,9 +278,9 @@ This package, written by [Sylvie Putot](http://www.lix.polytechnique.fr/Labo/Syl
 -  [CAV 2018] Inner and Outer Approximating Flowpipes for Delay Differential Equations, by Eric Goubault, Sylvie Putot and Lorenz Sahlmann, Proceedings of 30th International Conference on Computer Aided Verification, CAV 2018, Springer LNCS volume 10982 [ [DOI](https://www.springer.com/us/book/9783319961415) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/cav18.pdf) ]  
 -  [HSCC 2017] Forward inner-approximated reachability of non-linear continuous systems, by Eric Goubault and Sylvie Putot, Proceedings of the 20th ACM International Conference on Hybrid Systems: Computation and Control, HSCC 2017 [ [DOI](https://dl.acm.org/citation.cfm?id=3049811) | [pdf](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/Publications/hscc17.pdf) ]
 
-Please contact me (putot@lix.polytechnique.fr) for suggestions or difficulties with the package.
+Versions until 2019 were focused on uncertain continuous-time dynamics. More recent versions include discrete-time dynamics and neural-network controlled systems. 
+Please contact putot@lix.polytechnique.fr for suggestions or difficulties with the package.
 
-Versions until 2019 were focused on uncertain continuous-time dynamics. More recent versions include discrete-time dynamics and neural-network controlled systems. Input-output formatting has been updated, please contact me in case of difficulties running older examples. 
 
 ## License
 
