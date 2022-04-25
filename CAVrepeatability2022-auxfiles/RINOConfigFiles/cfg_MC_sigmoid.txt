@@ -11,4 +11,4 @@ order = 3
 initial-values = [-0.5,-0.48] [0.,0.001]
 #initial-values = [-0.53,-0.5] [0.,0.000]
 samples-per-dim = 5
-create-png = 1
+#create-png = 1
