@@ -125,28 +125,19 @@ For now, please take inspiration for the existing examples.
 ```
 # system type (ode, dde, discrete)
 systype = ode
+
 # system ID
 syschoice = 2
-
-time-horizon = 5.
-# time step: only for ODEs
-integration-step = 0.02
-
-# order for Taylor models in time
-order = 3
-
-# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
-refined-mean-value = 1
 
 # ranges for initial conditions
 initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
 # accuracy can be refined by partitioning the initial domain, you can specify the component you whish to subdivide and the number of partitions by:
-# for example for 2 subdivisions for the last component; for the time being only one component at at time can be partitioned
-initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
+# for example for 2 subdivisions for the last component (for the time being only one component at at time can be partitioned): 
+# initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
 
 # ranges for (constant or piecewise constant) inputs
 # if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
-# for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
+# for piecewise constant parameters, you can also specify number of steps over the time horizon (default is 1 for constant, x for piecewise constant with x different pieces)
 inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
 
 # ranges for uncertain but constant parameters
@@ -187,23 +178,6 @@ order = 3
 
 # refined mean-value theorem for inner-approximation (default is 0: classical mean value)
 refined-mean-value = 1
-
-
-# ranges for (constant or piecewise constant) inputs
-# if all inputs are constant you can simply write inputs = [-0.1,0.1] [-0.1,0.1]
-# for piecewise constant parameters, you can also specify number of steps (default is 1 for constant, x for piecewise constant with x different pieces)
-inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # or inputs = [-0.1,0.1] ([-0.1,0.1],10)
-
-# which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
-uncontrolled = 1
-
-# for the visualization: if 0, the visualization script is not called
-create-png = 0
-# for the visualization: if 0, only .png files are produced (if create-png is 1), if 1 figures are plot on screen 
-interactive-visualization = 1
-# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
-# to print all (default value when the option is not set in the config file): set variables-to-display = all
-variables-to-display = 1 2
 ```
 
 ## Sample configuration file for DDEs
@@ -236,14 +210,12 @@ nbsteps = 25
 # iterating algorithm (Algorithm 1 or 2 in [ADHS2021])
 iter-method = 1
 
-# computing skewed box joint approximation or regular boxes
+# computing skewed box joint approximation or regular boxes (influences the precision for Algorithm 1, mostly for visualization for Algorithm 2)
 skew = 1
 
 # Order of the AE extension (1 for mean-value, 2 for Taylor-based higher-order extension)
 AEextension-order = 1
 ```
-
-
 
 
 
