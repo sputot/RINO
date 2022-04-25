@@ -183,7 +183,7 @@ public:
             }
             vector<C> u = net_outputs[NH.n_hidden_layers+1]; //  0.0; // NN control */
             vector<C> u = NH.eval_network(x); // NN control
-            cout << "u= " << u;
+            //cout << "u= " << u;
             z[0] = x[0] + x[1];
             z[1] = x[1] - 0.0025*cos(3.0*x[0]) + 0.0015*u[0];
         }
