@@ -748,7 +748,7 @@ void run_pythonscript_visualization()
         sprintf(displayed_variables,"%s","all");
     }
     sprintf(command_line,"cd GUI; python3 Visu_output.py --interactive=%d --printvar=%s; cd ..",interactive_visualization,displayed_variables);
-    cout << command_line << endl;
+    //cout << command_line << endl;
     system("pwd");
     if (create_png)
         system(command_line);
