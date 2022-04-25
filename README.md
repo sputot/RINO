@@ -1,8 +1,6 @@
 # ![RINO](https://github.com/cosynus-lix/RINO/blob/master/RINO2.jpg)
 
 
-# WARNING - Documentation currently being updated 
-
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
 
@@ -51,21 +49,63 @@ where
 
 ## Running existing examples
 
+### Continuous-time differential systems (ODEs)
 
-For example:
   - the Brusselator example of Reference [HSCC 2017] below is run by 
   ```./rino -systype ode -syschoice 2```
-  or to modify the parameter and initial conditions, by 
+  or if you want to use a configuration file to modify the parameter and initial conditions, by 
   ```./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt```
   - the self-driving car example of Reference [HSCC 2019]  is run by ```./rino -systype ode -syschoice 6``` or ```./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt```
+  <!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
+  
+  ### Continuous-time delay differential systems with constant delays (DDEs)
+  
   - the running example of [CAV 2018] is run  by ```./rino -systype dde -syschoice 1``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_1.txt```
   - Example 10 of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 3``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_3.txt```
   - Example 9 (self-driving car with uncertain PID coefficients) of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 8``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_8.txt```
-  - The platton examples of [CAV 2018] are run  by ```./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]``` (5 vehicles) or ```./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]``` (10 vehicles)
-<!---  - the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )-->
+  - The platoon examples of [CAV 2018] are run  by ```./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]``` (5 vehicles) or ```./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]``` (10 vehicles)
+
+### Discrete-time dynamical systems
+
 - the test model of [ADHS 2021] with Algorithm 1 is run by ```./rino -systype discrete -syschoice 15 -nbsteps 25 [-iter_method 1 -AEextension_order 1 -skew 1]``` or ```./rino -configfile Examples/ConfigFiles/cfg_discrete_15.txt```
 - the SIR epidemic model of [ADHS 2021] with Algorithm 1 (Fig. 3) is run by ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_1.txt``` and the same model with slightly modified initial conditions and Algorithm 2 (Fig. 4) is run by  ```./rino -configfile Examples/ConfigFiles/cfg_discrete_16_2.txt```.
 - the Honeybees Site Choice Model [ADHS 2021] with Algorithm 2 is run by ```./rino -configfile Examples/ConfigFiles/cfg_discrete_17.txt```
+
+### Neural network controlled dynamical systems (continuous-time or discrete-time)
+
+```
+TORA
+./rino -configfile Examples/ConfigFiles/cfg_tora_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_tora_sigmoid.txt
+
+B1
+./rino -configfile Examples/ConfigFiles/cfg_B1_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
+
+B2
+./rino -configfile Examples/ConfigFiles/cfg_B2_sigmoid.txt
+
+B3
+./rino -configfile Examples/ConfigFiles/cfg_B3_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B3_sigmoid.txt
+
+B4:
+./rino -configfile Examples/ConfigFiles/cfg_B4_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B4_sigmoid.txt
+
+B5:
+./rino -configfile Examples/ConfigFiles/cfg_B5_tanh.txt
+./rino -configfile Examples/ConfigFiles/cfg_B5_sigmoid.txt
+  
+ACC:
+./rino -configfile Examples/ConfigFiles/cfg_acc_tanh.txt
+
+Continuous-time Mountain Car
+./rino -configfile Examples/ConfigFiles/cfg_MC_sigmoid.txt
+
+Discrete-time Mountain Car
+./rino -configfile Examples/ConfigFiles/cfg_discrete_mc.txt
+```
 
 The corresponding predefined systems are defined:
   - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
@@ -203,41 +243,7 @@ skew = 1
 AEextension-order = 1
 ```
 
-## New: Running neural network controlled dynamical systems
 
-```
-TORA
-./rino -configfile Examples/ConfigFiles/cfg_tora_tanh.txt
-./rino -configfile Examples/ConfigFiles/cfg_tora_sigmoid.txt
-
-B1
-./rino -configfile Examples/ConfigFiles/cfg_B1_tanh.txt
-./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
-
-B2
-./rino -configfile Examples/ConfigFiles/cfg_B2_sigmoid.txt
-
-B3
-./rino -configfile Examples/ConfigFiles/cfg_B3_tanh.txt
-./rino -configfile Examples/ConfigFiles/cfg_B3_sigmoid.txt
-
-B4:
-./rino -configfile Examples/ConfigFiles/cfg_B4_tanh.txt
-./rino -configfile Examples/ConfigFiles/cfg_B4_sigmoid.txt
-
-B5:
-./rino -configfile Examples/ConfigFiles/cfg_B5_tanh.txt
-./rino -configfile Examples/ConfigFiles/cfg_B5_sigmoid.txt
-  
-ACC:
-./rino -configfile Examples/ConfigFiles/cfg_acc_tanh.txt
-
-Continuous-time Mountain Car
-./rino -configfile Examples/ConfigFiles/cfg_MC_sigmoid.txt
-
-Discrete-time Mountain Car
-./rino -configfile Examples/ConfigFiles/cfg_discrete_mc.txt
-```
 
 
 
