@@ -8,7 +8,7 @@ This is a library to compute guaranteed inner and outer approximations of reacha
 
 For continuous-time systems, it relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
 
-## Dependencies and Installation
+# Dependencies and Installation
 
 ### Using docker
 
@@ -32,22 +32,25 @@ Go to directory aaflib-0.1 within the current package and compile by "make stati
 Returning to the main directory, you can now compile by "make" and obtain the "main" executable. 
 The installation has been mostly tested on MacOS, but should also work on Ubuntu. 
 
-## Running the analysis
+# Running the analysis
 
-### Running existing examples
 
-For now, the models of systems to analyse are defined in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
-Running an existing example is then performed at command line, by 
+For now, the models of systems on which to perform reachability analysis are defined as C++ functions in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
+Running an example is then performed at command line, by 
 ```
 ./rino [-systype system_type -syschoice system_id] [-nnfile-sfx filename.sfx] [config_file.txt]
 ```
 where 
 - system_type is either ode (for a system of ODEs - Ordinary Differential Equations) or dde (for a system of DDEs - Delay Differential Equations) or discrete (for a discrete-time dynamical system)
-- system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ```ode_def.h```)
+- system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ```ode_def.h``` for ODEs and DDEs and  ```discrete_system.h``` for discrete-time systems )
 - optional filename.sfx is the name of a file containing a neural network in the Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
 - optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). 
 - configuration files for some examples are available in directory ```Examples/ConfigFiles```. 
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
+
+
+## Running existing examples
+
 
 For example:
   - the Brusselator example of Reference [HSCC 2017] below is run by 
@@ -69,7 +72,15 @@ The corresponding predefined systems are defined:
   - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
 
 
-#### Sample configuration file: parameters common to all system types
+## Modifying / adding one's own example
+
+For now, please take inspiration for the existing examples.
+
+
+
+# Parameters and Configuration File
+
+## Sample configuration file: parameters common to all system types
 
 ```
 # system type (ode, dde, discrete)
@@ -123,7 +134,7 @@ points-per-graph = 50
 variables-to-display = 1 2
 ```
 
-#### Sample configuration file: parameters specific to ODEs (when systype is ode)
+## Sample configuration file: parameters specific to ODEs (when systype is ode)
 
 ```
 time-horizon = 5.
@@ -155,7 +166,7 @@ interactive-visualization = 1
 variables-to-display = 1 2
 ```
 
-#### Sample configuration file for DDEs
+## Sample configuration file for DDEs
 
 ```
 time-horizon = 5.
@@ -176,7 +187,7 @@ order = 3
 refined-mean-value = 1
 ```
 
-#### Sample configuration file for discrete-time systems
+## Sample configuration file for discrete-time systems
 
 ```
 # number of discrete time steps
@@ -192,7 +203,7 @@ skew = 1
 AEextension-order = 1
 ```
 
-#### New: Running neural network controlled dynamical systems
+## New: Running neural network controlled dynamical systems
 
 ```
 TORA
@@ -230,7 +241,7 @@ Discrete-time Mountain Car
 
 
 
-### Visualizing results (ODEs)
+# Visualizing results (ODEs)
 
 After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
 - ```sumup.txt```: summary of configuration, running time and ranges at the end of the analysis
@@ -265,11 +276,9 @@ These different type of inner and outer approximations are those described in "I
 
 Note that the files produced can slightly vary depending on the system type (ode, dde, discrete-time)
 
-### Modifying / adding one's own example
 
-For now, please take inspiration for the existing examples.
 
-## Authors and References
+# Authors and References
 
 This package, written by [Sylvie Putot](http://www.lix.polytechnique.fr/Labo/Sylvie.Putot/), implements the ideas presented in:
 - [ADHS 2021] Tractable higher-order under-approximating AE extensions for non-linear systems, In IFAC Conference on Analysis and Design of Hybrid Systems, ADHS 2021 [ [DOI](https://www.sciencedirect.com/science/article/pii/S2405896321012799) ]
@@ -282,7 +291,7 @@ Versions until 2019 were focused on uncertain continuous-time dynamics. More rec
 Please contact putot@lix.polytechnique.fr for suggestions or difficulties with the package.
 
 
-## License
+# License
 
 This project is licensed under the GNU LGPLv3 license - see the [LICENSE](LICENSE) file for details
 
