@@ -1,0 +1,68 @@
+FROM tensorflow/tensorflow:1.15.0-gpu-py3
+
+MAINTAINER Eric Goubault and Sylvie Putot
+
+RUN apt-get -y update
+RUN apt install build-essential -y --no-install-recommends
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt install -y libgmp3-dev libmpfr-dev libmpfr-doc libmpfr6 gsl-bin libgsl0-dev bison flex gnuplot-x11 libglpk-dev libyaml-cpp-dev m4
+RUN apt install -y gcc-8 g++-8
+RUN apt install -y libopenmpi-dev
+RUN apt install -y python3-pip
+#RUN apt install --fix-missing -y emacs
+RUN apt install -y git
+RUN apt install -y curl wget
+RUN apt install -y python3-dev
+RUN apt-get -y update
+RUN apt install -y python3-matplotlib
+
+RUN pip3 install pip --upgrade
+
+RUN git clone https://github.com/rivapp/CAV21_repeatability_package.git
+
+# verisig 1.0
+RUN apt install -y openjdk-8-jdk
+RUN cd /CAV21_repeatability_package/verisig/verisig-src && ./gradlew installDist
+# verisig 1.0 est /CAV21_repeatability_package/verisig
+
+# verisig 2.0
+RUN cd /CAV21_repeatability_package/verisig/flowstar && make
+RUN cd /CAV21_repeatability_package/tmp && make
+# verisig2.0 est /CAV21_repeatability_package/tmp/flowstar exemples cf. https://github.com/rivapp/CAV21_repeatability_package/blob/main/documentation.pdf
+
+# ReachNNStar
+RUN cd /CAV21_repeatability_package/ReachNNStar && pip install -r requirements.txt && ./compile.sh
+# exemples /CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex2_tanh.sh cf. https://github.com/rivapp/CAV21_repeatability_package/blob/main/documentation.pdf
+
+# RINO
+RUN cd /home && wget http://www.fadbad.com/download/FADBAD++-2.1.tar.gz && tar -xzvf FADBAD++-2.1.tar.gz && rm FADBAD++-2.1.tar.gz
+RUN cd /home && curl -O http://www2.math.uni-wuppertal.de/wrswt/software/filib++/filibsrc-3.0.2.tar.gz && tar -xzvf filibsrc-3.0.2.tar.gz && rm filibsrc-3.0.2.tar.gz
+
+COPY . /home/RINO
+
+RUN cd /home/filibsrc && ./configure && make && make install
+
+#RUN cd /home/RINO/sherlock_2_reduct && make
+
+RUN touch /root/.bashrc.sh
+RUN echo "#!/bin/bash" >> /root/.bashrc.sh
+RUN echo "export PATH=/usr/local/include:${PATH}" >> /root/.bashrc.sh
+RUN echo "export FADBADHOME=/home/FADBAD++" >> /root/.bashrc.sh
+RUN echo "export FILIBHOME=/home/filibsrc" >> /root/.bashrc.sh
+RUN chmod a+x /root/.bashrc.sh
+
+RUN cd /home/RINO/aaflib-0.1 && make static
+
+RUN . /root/.bashrc.sh && cd /home/RINO && for f in *.cpp; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && for f in *.h; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && make
+
+
+# Extra notes for installing the latest ReachNNStar and verisig versions
+#RUN cd /home && git clone https://github.com/JmfanBU/ReachNNStar.git
+#RUN cd /home/ReachNNStar && ./compile.sh
+#RUN cd /home && git clone https://github.com/Verisig/verisig.git
+#RUN cd /home/verisig/flowstar && make
+#RUN sdk install gradle 7.3.3
+#RUN cd /home/verisig/verisig-src && ./gradlew installDist
+#RUN apt install --fix-missing -y python3-pip emacs
+#RUN pip3 install pip --upgrade
