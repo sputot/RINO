@@ -12,7 +12,7 @@ For continuous-time systems, it relies on Taylor expansions in time and affine a
 
 Get the RINO directory and run ```docker build .```.
 An image ```shaxxx...``` is built which you can run by ```docker run -it --name rino shaxxx...```.
-You can then execute RINO as indicated below.
+You can then execute RINO as indicated in the "Running the analysis" Section.
 
 ### Building from sources
 
