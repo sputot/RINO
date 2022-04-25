@@ -67,7 +67,7 @@ mv output output_B2_sigmoid_001
 ./rino -configfile Examples/ConfigFiles/cfg_B3_tanh_001.txt
 mv output output_B3_tanh_001
 ./rino -configfile Examples/ConfigFiles/cfg_B3_sigmoid_001.txt
-mv output output B3_sigmoid_001
+mv output output_B3_sigmoid_001
 
 # B4:
 ./rino -configfile Examples/ConfigFiles/cfg_B4_tanh_001.txt
