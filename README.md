@@ -4,7 +4,7 @@
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
 
-For continuous-time systems, it relies on Taylor model based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system, as implemented in other reachability tools (but with the specificity to rely on affine arithmetic for the evaluation of the Taylor models). Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. Finally, it also studies robust versions of these tubes, when there can be control inputs and perturbations to the system.
+For continuous-time systems, it relies on Taylor expansions in time and affine arithmetic or zonotopes in space based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
 
 # Dependencies and Installation
 
@@ -20,11 +20,11 @@ You need g++, LAPACK and BLAS installed.
 
 Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/wrswt/software/filib.html (we used Version 3.0.2), and set variable $FILIBHOME
 
-Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME
+Get and unzip the FADBAD++ automatic diffentiation package, available from http://www.fadbad.com/fadbad.html (we used FADBAD++ 2.1), and set variable $FADBADHOME.
+Copy files fadbad.h and fadiff.h from RINO/FADBAD_Modified/ into your FADBAD++ distribution (we modified these files to add differentiation of activation functions).
 
 A slightly modified of the third party package for Affine Arithmetic aaflib-0.1 (http://aaflib.sourceforge.net) has been included in the current directory. 
 Future plans include separating more cleanly the initial version and our modifications...
-
 Go to directory aaflib-0.1 within the current package and compile by "make static". 
 
 Returning to the main directory, you can now compile by "make" and obtain the "main" executable. 
@@ -46,8 +46,13 @@ where
 - configuration files for some examples are available in directory ```Examples/ConfigFiles```. 
 - at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
 
+The predefined systems (see running existing examples Section) are defined as C++ code:
+  - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
+  - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
+The examples of neural network files are in directory ```Examples/Networks```.
 
-## Running existing examples
+
+## Running existing systems
 
 ### Continuous-time differential systems (ODEs)
 
@@ -107,10 +112,6 @@ Discrete-time Mountain Car
 ./rino -configfile Examples/ConfigFiles/cfg_discrete_mc.txt
 ```
 
-The corresponding predefined systems are defined:
-  - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
-  - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
-
 
 ## Modifying / adding one's own example
 
@@ -165,7 +166,7 @@ points-per-graph = 50
 variables-to-display = 1 2
 ```
 
-## Sample configuration file: parameters specific to ODEs (when systype is ode)
+## Parameters specific to ODEs (when systype is ode)
 
 ```
 time-horizon = 5.
@@ -180,7 +181,7 @@ order = 3
 refined-mean-value = 1
 ```
 
-## Sample configuration file for DDEs
+## Parameters specific to DDEs (when systype is ode)
 
 ```
 time-horizon = 5.
@@ -201,7 +202,7 @@ order = 3
 refined-mean-value = 1
 ```
 
-## Sample configuration file for discrete-time systems
+## Parameters specific to discrete-time systems (when systype is discrete)
 
 ```
 # number of discrete time steps
@@ -217,9 +218,22 @@ skew = 1
 AEextension-order = 1
 ```
 
+## Parameters specific to neural network controlled dynamical systems (systype can be either ode or discrete)
+
+```
+# file containing the neural network in Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
+nnfile-sfx = Examples/Networks/tora_tanh.sfx
+
+# when relevant, final offset and scaling of the output of the network:
+nn-offset = 0. # also read from nn file (erasing this one)
+nn-scaling = 11.  # also read from nn file (erasing this one)
+
+# control time step
+control-step = 0.1
+```
 
 
-# Visualizing results (ODEs)
+# Visualizing results
 
 After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
 - ```sumup.txt```: summary of configuration, running time and ranges at the end of the analysis
