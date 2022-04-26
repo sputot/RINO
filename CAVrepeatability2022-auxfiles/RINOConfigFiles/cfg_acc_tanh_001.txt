@@ -7,4 +7,5 @@ time-horizon = 5.
 integration-step = 0.01
 control-step = 0.1
 order = 3
+samples-per-dim = 3
 initial-values = [90,91] [32,32.05] [0,0] [10,11] [30,30.05] [0,0]
