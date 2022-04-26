@@ -705,9 +705,9 @@ def print_projections(print_robust,print_maximal,print_sample,only_one_graph,sub
         fig = plt.figure()
     
     if (print_robust and print_maximal and print_sample):
-        extension = '_rob_max_sample.png'
+        extension = '_sample.png'
     elif (print_robust and print_maximal):
-        extension = '_rob_max.png'
+        extension = '.png'
     elif (print_robust):
         extension = '_rob.png'
     elif (print_maximal and print_sample):
