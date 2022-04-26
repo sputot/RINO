@@ -4,7 +4,7 @@
 
 This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
 
-For continuous-time systems, it relies on Taylor expansions in time and affine arithmetic or zonotopes in space based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
+For continuous-time systems, it relies on Taylor expansions in time and affine arithmetic (i.e. zonotopes) in space based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
 
 # Dependencies and Installation
 
@@ -236,7 +236,7 @@ control-step = 0.1
 # Visualizing results
 
 After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
-- ```sumup.txt```: summary of configuration, running time and ranges at the end of the analysis
+- ```sumup.txt```: summary of configuration, running time and ranges at the final state of the analysis (part of this information can also be found with more significant digits in ```sumup.yaml```)
 - ```samplesreachset.yaml```: sampled trajectories (used to assess accuracy of reachability results)
 - ```approxreachset.yaml```: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
 
@@ -251,12 +251,11 @@ interactive-visualization = 1
 variables-to-display = 1 2
 ```
 In particular, for the k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
-- ```xk_max.png``` and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories (e.g. ```x1_max.png```)
-- ```xk_min_max.png```: when minimal approximations are computed, the minimal, maximal inner and outer-approximations on a same graph
-- ```xk_rob_max.png```, ```xk_rob_min_max.png```: when robust approximations are computed, the minimal, robust and maximal inner and outer-approximations
+- ```xk_max.png```  (e.g. ```x1_max.png```)  and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories
+- ```xk_rob_max.png```, ```xk_rob_max_sample.png```: when robust approximations are computed, the robust and maximal inner and outer-approximations, with and without sampled trajectories
 
 For any couple (k,l) we also print 2-dimensional projections :
-- ```xkxl.png```:  maximal (and when relevant minimal, robust) under and over approximations of (xk,xl) 
+- ```xkxl.png```:  maximal (and when relevant robust) under and over approximations of (xk,xl) 
 Three-dimensional projections when relevant are also printed, only the corners of boxes are printed for more lisibility.
 
 We also provide 

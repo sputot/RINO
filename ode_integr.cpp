@@ -430,8 +430,7 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
         }
     }
     
-    //if (syschoice == 461 ||syschoice == 451 || syschoice == 471 || syschoice == 481 || syschoice == 482 || syschoice == 483 || syschoice == 484 ||syschoice == 491 || syschoice == 492 || syschoice == 493 || syschoice == 381 || syschoice == 382|| syschoice == 383 || syschoice == 384|| syschoice == 385|| syschoice == 386 || syschoice == 387|| syschoice == 388)
-     //   addJacfzJacfz(J_res,Jac_params);
+  
     
     // pour les premiers termes, Jac^i(x)*J*tau^i
     for (int i=1; i<order ; i++)
@@ -692,32 +691,19 @@ HybridStep_ode init_ode(OdeFunc bf, vector<AAF> &x0, vector<AAF> &x,  double tn,
 {
     vector<OdeVar> odeVAR_x(sysdim+inputsdim);
     
-    // ne compile plus: TODO a remplacer par l'expression comme ci-dessous et/ou comprendre
-   /* if (syschoice == 491)
-        nncontrol = NH.eval_network(syst_to_nn(x));
-    else*/
-        if (nn_analysis)
-        nncontrol = NH.eval_network(x);
-    
-    
+    vector<F<AAF>> nncontrolf;
     vector<F<AAF>> xf(sysdim);
+    
     for (int i=0 ; i<sysdim; i++)
         xf[i] = x[i];
     for (int i=0; i < sysdim ; i++)
         xf[i].diff(i,sysdim);    // differentiate to x   // TODO. we still need to add the inputs (inputsdim) in the dimensions that we are differentiatiing to // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
 
-    vector<F<AAF>> nncontrolf;
-    if (syschoice == 491) {
-        vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
-        resf[0] = 30.0;
-        resf[1] = 1.4;
-        resf[2] = xf[4]; // v_ego
-        resf[3] = xf[0]-xf[3]; // x_lead-x_ego
-        resf[4] = xf[1]-xf[4];
-        nncontrolf = NH.eval_network(resf);
+    if (nn_analysis) {
+        nncontrol = NH.eval_network(syst_to_nn(x));
+        nncontrolf = NH.eval_network(syst_to_nn(xf));
     }
-    else if (nn_analysis)
-        nncontrolf = NH.eval_network(xf);
+    
     
     OdeVar odeVAR_g = OdeVar(bf,nncontrolf);
     Ode ode_x0 = Ode(bf,nncontrol);
@@ -826,21 +812,14 @@ void HybridStep_ode::eval_valandJacobian_nn(vector<AAF> x, vector<AAF> &param_in
             // something like for (int k=0 ; k<inputsdim ; k++) { Jac[j][sysdim+...]
                     
             vector<F<AAF>> nncontrolf;
-            if (syschoice == 491) {
-                vector<F<AAF>> resf = vector<F<AAF>>(NH.n_inputs);
-                resf[0] = 30.0;
-                resf[1] = 1.4;
-                resf[2] = xf[4]; // v_ego
-                resf[3] = xf[0]-xf[3]; // x_lead-x_ego
-                resf[4] = xf[1]-xf[4];
-                nncontrolf = NH.eval_network(resf);
-            }
-            else
-                nncontrolf = NH.eval_network(xf);
+            
+            nncontrolf = NH.eval_network(syst_to_nn(xf));
             for (int i=0 ; i<nncontroldim; i++) {
                 nncontrol[i] = nncontrolf[i].x();
                 cout << "nncontrol[i]=" << nncontrol[i].convert_int() << endl;
             }
+            
+            
                         
             vector<vector<AAF>> auxu = vector<vector<AAF>>(sysdim, vector<AAF>(sysdim));
             for (int i=0; i < nncontroldim ; i++)
@@ -1110,8 +1089,8 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr)
                                 if (sysdim > 4) {
                                     for (int j=4;j<sysdim;j++) // should rather be jacdim (but adapt xinit then)
                                     {
-                                        if (xinit[j].inf() != xinit[j].sup())
-                                            printf("warning, case not fully implemented");
+                                      //  if (xinit[j].inf() != xinit[j].sup())
+                                      //      printf("warning, case not fully implemented");
                                         input[cur_point][j] = (xinit[j].inf()+xinit[j].sup())/2.0;
                                     }
                                 }
@@ -1181,20 +1160,8 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr)
                 
             if ((control_period == 0) || (tn == 0) || ((tn/control_period >= (int)(tn/control_period)) && ((tn-tau)/control_period < (int)(tn/control_period))))  // control update rate is not the same as time step
             {
-                if (syschoice == 491)
-                {
-                    vector<double> res = vector<double>(NH.n_inputs);
-                    res[0] = 30.0;
-                    res[1] = 1.4;
-                    res[2] = input[cur_point][4]; // v_ego
-                    res[3] = input[cur_point][0]-input[cur_point][3]; // x_lead-x_ego
-                    res[4] = input[cur_point][1]-input[cur_point][4];
-                    
-                    sampled_nncontrol = NH.eval_network(res);
-                  //  sampled_nncontrol = NH.eval_network(syst_to_nn(input[cur_point]));
-                }
-                else if (nn_analysis)
-                    sampled_nncontrol = NH.eval_network(input[cur_point]);
+                if (nn_analysis)
+                    sampled_nncontrol = NH.eval_network(syst_to_nn(input[cur_point]));
             }
             
             // taking a new value for time-varying inputs
@@ -1212,6 +1179,7 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr)
             //for (int i=0; i < sysdim ; i++)
             //    outFile_xi << output[cur_point][i] <<  "\t";
             //outFile_xi << endl;
+            
             
             out_samples << YAML::BeginMap;
             out_samples << YAML::Key << "tn";
@@ -1251,11 +1219,9 @@ vector<vector<interval>> estimate_reachset(OdeFunc &obf, int discr)
     }
     
     // resetting nncontrol to initial condition
-   // TODO. A comprendr epourquoi ne compile plus et remplacer
-/*    if (syschoice == 491)
+    if (nn_analysis)
         nncontrol = NH.eval_network(syst_to_nn(initial_values_aff));
-    else */if (nn_analysis)
-        nncontrol = NH.eval_network(initial_values_aff);
+    
     
     out_samples << YAML::EndSeq;
     out_samples << YAML::EndMap;

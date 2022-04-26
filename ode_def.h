@@ -17,6 +17,10 @@
 #include "network_handler.h"
 #include "fadbad_aa.h"
 
+#include <math.h>
+#include <cstring>
+#include <gsl/gsl_math.h>
+#include <gsl/gsl_sf_gamma.h>
 #include <algorithm>
 
 using namespace std;
@@ -87,7 +91,30 @@ void AnalyticalSol(int current_iteration, double d0);
 void read_parameters(const char * params_filename);
 
 //vector<F<AAF>> syst_to_nn(vector<F<AAF>> &sysval);
-template <class C> vector<C> syst_to_nn(vector<C> &sysval);
+//template <class C> vector<C> syst_to_nn(vector<C> &sysval);
+
+template <class C> vector<C> syst_to_nn(vector<C> &sysval) {
+vector<C> res; //= vector<AAF>(NH.n_inputs);
+                              
+if ((syschoice == 491) || (syschoice == 492)) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
+ {
+     res = vector<C>(NH.n_inputs);
+     res[0] = 30.0;
+     res[1] = 1.4;
+     res[2] = sysval[4]; // v_ego
+     res[3] = sysval[0]-sysval[3]; // x_lead-x_ego
+     res[4] = sysval[1]-sysval[4]; // v_lead-v_ego
+}
+else
+    res = sysval;
+return res;
+}
+
+template <class C> vector<C> nn_to_control(vector<C> nnoutput);
+
+
+
+
 
 template<class ForwardIterator>
 inline size_t argmax(ForwardIterator first, ForwardIterator last)
@@ -95,8 +122,6 @@ inline size_t argmax(ForwardIterator first, ForwardIterator last)
     return std::distance(first, std::max_element(first, last));
 }
 
-// vector<AAF> nn_to_control(vector<AAF> &nnoutput);
-template <class C> vector<C> nn_to_control(vector<C> nnoutput);
 
 
 // for ODEs and DDEs: define bounds for parameters and inputs, value of delay d0 if any, and parameters of integration (timestep, order of TM)

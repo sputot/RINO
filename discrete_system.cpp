@@ -4365,8 +4365,8 @@ vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f) {
                                 
                                 // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
                                 if (jacdim > 4) {
-                                    if (xinit[4].inf() != xinit[4].sup())
-                                        printf("warning, case not fully implemented");
+                                  //  if (xinit[4].inf() != xinit[4].sup())
+                                  //      printf("warning, case not fully implemented");
                                     input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
                                     
                                 }

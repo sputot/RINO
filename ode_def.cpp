@@ -622,58 +622,9 @@ void read_parameters(const char * params_filename)
 
 
 
-// maps the ODE sys coordinates to the neural network inputs when they do not correspond
-//vector<F<AAF>> syst_to_nn(vector<F<AAF>> &sysval){
-    template <class C> vector<C> syst_to_nn(vector<C> &sysval) {
-    vector<C> res; //= vector<AAF>(NH.n_inputs);
-                                  
-    if ((syschoice == 491) || (syschoice == 492)) // Ex ACC de Verisig (avec nn obtenu a partir du yaml)
-     {
-         res = vector<C>(NH.n_inputs);
-         res[0] = 30.0;
-         res[1] = 1.4;
-         res[2] = sysval[4]; // v_ego
-         res[3] = sysval[0]-sysval[3]; // x_lead-x_ego
-         res[4] = sysval[1]-sysval[4]; // v_lead-v_ego
-    }
-    else
-        res = sysval;
-    return res;
-}
 
-// maps the neural network output to the control commands when they do not correspond
-//vector<AAF> nn_to_control(vector<AAF> &nnoutput)
-template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
-    
-    if (syschoice == 493) // QMPC
-    {
-        //vector<AAF> res = vector<AAF>(paramsdim);
-        vector<double> actions(NH.n_outputs);
-        for (int i=0 ; i<NH.n_outputs ; i++)
-            actions[i] = sup(nnoutput[i].convert_int());
-        // unsound implementation for now: should do the union over all argmax for the interval outputs of the NN...
-        int index = argmax(actions.begin(),actions.end());
-        cout << "index=" << index;
-        if (index == 0)
-            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
-        else if (index == 1)
-            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
-        else if (index == 2)
-            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(7.81,7.81)};
-        else if (index == 3)
-            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(11.81,11.81)};
-        else if (index == 4)
-            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
-        else if (index == 5)
-            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
-        else if (index == 6)
-            return {interval(0.1,0.1), interval(0.1,0.1), interval(7.81,7.81)};
-        else
-            return {interval(0.1,0.1), interval(0.1,0.1), interval(11.81,11.81)};
-    }
-    else
-        return nnoutput;
-}
+
+
 
 
 
@@ -2011,8 +1962,7 @@ void init_utils_inputs()
         inputs_aff[i] = inputs[i];
     
     if (nn_analysis)
-        nncontrol= NH.eval_network(initial_values_aff);
-    
+        nncontrol = NH.eval_network(syst_to_nn(initial_values_aff));
     
     
     // ******************* for piecewise constant inputs
@@ -2386,3 +2336,37 @@ void AnalyticalSol(vector<interval> &initial_values, double d0, int current_iter
     
 }
 
+// TODO. Template content should be in .h not in .cpp but for some reason does not accept argmax in .h => see later
+// maps the neural network output to the control commands when they do not correspond
+//vector<AAF> nn_to_control(vector<AAF> &nnoutput)
+template <class C> vector<C> nn_to_control(vector<C> nnoutput) {
+    
+    if (syschoice == 493) // QMPC
+    {
+        //vector<AAF> res = vector<AAF>(paramsdim);
+        vector<double> actions(NH.n_outputs);
+        for (int i=0 ; i<NH.n_outputs ; i++)
+            actions[i] = sup(nnoutput[i].convert_int());
+        // unsound implementation for now: should do the union over all argmax for the interval outputs of the NN...
+        int index = argmax(actions.begin(),actions.end());
+        cout << "index=" << index;
+        if (index == 0)
+            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
+        else if (index == 1)
+            return {interval(-0.1,-0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
+        else if (index == 2)
+            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(7.81,7.81)};
+        else if (index == 3)
+            return {interval(-0.1,-0.1), interval(0.1,0.1), interval(11.81,11.81)};
+        else if (index == 4)
+            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(7.81,7.81)};
+        else if (index == 5)
+            return {interval(0.1,0.1), interval(-0.1,-0.1), interval(11.81,11.81)};
+        else if (index == 6)
+            return {interval(0.1,0.1), interval(0.1,0.1), interval(7.81,7.81)};
+        else
+            return {interval(0.1,0.1), interval(0.1,0.1), interval(11.81,11.81)};
+    }
+    else
+        return nnoutput;
+}

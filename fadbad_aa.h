@@ -59,7 +59,7 @@ template <> struct Op<interval>
     static Base myAtan(const Base& x) { return atan(x); }
     
     static Base mySig(const Base& x) { /*cout << "est bien appele (interv)";*/ return  1./(1.+exp(-x));} // act_sigmoid(x); } return act_sigmoid(x); }//
-    static Base myTanh(const Base& x) { cout << "est bien appele aussi (interv)"; return  2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
+    static Base myTanh(const Base& x) { /*cout << "est bien appele aussi (interv)";*/ return  2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
     
     static bool myEq(const Base& x, const Base& y) { return x==y; }
     static bool myNe(const Base& x, const Base& y) { return x!=y; }
@@ -101,7 +101,7 @@ template <> struct Op<AAF>
   static Base myAtan(const Base& x) { return atan(x); }
     
     static Base mySig(const Base& x) { /*cout << "est bien appele"; */AAF y = x; y.sumup(tol_noise); return act_sigmoid(y); }// 1./(1.+exp(-x));} //act_sigmoid(x); }
-    static Base myTanh(const Base& x) { cout << "est bien appele aussi"; AAF y = x; y.sumup(tol_noise); return act_tanh(y); return 2.0/(1.+ exp(-2.0*x)) - 1.;} // ::act_tanh(x); }
+    static Base myTanh(const Base& x) { /*cout << "est bien appele aussi"*/; AAF y = x; y.sumup(tol_noise); return act_tanh(y); return 2.0/(1.+ exp(-2.0*x)) - 1.;}
   
   /*  static Base myPos(const Base& x) { return +x; }
   static bool myNe(const Base& x, const Base& y) { return x!=y; }
