@@ -55,9 +55,9 @@ RUN echo "export FADBADHOME=/home/FADBAD++" >> /root/.bashrc.sh
 RUN echo "export FILIBHOME=/home/filibsrc" >> /root/.bashrc.sh
 RUN chmod a+x /root/.bashrc.sh
 
-RUN cd /home/RINO/aaflib-0.1 && make static
+RUN cd /home/RINO/aaflib-0.1 && make clean && rm libaaf.a && make static
 
-RUN . /root/.bashrc.sh && cd /home/RINO && for f in *.cpp; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && for f in *.h; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && make
+RUN . /root/.bashrc.sh && cd /home/RINO && for f in *.cpp; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && for f in *.h; do iconv -c -f UTF-8 -t US-ASCII $f -o $f; done && make clean && make
 
 # Aux files for repeatability
 
