@@ -116,9 +116,9 @@ Discrete-time Mountain Car
 ## Modifying / adding one's own example
 
 Please take inspiration for the existing examples. In short :
-    - for ODEs, the dynamical system should be given an (unused) syschoice ID and the dynamics defined in file ```ode_def.h```, in class OdeFunc, by the vector yp  of time derivatives as function of state vector y and possibly parameters.  
+- for ODEs, the dynamical system should be given an (unused) syschoice ID and the dynamics defined in file ```ode_def.h```, in class OdeFunc, by the vector yp  of time derivatives as function of state vector y and possibly parameters.  
 The dimension of the state vector (sysdim) needs to be set in file ```ode_def.cpp``` in function define_system_dim(). The parameters and initial values (if not given at command line in a configuration file) need to be set in function init_system() in the same file. 
--for discrete-time systems, the process is very similar but in a different location. Give the system  an (unused) syschoice ID and define the dynamics in file ```discrete_system.h```, in class DiscreteFunc, by the vector z of next discrete state as a function of the current state x and possibly parameters. 
+- for discrete-time systems, the process is very similar but in a different location. Give the system  an (unused) syschoice ID and define the dynamics in file ```discrete_system.h```, in class DiscreteFunc, by the vector z of next discrete state as a function of the current state x and possibly parameters. 
 The dimension of the state vector (sysdim) and the initial conditions need to be set in file ```discrete_system.h``` in function init_discrete_system().  
 
 
