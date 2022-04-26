@@ -115,7 +115,11 @@ Discrete-time Mountain Car
 
 ## Modifying / adding one's own example
 
-For now, please take inspiration for the existing examples.
+Please take inspiration for the existing examples. In short :
+    - for ODEs, the dynamical system should be given an (unused) syschoice ID and the dynamics defined in file ```ode_def.h```, in class OdeFunc, by the vector yp  of time derivatives as function of state vector y and possibly parameters.  
+The dimension of the state vector (sysdim) needs to be set in file ```ode_def.cpp``` in function define_system_dim(). The parameters and initial values (if not given at command line in a configuration file) need to be set in function init_system() in the same file. 
+-for discrete-time systems, the process is very similar but in a different location. Give the system  an (unused) syschoice ID and define the dynamics in file ```discrete_system.h```, in class DiscreteFunc, by the vector z of next discrete state as a function of the current state x and possibly parameters. 
+The dimension of the state vector (sysdim) and the initial conditions need to be set in file ```discrete_system.h``` in function init_discrete_system().  
 
 
 
@@ -252,10 +256,15 @@ variables-to-display = 1 2
 ```
 In particular, for the k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
 - ```xk_max.png```  (e.g. ```x1_max.png```)  and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories
-- ```xk_rob_max.png```, ```xk_rob_max_sample.png```: when robust approximations are computed, the robust and maximal inner and outer-approximations, with and without sampled trajectories
+- ```xk.png```, ```xk_sample.png```: the maximal inner and outer-approximations and the robust approximations when relevant, with and without sampled trajectories
 
 For any couple (k,l) we also print 2-dimensional projections :
-- ```xkxl.png```:  maximal (and when relevant robust) under and over approximations of (xk,xl) 
+- ```xkxl.png```:  maximal (and when relevant robust) inner and outer-approximations of the joint range (xk,xl) as skewed boxes (see e.g. [CDC-LCSS 2020])
+- ```xkxl_sample.png```: sampled trajectories for (xk,xl) 
+- ```xkxl_approx_sample.png```: on the same graph the inner and outer-approximations of the joint range (xk,xl) as skewed boxes and sampled trajectories
+- ```xkxl_box_sample.png```: same as above but the approximations are printed as boxes (useful in a few cases where the skewed boxes have a bad behavior)
+- ```xkxl_finalstate.png```: box and skewed box inner and outer-approximations, robust when relevant, and sampled points at the final state of the analysis
+
 Three-dimensional projections when relevant are also printed, only the corners of boxes are printed for more lisibility.
 
 We also provide 
