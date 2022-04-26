@@ -1,0 +1,12 @@
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex1_tanh.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex1_sig.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex2_tanh.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex2_sig.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex3_tanh.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex3_sig.sh
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex4_tanh.sh 
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex4_sig.sh
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex5_tanh.sh
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_ex5_sig.sh
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_tora_tanh.sh
+/CAV21_repeatability_package/ReachNNStar/ReachNN/run_tora_sig.sh
