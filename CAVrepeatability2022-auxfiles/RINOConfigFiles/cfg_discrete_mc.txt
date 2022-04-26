@@ -12,4 +12,4 @@ AEextension-order = 1
 initial-values = [-0.5,-0.48] [0.,0.001]
 #initial-values = [-0.53,-0.5] [0.,0.00]
 interactive-visualization = 0
-create-png = 1
+#create-png = 1
