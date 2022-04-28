@@ -16,7 +16,7 @@ You can then execute RINO as indicated in the "Running the analysis" Section.
 
 ### Building from sources
 
-You need g++, LAPACK and BLAS installed.
+You need g++, LAPACK and BLAS installed. Python visualization was tested with Python 3.8.8. 
 
 Install the FILIB++ Interval Library, available from http://www2.math.uni-wuppertal.de/wrswt/software/filib.html (we used Version 3.0.2), and set variable $FILIBHOME
 
