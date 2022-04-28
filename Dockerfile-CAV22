@@ -85,6 +85,8 @@ RUN cp /home/RINO/CAVrepeatability2022-auxfiles/RINOConfigFiles/*.txt /home/RINO
 # Copy script files
 RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_RINO.sh /home/RINO/.
 RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_Verisig2.sh /home/RINO/.
+RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_RINO_001.sh /home/RINO/.
+RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_Verisig2_005.sh /home/RINO/.
 RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_ReachNNStar.sh /home/RINO/.
 RUN chmod a+x /home/RINO/script_RINO.sh
 RUN chmod a+x /home/RINO/script_Verisig2.sh
