@@ -2,6 +2,10 @@ FROM tensorflow/tensorflow:1.15.0-gpu-py3
 
 MAINTAINER Eric Goubault and Sylvie Putot
 
+#RUN apt-key del 7fa2af80
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys F60F4B3D7FA2AF80
+RUN apt-key adv --keyserver keyserver.ubuntu.com --recv-keys A4B469963BF863CC
+
 RUN apt-get -y update
 RUN apt install build-essential -y --no-install-recommends
 ENV DEBIAN_FRONTEND=noninteractive
@@ -90,6 +94,8 @@ RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_Verisig2_005.sh /home/RIN
 RUN cp /home/RINO/CAVrepeatability2022-auxfiles/script_ReachNNStar.sh /home/RINO/.
 RUN chmod a+x /home/RINO/script_RINO.sh
 RUN chmod a+x /home/RINO/script_Verisig2.sh
+RUN chmod a+x /home/RINO/script_RINO_001.sh
+RUN chmod a+x /home/RINO/script_Verisig2_005.sh
 RUN chmod a+x /home/RINO/script_ReachNNStar.sh
 
 
