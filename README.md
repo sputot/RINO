@@ -256,7 +256,7 @@ variables-to-display = 1 2
 ```
 In particular, for the k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
 - ```xk_max.png```  (e.g. ```x1_max.png```)  and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories
-- ```xk.png```, ```xk_sample.png```: the maximal inner and outer-approximations and the robust approximations when relevant, with and without sampled trajectories
+- ```xk.png```, ```xk_sample.png```: additionally to the maximal inner and outer-approximations, the robust approximations when relevant, with and without sampled trajectories
 
 For any couple (k,l) we also print 2-dimensional projections :
 - ```xkxl.png```:  maximal (and when relevant robust) inner and outer-approximations of the joint range (xk,xl) as skewed boxes (see e.g. [CDC-LCSS 2020])
