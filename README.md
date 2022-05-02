@@ -12,7 +12,7 @@ For continuous-time systems, it relies on Taylor expansions in time and affine a
 
 Get the RINO directory and run ```docker build .```.
 An image ```shaxxx...``` is built which you can run by ```docker run -it --name rino shaxxx...```.
-You can then execute RINO  from directory /home/RINO as indicated in the "Running the analysis" Section.
+You can then execute RINO  from directory /home/RINO as described in the "Running the analysis" Section.
 
 ### Building from sources
 
@@ -33,23 +33,25 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 # Running the analysis
 
 
-For now, the dynamics of systems on which to perform reachability analysis are defined as C++ functions in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
+For now, the dynamics of systems on which to perform reachability analysis are defined as C++ functions in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given a fixed id used to run their analysis:
+- for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
+- for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``
+
 Running an example is then performed at command line, in directory /home/RINO, by 
 ```
-./rino [-systype system_type -syschoice system_id] [-nnfile-sfx filename.sfx] [config_file.txt]
+./rino [-systype system_type -syschoice system_id] [-nnfile-sfx nnfile.sfx] [-configfile cfgfile.txt]
 ```
 where 
-- system_type is either ode (for a system of ODEs - Ordinary Differential Equations) or dde (for a system of DDEs - Delay Differential Equations) or discrete (for a discrete-time dynamical system)
+- system_type is either ode (for a system of Ordinary Differential Equations) or dde (for a system of Delay Differential Equations) or discrete (for a discrete-time dynamical system)
 - system_id is an integer specifying the predefined system identifier (matching variable syschoice in file ```ode_def.h``` for ODEs and DDEs and  ```discrete_system.h``` for discrete-time systems )
-- optional filename.sfx is the name of a file containing a neural network in the Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
-- optional configuration file allows to specify analysis parameters, inputs, parameters and initial conditions of the system, and the visualized outputs (all these can also be set in the code, but if both are specified, the configuration file overrides the code). 
-- configuration files for some examples are available in directory ```Examples/ConfigFiles```. 
-- at command line, either systype and syschoice should be specified, or a configuration file containing this information should be provided (if both are provided, config file information overrides command-line options)
+- nnfile.sfxcontains a neural network in the Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
+- cfgfile.txt specifies analysis parameters, inputs, initial conditions of the system
 
-The predefined systems (see running existing examples Section) are defined as C++ code:
-  - for ODEs and DDEs in ```ode_def.h``` (system and constant parameters) and ```ode_def.cpp``` (parameters, initial conditions and input ranges)
-  - for discrete-time systems in ```discrete_system.h``` and ```discrete_system.cpp``` 
-The examples of neural network files are in directory ```Examples/Networks```.
+Note that default values for parameters, inputs and initial conditions of the system are set in the code.  If a configuration file is used,  the configuration file values override those present in the code. 
+
+At command line,  either the system type and choice should be specified, or a configuration file containing this information should be provided.  If both are provided,  the configuration file information overrides command-line options.  Finally,  the  name of file containing the neural network, when relevant,  can be provided either at command-line or in the configuration file. 
+
+The parameters which can be set in the configuration file are described in Section "Parameters and Configuration File".  The commands for running the different examples presented in our work are given in "Running existing systems".
 
 
 ## Running existing systems
