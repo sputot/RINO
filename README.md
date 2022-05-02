@@ -12,7 +12,7 @@ For continuous-time systems, it relies on Taylor expansions in time and affine a
 
 Get the RINO directory and run ```docker build .```.
 An image ```shaxxx...``` is built which you can run by ```docker run -it --name rino shaxxx...```.
-You can then execute RINO as indicated in the "Running the analysis" Section.
+You can then execute RINO  from directory /home/RINO as indicated in the "Running the analysis" Section.
 
 ### Building from sources
 
@@ -33,8 +33,8 @@ The installation has been mostly tested on MacOS, but should also work on Ubuntu
 # Running the analysis
 
 
-For now, the models of systems on which to perform reachability analysis are defined as C++ functions in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
-Running an example is then performed at command line, by 
+For now, the dynamics of systems on which to perform reachability analysis are defined as C++ functions in ode_def.h/ode_def.cpp for continuous-time systems, discrete_system.h/discrete_system.cpp for discrete-time systems, and given some fixed ids.
+Running an example is then performed at command line, in directory /home/RINO, by 
 ```
 ./rino [-systype system_type -syschoice system_id] [-nnfile-sfx filename.sfx] [config_file.txt]
 ```
@@ -239,13 +239,14 @@ control-step = 0.1
 
 # Visualizing results
 
-After running an example, all results are in the subdirectory ‘output’. The data are provided in the following files : 
+After running an example, all results are in the subdirectory ‘output’. They are provided in the following files : 
 - ```sumup.txt```: summary of configuration, running time and ranges at the final state of the analysis (part of this information can also be found with more significant digits in ```sumup.yaml```)
 - ```samplesreachset.yaml```: sampled trajectories (used to assess accuracy of reachability results)
 - ```approxreachset.yaml```: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
 
-A python visualization file Visu_output.py is available in the GUI directory. 
-It is run from the analyzer but you can also run it from the GUI directory, for example (for an interactive analysis and to produce .png files only for variables x[1] and x[2]) by:
+A python visualization file Visu_output.py is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately, 
+provided that the above data files are presen tn the output subdirectory of RINO. 
+For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]), by:
 ```
 cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
 ```
