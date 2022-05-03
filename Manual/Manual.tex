@@ -240,7 +240,7 @@ $./rino -configfile Examples/ConfigFiles/cfg_discrete_mc.txt
 \end{verbatim}
 \end{itemize}
 \subsection{Adding one's own example}
-In short (to be completed, but a lot of additional information can already be found in Section~\ref{params}):
+In short (to be completed, but a lot of additional information can already be found in Section~\ref{params} and \ref{examples}):
 \begin{itemize}[noitemsep]
 \item For ODEs,  the dynamical system should be given an (unused) syschoice ID and the dynamics defined in file \texttt{ode\_def.h}, in class OdeFunc,  by the vector yp  of time derivatives as function of state vector y and possibly parameters.  
 
@@ -248,6 +248,12 @@ The dimension of the state vector (sysdim) needs to be set in file \texttt{ode\_
 
 \item For discrete-time systems, the process is very similar but in a different location. Give the system  an (unused) syschoice ID and define the dynamics in file \texttt{discrete\_system.h}, in class DiscreteFunc, by the vector z of next discrete state as a function of the current state x and possibly parameters. 
 The dimension of the state vector (sysdim) and the initial conditions need to be set in file \texttt{discrete\_system.h}  in function init\_discrete\_system().  
+\end{itemize}
+Both continuous-time and discrete-time systems can take (see also Sections \ref{params} and \ref{examples})
+\begin{itemize}[noitemsep]
+\item constant but possibly uncertain parameters (vector variable \texttt{params} in the C++ code),
+\item constant or piecewise constant control inputs or disturbances (vector variable \texttt{param\_inputs} in the C++ code),
+\item control inputs defined as the output of a neural network which input is the system state  (vector variable \texttt{control\_inputs} in the C++ code).
 \end{itemize}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
