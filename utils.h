@@ -69,9 +69,6 @@ extern int current_iteration;
 extern int uncontrolled;  // number of uncontrolled parameters (forall params)
 extern int controlled;  // number of controlled parameters (forall params)
 extern vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
-//extern vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust inner-approx)
-//extern int variable;  // number of non constant parameters
-//extern vector<bool> is_variable; // for each parameter, constant or variable
 
 extern vector<interval> target_set;
 extern vector<interval> unsafe_set;

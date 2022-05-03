@@ -252,17 +252,161 @@ The dimension of the state vector (sysdim) and the initial conditions need to be
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-\section{Parameters and Configuration File \label{params}}
+\section{Parameters of analysis and Configuration File \label{params}}
+We list in this section the parameters and inputs of the system that can be set in the configuration file.  For examples of use, we refer the reader to:
+\begin{itemize}[noitemsep]
+\item Section~\ref{existing} for sample files (in directory Examples/ConfigFiles) for existing examples,
+\item Section~\ref{examples} for fully detailed results on chosen examples.
+\end{itemize}
+\subsection{Parameters of the analysis common to all system types}
 
-\subsection{Sample configuration file: parameters common to all system types}
+\paragraph{System definition}
+\begin{itemize}
+\item Keyword \texttt{systype}: class of dynamical system, can be equal to \texttt{ode, dde, discrete}.  For example:
+\begin{verbatim}
+systype = ode
+\end{verbatim}
 
-\subsection{Parameters specific to ODEs (when systype is ode)}
+\item Keyword \texttt{syschoice}: identifier for dynamical system,  should be equal to an integer, and matched by a system definition in RINO.
+\begin{itemize}
+\item if systype is \texttt{ode}, the dynamics of the system should be defined in   \texttt{ode\_def.h}, in class OdeFunc,  by the vector yp  of time derivatives as function of state vector y and possibly system parameters, 
+\item if systype is \texttt{dde}, the dynamics of the system should be defined in   \texttt{ode\_def.h}, in class DdeFunc,  by the vector yp  of time derivatives as function of state vector y and delayed state vector y\_prev,  and possibly parameters,
+\item if systype is \texttt{discrete},  the dynamics should be defined in \texttt{discrete\_system.h}, in class DiscreteFunc, by the vector z of next discrete state as a function of the current state x and possibly system parameters. 
+\end{itemize}
+Note that the same syschoice identifier can be used (with different system definition) for different values of systype.  
+For example:
+\begin{verbatim}
+syschoice = 2
+\end{verbatim}
+\end{itemize}
 
-\subsection{Parameters specific to DDEs (when systype is dde)}
+\paragraph{Uncertain inputs and initial conditions}
+\begin{itemize}
+\item Keyword \texttt{initial-values}: should be equal to a sequence of intervals separated by a white space, which length is the dimension of the system (equal to global variable \texttt{sysdim} in the code).  The cartesian product of these intervals defines the set of initial values of the dynamical system, whatever its type. 
+For example:
+\begin{verbatim}
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] [2.9,3.1]
+\end{verbatim}
+In cases when the accuracy of analysis is not considered sufficient, it can be refined by partitioning one component of the initial domain (for the time being, only one component at at time can be partitioned).  
+You can specify the component you want to subdivide and the number of partitions. For example,  for 2 subdivisions for the last component: 
+\begin{verbatim}
+initial-values = [-0.1,0.1] [0,0.1] [1.9,2.1] ([2.9,3.1],2) 
+\end{verbatim}
+[***Warning***: the partitioning functionality is implemented only for systype ode and dde and has not been tested recently] 
 
-\subsection{Parameters specific to discrete-time systems (when systype is discrete)}
+\item Keyword \texttt{inputs}: for constant but uncertain inputs,  should be equal to a sequence of  intervals separated by a white space,  which length is the dimension of the input vector (equal to global variable \texttt{inputsdim} in the code). In class OdeFunc, the variable name for these inputs is \texttt{param\_inputs}.
+For example:
+\begin{verbatim}
+inputs = [-0.1,0.1] [-0.1,0.1]
+\end{verbatim}
+For piecewise constant inputs,  one can specify the number of pieces for the piecewise constant function over the time horizon.  A constant input period is supposed.
+For example, for an input which first component is constant and second component is piecewise constant with 10 pieces:
+\begin{verbatim}
+inputs = ([-0.1,0.1],1) ([-0.1,0.1],10) # same as inputs = [-0.1,0.1] ([-0.1,0.1],10)
+\end{verbatim}
+
+\item Keyword \texttt{uncontrolled}: should be equal to a sequence of integers which length is smaller or equal to the dimension of the input vector. It defines which dimensions of the inputs (numbered starting from 1) are disturbances, the remaining dimensions being considered as control inputs.
+For example,  if the first 2 dimensions of the input vectors are disturbances:
+\begin{verbatim}
+uncontrolled = 1 2
+\end{verbatim}
+
+
+\item Keyword \texttt{params}: should be equal to  a sequence of  intervals separated by a white space,  which length is the dimension of the vector of uncertain but constant parameters (equal to global variable  \texttt{paramsdim} in the code).  In class OdeFunc, the variable name for these parameters is \texttt{params}.
+For example:
+\begin{verbatim}
+params = [2,2] [3,4]
+\end{verbatim}
+Parameters are handled differently from inputs in the definition of the robust reachable sets~\cite{hscc19}.  In particular,  they don't add dimensions to the Jacobian matrix of the trajectories, used to compute the robust under and over-appproximations. 
+\end{itemize}
+
+\paragraph{Output results and visualization}
+\begin{itemize}
+\item
+\begin{verbatim}
+# number of samples in each dimension taken for reachset estimation by trajectory samples
+samples-per-dim = 20
+
+# for the visualization: if 0, the visualization script is not called
+create-png = 0
+
+# for the visualization: if 0, only .png files are produced (if create-png is 1), if 1 figures are plot on screen 
+interactive-visualization = 1
+
+# number of (time) points saved and printed on graphs 
+points-per-graph = 50
+
+# the dimensions we wish to visualize graphically (output files are produced for all dimensions in any case)
+# to print all (default value when the option is not set in the config file): set variables-to-display = all
+variables-to-display = 1 2
+\end{verbatim}
+\end{itemize}
+
+\subsection{Parameters specific to ODEs (systype is ode)}
+
+\begin{verbatim}
+time-horizon = 5.
+
+# time step
+integration-step = 0.02
+
+# order for Taylor models in time
+order = 3
+
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+\end{verbatim}
+
+\subsection{Parameters specific to DDEs (systype is dde)}
+
+\begin{verbatim}
+time-horizon = 5.
+
+# only for DDEs (for ODEs, starting-time is set to 0)
+starting-time = -0.3
+
+# only for DDEs
+delay = 0.3 
+
+# defines the time-step by delay/nb-time-subdivisions
+nb-time-subdivisions = 3
+
+# order for Taylor models in time
+order = 3
+
+# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
+refined-mean-value = 1
+\end{verbatim}
+
+\subsection{Parameters specific to discrete-time systems (systype is discrete)}
+
+\begin{verbatim}
+# number of discrete time steps
+nbsteps = 25
+
+# iterating algorithm (Algorithm 1 or 2 in [ADHS2021])
+iter-method = 1
+
+# computing skewed box joint approximation or regular boxes (influences the precision for Algorithm 1, mostly for visualization for Algorithm 2)
+skew = 1
+
+# Order of the AE extension (1 for mean-value, 2 for Taylor-based higher-order extension)
+AEextension-order = 1
+\end{verbatim}
 
 \subsection{Parameters specific to neural network controlled dynamical systems (systype can be either ode or discrete)}
+
+\begin{verbatim}
+# file containing the neural network in Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
+nnfile-sfx = Examples/Networks/tora_tanh.sfx
+
+# when relevant, final offset and scaling of the output of the network:
+nn-offset = 0. # also read from nn file (erasing this one)
+nn-scaling = 11.  # also read from nn file (erasing this one)
+
+# control time step
+control-step = 0.1
+\end{verbatim}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -280,9 +424,9 @@ After running an example, all results are in the subdirectory ‘output’. They
 \paragraph{Running the visualization script}
 A python visualization file \texttt{Visu\_output.py} is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately,  provided the above data files are present in the output subdirectory of RINO. 
 For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]),  it is run by:
-\begin{lstlisting}[language=bash]
-$ cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
-\end{lstlisting}
+\begin{verbatim}
+$cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
+\end{verbatim}
 When the script is run by analyzer, the options set above in command line can be set in the configuration file by: 
 \begin{verbatim}
 interactive-visualization = 1
@@ -317,8 +461,9 @@ $\gamma$ = (width of inner-approx)/(width of outer-approx)
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Examples}
+\section{Examples \label{examples}}
 
+To be completed. 
 %\section{Authors and References}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

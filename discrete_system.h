@@ -56,7 +56,7 @@ public:
         
         if (syschoice == 1)
             z[0] = x[0]*x[0] - x[0];
-        else if (syschoice == 111)  // test sigmoid
+        else if (syschoice == 111)  // test sigmoidhttps://www.immofrontiere.com/img/57/facilogi-immofrontiere/5170-620fe77a1b103.jpeg
           //  z[0] = 1.0/(1.0 + exp(-x[0]));  //
             z[0] = act_sigmoid(x[0]);
         else if (syschoice == 2)

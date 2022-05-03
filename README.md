@@ -70,7 +70,7 @@ The parameters which can be set in the configuration file are described in Secti
   - the running example of [CAV 2018] is run  by ```./rino -systype dde -syschoice 1``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_1.txt```
   - Example 10 of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 3``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_3.txt```
   - Example 9 (self-driving car with uncertain PID coefficients) of  [CAV 2018] is run  by ```./rino -systype dde -syschoice 8``` or ```./rino -configfile Examples/ConfigFiles/cfg_dde_8.txt```
-  - The platoon examples of [CAV 2018] are run  by ```./rino -systype dde -syschoice 10 [Examples/ConfigFiles/cfg_dde_10.txt]``` (5 vehicles) or ```./rino -systype dde -syschoice 11 [Examples/ConfigFiles/cfg_dde_11.txt]``` (10 vehicles)
+  - The platoon examples of [CAV 2018] are run  by ```./rino -systype dde -syschoice 10 [-configfile Examples/ConfigFiles/cfg_dde_10.txt]``` (5 vehicles) or ```./rino -systype dde -syschoice 11 [-configfile Examples/ConfigFiles/cfg_dde_11.txt]``` (10 vehicles)
 
 ### Discrete-time dynamical systems
 
@@ -152,8 +152,6 @@ params = [2,2] [3,4]
 
 # which dimensions of the inputs (numbered starting from 1) are disturbances (the others are control inputs)
 uncontrolled = 1
-# which dimensions are time-varying inputs or parameters
-variable =
 
 # number of samples in each dimension taken for reachset estimation by trajectory samples
 samples-per-dim = 20
@@ -282,7 +280,7 @@ Three-dimensional projections when relevant are also printed, only the corners o
 
 ### Error measures 
 
-We display the following error measures as function of time (or iterations for discret-time systems):  ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set); gamma = (width of under_approx)/(width of over_approx)
+We display the following error measures ( (the closer to 1 the better) as functions of time (or iterations for discret-time systems):  ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set); gamma = (width of under_approx)/(width of over_approx)
 
 
 Note that the files produced can slightly vary depending on the system type (ode, dde, discrete-time)

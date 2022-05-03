@@ -80,9 +80,6 @@ int current_iteration;
 int uncontrolled; // number of uncontrolled parameters (forall params)
 int controlled; // number of controlled parameters (forall params)
 vector<bool> is_uncontrolled; // for each input, uncontrolled or controlled (for robust inner-approx)
-//vector<bool> is_initialcondition; // for each input, initial condition or parameter (for robust outer-approx)
-//int variable; // number of non constant parameters
-//vector<bool> is_variable;  // for each parameter, constant or variable
 
 vector<interval> target_set;
 vector<interval> unsafe_set;

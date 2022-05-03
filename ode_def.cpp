@@ -723,7 +723,6 @@ void init_system()
             initial_values[3] = interval(0.0,0.25); // interval(0.0,0.01);
             inputs[0]= interval(11.,15.); // 14.... la masse (incontrollable)
             is_uncontrolled[0] = true;
-  //          is_variable[4] = true;
             nb_subdiv_init = 1;
             component_to_subdiv = 3;
             component_to_subdiv2 = 4;
@@ -751,9 +750,7 @@ void init_system()
             inputs[0] =  interval(1.9,2.1);  // Kp
             inputs[1] =  interval(2.9,3.1);    // Kd
             is_uncontrolled[1] = true; // Kd uncontrolled
-         //   is_variable[2] = true;  // piecewise constant
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-          //   is_variable[3] = true; // piecewise constant
         }
   // REFLECHIR COMMENT GERER CA DIFFEREMMENT
         else if (syschoice == 7) // self-driving car with time varying parameters; sysdim = 4, jacdim = 4
@@ -769,10 +766,7 @@ void init_system()
             params[0] =  interval(-2,2);
             params[1] =  interval(-2,2);
          //   is_uncontrolled[3] = true; // Kd uncontrolled
-            // REFLECHIR COMMENt GERER is_variable[2] et is_variable[3]
-         //   is_variable[2] = true;  // attention, when changing from const to time-varying the differential system must also be modified in ode_def.h
           //  is_uncontrolled[2] = true;  // Kp uncontrolled
-          //   is_variable[3] = true; // attention the differential system must also be modified in ode_def.h
         }
         else if (syschoice == 8)
         {
@@ -857,8 +851,6 @@ void init_system()
             initial_values[1] = 0;
             inputs[0] = interval(0,0.1);
             inputs[1] = interval(0,0.1);
-        //    is_variable[2] = true;
-        //    is_variable[3] = true;
         }
         else if (syschoice == 13)  // Laub-Loomis Benchmark [Arch 2019]
         {
@@ -1733,10 +1725,8 @@ void init_system()
            inputs[1] = interval(0,0.25);   // w2
            is_uncontrolled[0] = true;
            is_uncontrolled[1] = true;
-           nb_inputs[0] = 5;
-           nb_inputs[1] = 5;
-      //     is_variable[0] = true; // piecewise constant
-      //     is_variable[1] = true; // piecewise constant
+           nb_inputs[0] = 5; // piecewise constant
+           nb_inputs[1] = 5; // piecewise constant
        }
        else if (syschoice == 51) //
        {
@@ -1748,8 +1738,6 @@ void init_system()
            //inputs[0] = interval(-2,2);  // w1
            //is_uncontrolled[0] = true;
            //nb_inputs[0] = 5;
-      //     is_variable[0] = true; // piecewise constant
-      //     is_variable[1] = true; // piecewise constant
        }
        else if (syschoice == 52) //
        {
