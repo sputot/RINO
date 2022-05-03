@@ -1,0 +1,279 @@
+\documentclass{article}
+\usepackage[affil-it]{authblk}
+\usepackage{listings}
+% Language setting
+% Replace `english' with e.g. `spanish' to change the document language
+\usepackage[english]{babel}
+\usepackage{enumitem}
+
+% Set page size and margins
+% Replace `letterpaper' with`a4paper' for UK/EU standard size
+%\usepackage[letterpaper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+\usepackage[a4paper,top=2cm,bottom=2cm,left=3cm,right=3cm,marginparwidth=1.75cm]{geometry}
+
+% Useful packages
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage[colorlinks=true, allcolors=blue]{hyperref}
+
+%\title{\includegraphics[width=0.3\textwidth]{rino2.jpg}  \hspace*{2cm} \Huge{RINO User Manual}  }
+\title{\includegraphics[scale=0.4]{rino2.jpg} \\  \Huge{RINO User Manual}  }
+\author{Eric Goubault and Sylvie Putot}
+\affil{LIX, Ecole Polytechnique, CNRS and Institut Polytechnique de Paris,  \\91128
+Palaiseau, France \\ name.surname@polytechnique.edu}
+
+
+\begin{document}
+
+
+
+\maketitle
+
+
+
+\begin{abstract}
+We present the C++ RINO library, available on \url{https://github.com/cosynus-lix/RINO/},  for the computation of inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) disturbances and control inputs, where some of the control inputs can be specified as outputs of a neural network.
+
+For continuous-time systems, it relies on Taylor expansions in time and affine arithmetic (i.e. zonotopes) in space based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state.
+\end{abstract}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Introduction and references}
+ RINO implements the following:
+\begin{itemize}[noitemsep]
+\item Forward inner and outer-approximated reachability of non-linear differential systems~\cite{hscc2017}.  The reachability algorithm relies on Taylor expansions in time and affine arithmetic (i.e. zonotopes) in space for computing over or outer-approximating tubes.  Under or inner-approximating tubes are deduced by application of a generalized mean-value theorem to the flow of the system.  This supposes to compute an over-approximation of the solution flow and its Jacobian with respect to uncertain inputs and initial conditions.
+\item Forward inner and outer-approximated reachability of non-linear delay differential systems with constant delay~\cite{cav18}.  Using the classical method of steps,  the problem is reduced to the reachability analysis of a sequence of non-linear differential systems. 
+\item Robust inner and outer approximations of differential systems with possibly time-varying disturbances~\cite{hscc19}: the above reachability analysis is extended to the case with both disturbances and control inputs.
+\item In \cite{hscc2017,cav18,hscc19},  inner-approximations are computed for one-dimensional projections.  RINO also implements vector-valued inner-approximations~\cite{lcss2020}. (in practice, 2 and 3-dimensional projections).
+\item In \cite{hscc2017,cav18,hscc19,lcss2020}, the under-approximation relies on a mean-value theorem, which may be imprecise in some cases.  In~\cite{adhs21}, higher-order inner-approximations are proposed.  They are implemented in RINO in the case of discrete-time dynamical systems.   
+\item In \cite{hscc2017,cav18,hscc19,lcss2020,adhs21}, the control inputs are specified either in a range (for constant or piecewise constant inputs) or as solution of a differential system (for differentiable time-varying inputs).  Some of the control inputs can also be specified as the output of a neural network taking as input the system state~\cite{cav22}. This constitutes neural network controlled systems.  In RINO, the underlying dynamical system can be either discrete-time or continuous time.  For the time being, the activation functions have to be differentiable functions (typically sigmoid and hyperbolic tangent). 
+
+
+
+\end{itemize}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Installation}
+
+\subsection{Using docker}
+
+Get the RINO directory and run 
+\begin{verbatim}
+$ docker build .
+\end{verbatim}
+An image \texttt{shaxyz...}  is built which you can run by 
+\begin{verbatim}
+$ docker run -it --name rino shaxyz.... 
+\end{verbatim}
+You can then execute RINO from directory /home/RINO as described in Section \ref{running}.
+
+\subsection{Building from sources}
+
+%\setlist{nolistsep}
+
+\begin{itemize}[noitemsep]
+
+\item You need g++, LAPACK and BLAS installed. Python visualization was tested with Python 3.8.8. 
+
+\item Install the FILIB++ Interval Library, available from \url{http://www2.math.uni-wuppertal.de/wrswt/software/filib.html} (we used Version 3.0.2), and set variable \$FILIBHOME
+
+\item Get and unzip the FADBAD++ automatic diffentiation package, available from \url{http://www.fadbad.com/fadbad.html} (we used FADBAD++ 2.1), and set variable \$FADBADHOME.
+Copy files fadbad.h and fadiff.h from RINO/FADBAD\_Modified/ into your FADBAD++ distribution (we modified these files to add differentiation of activation functions).
+
+\item A slightly modified of the third party package for Affine Arithmetic aaflib-0.1 (\url{http://aaflib.sourceforge.net}) has been included in the current directory. 
+Future plans include separating more cleanly the initial version and our modifications...
+Go to directory aaflib-0.1 within the current package and compile by "make static". 
+
+\item Returning to the main (RINO) directory, you can now compile by "make" and obtain the "main" executable. 
+\end{itemize}
+The installation has been mostly tested on MacOS, but should also work on Ubuntu. 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\section{Running the reachability analysis \label{running}}
+
+For now, the dynamics of systems on which to perform reachability analysis are defined as C++ code and given a fixed id used to run their analysis:
+\begin{itemize}[noitemsep]
+\item  for ODEs and DDEs in ```ode\_def.h``` (system and constant parameters) and ```ode\_def.cpp``` (parameters, initial conditions and input ranges)
+\item for discrete-time systems in ```discrete\_system.h``` and ```discrete\_system.cpp``` 
+  \end{itemize}
+Running an example is then performed at command line, in directory /home/RINO, by 
+\begin{verbatim}
+$ ./rino [-systype system_type -syschoice system_id] [-nnfile-sfx nnfile.sfx] 
+[-configfile cfgfile.txt]
+\end{verbatim}
+where 
+\begin{itemize}[noitemsep]
+\item \texttt{system\_type} is either \texttt{ode} (for a system of Ordinary Differential Equations) or \texttt{dde} (for a system of Delay Differential Equations) or \texttt{discrete} (for a discrete-time dynamical system)
+\item \texttt{system\_id} is an integer specifying the predefined system identifier (matching variable syschoice in file ode\_def.h for ODEs and DDEs and  discrete\_system.h for discrete-time systems )
+\item \texttt{nnfile.sfx}  contains a neural network in the Sherlock \texttt{sfx} format (\url{https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf}) 
+\item \texttt{cfgfile.txt} specifies analysis parameters,  inputs,  initial conditions of the system.  
+\end{itemize}
+
+Note that default values for parameters, inputs and initial conditions of the system are set in the code.  If a configuration file is used,  the configuration file values override those present in the code. 
+
+At command line,  either the system type and choice should be specified, or a configuration file containing this information should be provided.  If both are provided,  the configuration file information overrides command-line options.  Finally,  the  name of file containing the neural network, when relevant,  can be provided either at command-line or in the configuration file. 
+
+The parameters which can be set in the configuration file are described in Section \ref{params}.  The commands for running the different examples presented in our work are given in Section \ref{existing}.
+
+%The examples of neural network files are in directory ```Examples/Networks```.
+
+\subsection{Running existing systems \label{existing}}
+
+\subsubsection{Continuous-time differential systems (ODEs)}
+
+\begin{itemize}[noitemsep]
+\item The Brusselator example~\cite{hscc2017} (the system is an ODE and is given syschoice identifiant equal to 2) is run by:
+\begin{verbatim}
+$./rino -systype ode -syschoice 2
+\end{verbatim}
+or if you want to use a configuration file to modify the parameter and initial conditions, by:
+  \begin{verbatim}
+$./rino -configfile Examples/ConfigFiles/cfg_ode_2.txt
+\end{verbatim}
+In what follows,  we will use the following aggregate notation to indicate these two alternatives:
+  \begin{verbatim}
+$./rino -systype ode -syschoice 2 [-configfile Examples/ConfigFiles/cfg_ode_2.txt]
+\end{verbatim}
+\item The self-driving car example \cite{hscc19}  is run by 
+ \begin{verbatim}
+$./rino -systype ode -syschoice 6 [-configfile Examples/ConfigFiles/cfg_ode_6.txt]
+\end{verbatim}
+% or  \begin{verbatim}
+%$ ./rino -configfile Examples/ConfigFiles/cfg_ode_6.txt
+% \end{verbatim}
+% \item the crazyflie model of Reference [HSCC 2019]  is run by "./rino -systype ode -syschoice 18 [Examples/ConfigFiles/cfg_ode_18.txt]" )
+  \end{itemize}
+  
+\subsubsection{Continuous-time delay differential systems with constant delays (DDEs)}
+\begin{itemize}[noitemsep]
+\item  The running example of \cite{cav18} is run  by 
+\begin{verbatim}
+$ ./rino -systype dde -syschoice 1 [-configfile Examples/ConfigFiles/cfg_dde_1.txt]
+\end{verbatim}
+\item  Example 10 of \cite{cav18} is run  by 
+\begin{verbatim}
+$./rino -systype dde -syschoice 3 [-configfile Examples/ConfigFiles/cfg_dde_3.txt]
+\end{verbatim}
+\item  Example 9 (self-driving car with uncertain PID coefficients) of \cite{cav18} is run  by 
+\begin{verbatim}
+$./rino -systype dde -syschoice 8 [-configfile Examples/ConfigFiles/cfg_dde_8.txt]
+\end{verbatim}
+\item  The platoon examples of \cite{cav18} are run, for 5 vehicles by 
+\begin{verbatim}
+$./rino -systype dde -syschoice 10 [-configfile Examples/ConfigFiles/cfg_dde_10.txt]
+\end{verbatim}
+or for 10 vehicles by: 
+\begin{verbatim}
+$./rino -systype dde -syschoice 11 [-configfile Examples/ConfigFiles/cfg_dde_11.txt]
+\end{verbatim}
+ \end{itemize}
+
+\subsubsection{Discrete-time dynamical systems}
+
+\subsubsection{Neural network controlled dynamical systems (continuous-time or discrete-time)}
+
+\subsection{Modifying / adding one's own example}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Parameters and Configuration File \label{params}}
+
+\subsection{Sample configuration file: parameters common to all system types}
+
+\subsection{Parameters specific to ODEs (when systype is ode)}
+
+\subsection{Parameters specific to DDEs (when systype is dde)}
+
+\subsection{Parameters specific to discrete-time systems (when systype is discrete)}
+
+\subsection{Parameters specific to neural network controlled dynamical systems (systype can be either ode or discrete)}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{Visualizing results}
+
+\paragraph{Analysis output files}
+After running an example, all results are in the subdirectory ‘output’. They are provided in the following files : 
+\begin{itemize}[noitemsep]
+\item \texttt{sumup.txt}: summary of configuration, running time and ranges at the final state of the analysis (part of this information can also be found with more significant digits in \texttt{sumup.yaml})
+\item \texttt{samplesreachset.yaml}: sampled trajectories (used to assess accuracy of reachability results)
+\item \texttt{approxreachset.yaml}: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
+\end{itemize}
+
+\paragraph{Running the visualization script}
+A python visualization file \texttt{Visu\_output.py} is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately,  provided the above data files are present in the output subdirectory of RINO. 
+For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]),  it is run by:
+\begin{lstlisting}[language=bash]
+$ cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
+\end{lstlisting}
+When the script is run by analyzer, the options set above in command line can be set in the configuration file by: 
+\begin{verbatim}
+interactive-visualization = 1
+variables-to-display = 1 2
+\end{verbatim}
+\paragraph{One-dimensional projections}
+%The files produced may slightly vary depending on the system type. (ode, dde, discrete-time).
+For k ranging from 1 to system dimension, the following results files display the projected ranges on dimension k as function of time:
+\begin{itemize}[noitemsep]
+\item \texttt{xk\_max.png}  (e.g.  \texttt{x1\_max.png})  and \texttt{xk\_max\_sample.png}: the maximal inner and outer-approximations, with and without sampled trajectories
+\item \texttt{xk.png},  \texttt{xk\_sample.png}: additionally to the maximal inner and outer-approximations, the robust approximations when relevant, with and without sampled trajectories
+\end{itemize}
+Global views are provided: \texttt{xi\_max.png} and \texttt{xi\_subplots\_min\_max.png} display the one-dimensional projected reachable sets for all variables on one graph. 
+
+\paragraph{Two and three-dimensional projections}
+For any couple (k,l) we also display 2-dimensional projections:
+\begin{itemize}[noitemsep]
+\item \texttt{xkxl.png}:  maximal (and when relevant robust~\cite{hscc19}) inner and outer-approximations of the joint or vector-valued range (xk,xl) as skewed boxes. (see e.g. ~\cite{lcss2020})
+\item \texttt{xkxl\_sample.png}: sampled trajectories for (xk,xl) 
+\item \texttt{xkxl\_approx\_sample.png}: on the same graph the inner and outer-approximations of the joint range (xk,xl) as skewed boxes and sampled trajectories
+\item \texttt{xkxl\_box\_sample.png}: same as above but the approximations are printed as boxes (useful in a few cases where the skewed boxes have a bad behavior)
+\item \texttt{xkxl\_finalstate.png}: box and skewed box inner and outer-approximations, robust when relevant, and sampled points at the final state of the analysis
+\end{itemize}
+Three-dimensional projections when relevant are also printed, only the corners of boxes are printed for more lisibility.
+
+\paragraph{Error measures}
+We display the following error measures (the closer to 1 the better) as functions of time (or iterations for discrete-time systems):
+ \texttt{eta.png},  \texttt{gamma.png}: error measures ($\eta_o$ = (width of sampled set)/(width of outer-approx) ; $\eta_i$ = (width of inner-approx)/(width of sampled set);
+$\gamma$ = (width of inner-approx)/(width of outer-approx)
+
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Examples}
+
+%\section{Authors and References}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+\section{License}
+
+This project is licensed under the GNU LGPLv3 license - see the \url{https://github.com/cosynus-lix/RINO/blob/master/LICENSE} file for details.
+
+%\begin{figure}
+%\centering
+%\includegraphics[width=0.3\textwidth]{frog.jpg}
+%\caption{\label{fig:frog}This frog was uploaded via the file-tree menu.}
+%\end{figure}
+
+
+%\begin{table}
+%\centering
+%\begin{tabular}{l|r}
+%Item & Quantity \\\hline
+%Widgets & 42 \\
+%Gadgets & 13
+%\end{tabular}
+%\caption{\label{tab:widgets}An example table.}
+%\end{table}
+
+
+
+\bibliographystyle{alpha}
+\bibliography{rino}
+
+\end{document}

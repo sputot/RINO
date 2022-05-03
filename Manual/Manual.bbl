@@ -1,0 +1,43 @@
+\begin{thebibliography}{GPS18}
+
+\bibitem[GP17]{hscc2017}
+E.~Goubault and S.~Putot.
+\newblock Forward inner-approximated reachability of non-linear continuous
+  systems.
+\newblock In {\em {HSCC}}. {ACM}, 2017.
+
+\bibitem[GP19]{hscc19}
+Eric Goubault and Sylvie Putot.
+\newblock Inner and outer reachability for the verification of control systems.
+\newblock In {\em Proceedings of the 22nd {ACM} International Conference on
+  Hybrid Systems: Computation and Control, {HSCC} 2019, Montreal, QC, Canada,
+  April 16-18, 2019}, pages 11--22. {ACM}, 2019.
+
+\bibitem[GP20]{lcss2020}
+E.~{Goubault} and S.~{Putot}.
+\newblock Robust under-approximations and application to reachability of
+  non-linear control systems with disturbances.
+\newblock {\em IEEE Control Systems Letters}, 4(4):928--933, 2020.
+
+\bibitem[GP21]{adhs21}
+Eric Goubault and Sylvie Putot.
+\newblock Tractable higher-order under-approximating {AE} extensions for
+  non-linear systems.
+\newblock In Rapha{\"{e}}l~M. Jungers, Necmiye Ozay, and Alessandro Abate,
+  editors, {\em ADHS 2021}, volume~54 of {\em IFAC-PapersOnLine}, pages
+  235--240. Elsevier, 2021.
+
+\bibitem[GP22]{cav22}
+Eric Goubault and Sylvie Putot.
+\newblock Rino: Robust inner and outer approximated reachability of neural
+  networks controlled systems.
+\newblock In {\em Submitted as tool paper to CAV 2022}, 2022.
+
+\bibitem[GPS18]{cav18}
+Eric Goubault, Sylvie Putot, and Lorenz Sahlmann.
+\newblock {Inner and Outer Approximating Flowpipes for Delay Differential
+  Equations}.
+\newblock In {\em {Proceedings of the 30th International Conference on Computer
+  Aided Verification, Part II}}, pages 523--541. {Springer}, 2018.
+
+\end{thebibliography}
