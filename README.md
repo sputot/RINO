@@ -2,9 +2,9 @@
 
 
 
-This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network.
+This is a library to compute guaranteed inner and outer approximations of reachable sets for uncertain discrete-time or continous-time dynamical systems, with (possibly time-varying) perturbations and control inputs, where some of the control inputs can be specified as outputs of a neural network. In all this document, we use indifferently the expressions "over-approximations" or "under-approximations" to denote sets of states that may be reached, and "under-approximations" or "inner-approximations" to denote sets of states that are guaranteed to be reachable. More precise definitions can be found in e.g. [HSCC 2019]. 
 
-For continuous-time systems, it relies on Taylor expansions in time and affine arithmetic (i.e. zonotopes) in space based reachability analysis to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
+For continuous-time systems, our reachability analysis relies on Taylor expansions in time and affine arithmetic (which geometric concretization is zonotopes) in space to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it computes outer-envelopes of the Jacobian of the trajectories with respect to uncertain inputs and initial conditions, and uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
 
 # Dependencies and Installation
 
@@ -187,7 +187,7 @@ order = 3
 refined-mean-value = 1
 ```
 
-## Parameters specific to DDEs (when systype is ode)
+## Parameters specific to DDEs (when systype is dde)
 
 ```
 time-horizon = 5.
@@ -241,14 +241,18 @@ control-step = 0.1
 
 # Visualizing results
 
+### Analysis output files
+
 After running an example, all results are in the subdirectory ‘output’. They are provided in the following files : 
 - ```sumup.txt```: summary of configuration, running time and ranges at the final state of the analysis (part of this information can also be found with more significant digits in ```sumup.yaml```)
 - ```samplesreachset.yaml```: sampled trajectories (used to assess accuracy of reachability results)
 - ```approxreachset.yaml```: over and under-approximated reachset (projected, robust, joint ranges) and accuracy measures (eta, gamma) at each time step 
 
+###  Running the visualization script
+
 A python visualization file Visu_output.py is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately, 
-provided that the above data files are presen tn the output subdirectory of RINO. 
-For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]), by:
+provided the above data files are present in the output subdirectory of RINO. 
+For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]), it is run by:
 ```
 cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
 ```
@@ -257,9 +261,15 @@ When the script is run by analyzer, the options set above in command line can be
 interactive-visualization = 1
 variables-to-display = 1 2
 ```
-In particular, for the k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
+### One-dimensional projections
+
+For k ranging from 1 to system dimension, the following results files print the projected ranges on dimension k as function of time:
 - ```xk_max.png```  (e.g. ```x1_max.png```)  and ```xk_max_sample.png```: the maximal inner and outer-approximations, with and without sampled trajectories
-- ```xk.png```, ```xk_sample.png```: additionally to the maximal inner and outer-approximations, the robust approximations when relevant, with and without sampled trajectories
+- ```xk.png```, ```xk_sample.png```: additionally to the maximal inner and outer-approximations, the robust approximations (see e.g. [HSCC2019]) when relevant, with and without sampled trajectories
+
+Global views are also provided: ```xi_max.png``` and ```xi_subplots_min_max.png``` display the reachable sets for all variables on one graph
+
+### Two and three-dimensional projections
 
 For any couple (k,l) we also print 2-dimensional projections :
 - ```xkxl.png```:  maximal (and when relevant robust) inner and outer-approximations of the joint range (xk,xl) as skewed boxes (see e.g. [CDC-LCSS 2020])
@@ -270,12 +280,10 @@ For any couple (k,l) we also print 2-dimensional projections :
 
 Three-dimensional projections when relevant are also printed, only the corners of boxes are printed for more lisibility.
 
-We also provide 
-- ```xi_max.png``` and ```xi_subplots_min_max.png```: reachset for all variables on one graph
-- ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set);
-gamma = (width of under_approx)/(width of over_approx)
+### Error measures 
 
-These different type of inner and outer approximations are those described in "Inner and Outer Reachability for the Analysis of Control Systems" ([HSCC2019] in References below).
+We display the following error measures as function of time (or iterations for discret-time systems):  ```eta.png```, ```gamma.png```: error measures (eta_o = (width of sampled set)/(width of over_approx) ; eta_i = (width of under_approx)/(width of sampled set); gamma = (width of under_approx)/(width of over_approx)
+
 
 Note that the files produced can slightly vary depending on the system type (ode, dde, discrete-time)
 
