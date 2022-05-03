@@ -6,6 +6,8 @@ This is a library to compute guaranteed inner and outer approximations of reacha
 
 For continuous-time systems, our reachability analysis relies on Taylor expansions in time and affine arithmetic (which geometric concretization is zonotopes) in space to compute outer envelopes of all possible trajectories of an uncertain system. Additionally, it computes outer-envelopes of the Jacobian of the trajectories with respect to uncertain inputs and initial conditions, and uses a generalized mean-value theorem to deduce inner tubes, that contain only states guaranteed to be reached. It also studies robust versions of these tubes, when there can be control inputs and perturbations to the system. Finally, the control can be specified as the output of a neural network which inputs are the system state. 
 
+Please refer to RINO's user manual (https://github.com/cosynus-lix/RINO/tree/master/Manual) for a more detailed description. 
+
 # Dependencies and Installation
 
 ### Using docker
