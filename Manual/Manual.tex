@@ -444,7 +444,8 @@ After running an example, all results are in the subdirectory ‘output’. They
 \end{itemize}
 
 \paragraph{Running the visualization script}
-A python visualization file \texttt{Visu\_output.py} is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately,  provided the above data files are present in the output subdirectory of RINO. 
+A python visualization file \texttt{Visu\_output.py} is available in the GUI directory. It can be run from the analyzer (if variable create-png is set to 1 in the configuration file) but you can also run it separately,  provided the above data files are present in RINO/output.  It may even be required if you are running the docker version (see below the pararaph docker specifics).
+
 For example, for an interactive analysis (prints the figures on screen, otherwise the files are simply saved in the output directory) and to produce figures only for variables x[1] and x[2]),  it is run by:
 \begin{verbatim}
 $cd GUI; python3 Visu_output.py --interactive=1 --printvar=-1-2; cd ..
@@ -478,8 +479,45 @@ Three-dimensional projections when relevant are also printed, only the corners o
 We display the following error measures (the closer to 1 the better) as functions of time (or iterations for discrete-time systems) in files \texttt{eta.png},  \texttt{gamma.png}: for the projection on each state variable, we define $\eta_o$ = (width of sampled set)/(width of outer-approx) ; $\eta_i$ = (width of inner-approx)/(width of sampled set);
 $\gamma$ = (width of inner-approx)/(width of outer-approx).
 
+\paragraph{Docker specifics}
+
+It is rather difficult under docker to ensure that the visualization on the host
+machine will go correctly without further machine-dependant local installations.
+We can then turn off the automatic visualization in the configuration files 
+and rely on a local execution of a python script file on the
+host machine for generating the figures, as having a python installation working
+on the host machine is much easier to ensure than the link between docker and
+a X11 interface.
+
+First, you have to make sure that you have an \texttt{output} directory under the \texttt{\$HOME/RINO} directory on the host machine (not under the docker container): 
+\begin{verbatim}
+> mkdir output
+\end{verbatim}
+
+Then for instance for retrieving on the host machine the elements after analysis needed for visualization on the host machine, you will need to type in a console on the host machine:
+
+\begin{verbatim}
+> cd $HOME/RINO/output
+> docker cp rino:/home/RINO/output/approxreachset.yaml . 
+> docker cp rino:/home/RINO/output/samplesreachset.yaml .
+> docker cp rino:/home/RINO/output/sumup.txt .
+> docker cp rino:/home/RINO/output/sumup.yaml .
+\end{verbatim}
 
 
+Then for visualization (make sure \texttt{python3} is installed on your host machine), you can e.g. write: %\todo{J'ai l'impression qu'il faut tous les fichiers dans output et pas que approx...yaml?}
+\begin{verbatim}
+> cd ../GUI ; python3 Visu_output.py --interactive=0 --printvar=-1-2 ; cd ../output ; ls
+eta.png
+gamma.png
+x1.png
+x1_max.png
+x1_max_sample.png
+x1_sample.png
+xi_max.png
+xi_subplots_max.png
+(...)
+\end{verbatim}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Examples \label{examples}}
