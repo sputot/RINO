@@ -265,7 +265,7 @@ For examples of use, we refer the reader to:
 \item Section~\ref{existing} for sample files (in directory Examples/ConfigFiles) for existing examples,
 \item Section~\ref{examples} for fully detailed results on chosen examples.
 \end{itemize}
-\subsection{Parameters of the analysis common to all system types}
+\subsection{Parameters of the analysis common to all system types \label{common}}
 
 \paragraph{System definition}
 \begin{itemize}
@@ -327,6 +327,15 @@ params = [2,2] [3,4]
 Parameters are handled differently from inputs in the definition of the robust reachable sets~\cite{hscc19}.  In particular,  they don't add dimensions to the Jacobian matrix of the trajectories, used to compute the robust under and over-appproximations. 
 \end{itemize}
 
+\paragraph{Analysis}
+\begin{itemize}
+\item Keyword \texttt{refined-mean-value}: should be 0 or 1,  depending whether a coarse mean-value theorem is implemented for under-approximation, using the Jacobian evaluation for all input intervals (refined-mean-value=0), or a refined version (see e.g. Theorem 1 in \cite{lcss2020}).
+\begin{verbatim}
+refined-mean-value = 1
+\end{verbatim}
+The improvement due to this refined formula have been disappointing compared to the complexity of implementation, so that this option will probably be deprecated in further versions. 
+\end{itemize}
+
 \paragraph{Output results and visualization}
 \begin{itemize}
 \item Keyword \texttt{samples-per-dim}: should be an integer defining the number of samples in each input dimension used  for reachable set estimation by trajectory samples.  The samples are used  to compute estimated ranges for each state variable and to print sample points at different integration time steps of the analysis.
@@ -364,57 +373,79 @@ variables-to-display = all
 \end{verbatim}
 \end{itemize}
 
+\subsection{Parameters common to ODEs and DDEs (systype is ode or dde) \label{odedde}}
+
+
+Additionally to the parameters of Section~\ref{common},  for both ODEs and DDEs, the following parameters can be tuned:
+\begin{itemize}
+\item Keyword \texttt{time-horizon}: a real number  defining the time horizon of the reachability analysis (note that for DDEs the starting time can be tuned, while for ODEs it is equal to 0).
+For example:
+\begin{verbatim}
+time-horizon = 5.
+\end{verbatim}
+\item Keyword \texttt{order}: an integer specifying the order for Taylor expansions in time on each time step. 
+For example:
+\begin{verbatim}
+order = 3
+\end{verbatim}
+
+\end{itemize}
+
 \subsection{Parameters specific to ODEs (systype is ode)}
 
+Additionally to the parameters of Sections~\ref{common} and \ref{odedde}, in the case of ODEs the following parameter can be tuned:
+\begin{itemize}
+\item Keyword \texttt{integration-step}: a real number defining the time step of Taylor models in the reachability analysis (no variable time steps for the time being)
 \begin{verbatim}
-time-horizon = 5.
-
-# time step
 integration-step = 0.02
-
-# order for Taylor models in time
-order = 3
-
-# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
-refined-mean-value = 1
 \end{verbatim}
-
+\end{itemize}
 \subsection{Parameters specific to DDEs (systype is dde)}
 
+Additionally to the parameters of Sections~\ref{common} and \ref{odedde}, in the case of DDEs the following parameters can be tuned:
+\begin{itemize}
+\item Keyword \texttt{starting-time}: a real number specifying the initial time of definition of the initial conditions (for ODEs, the initial conditions are given at time 0).  Often in the examples, this initial time is the opposite of the delay value,  with initial conditions defined between the starting time and 0, and integration starting at time 0. 
+For example:
 \begin{verbatim}
-time-horizon = 5.
-
-# only for DDEs (for ODEs, starting-time is set to 0)
 starting-time = -0.3
-
-# only for DDEs
-delay = 0.3 
-
-# defines the time-step by delay/nb-time-subdivisions
-nb-time-subdivisions = 3
-
-# order for Taylor models in time
-order = 3
-
-# refined mean-value theorem for inner-approximation (default is 0: classical mean value)
-refined-mean-value = 1
 \end{verbatim}
+\item Keyword \texttt{delay}: the constant delay in the DDE. 
+For example:
+\begin{verbatim}
+delay = 0.3 
+\end{verbatim}
+\item Keyword \texttt{nb-time-subdivisions}: an integer which defines the integration time step by the delay divided by nb-time-subdivisions. (this replaces the definition of integration-step of ODEs).
+For example:
+\begin{verbatim}
+nb-time-subdivisions = 3
+\end{verbatim}
+\end{itemize}
 
 \subsection{Parameters specific to discrete-time systems (systype is discrete)}
-
+Additionally to the parameters of Section~\ref{common}, in the case of discrete-time systems, the following parameters can be tuned:
+\begin{itemize}
+\item Keyword \texttt{nbsteps}: an integer specifying the number of discrete time steps.
+For example:
 \begin{verbatim}
-# number of discrete time steps
 nbsteps = 25
-
-# iterating algorithm (Algorithm 1 or 2 in [ADHS2021])
+\end{verbatim}
+\item Keyword \texttt{iter-method}: should be either 1 or 2,  specifying whether Algorithm 1 or 2 in \cite{adhs21} is used for iterated discrete-time reachability.  
+For example:
+\begin{verbatim}
 iter-method = 1
-
-# computing skewed box joint approximation or regular boxes (influences the precision for Algorithm 1, mostly for visualization for Algorithm 2)
+\end{verbatim}
+\item Keyword \texttt{skew}: should be either 0 or 1, specifying whether boxes or skewed boxes (linear transform of a box) should be used for the approximation of vector valued functions: this choice influences the precision in Algorithm 1 (this vector-valued approximation is used as initial condition of the next discrete time step) while it is only used for visualization in Algorithm 2.
+In the general case,  a value of 1 (skewed box) is recommended. Only in a very few  cases, the preconditioning linear transform may possibly degrade the approximation. 
+For example:
+\begin{verbatim}
 skew = 1
-
-# Order of the AE extension (1 for mean-value, 2 for Taylor-based higher-order extension)
+\end{verbatim}
+\item Keyword \texttt{AEextension-order}: should be either 1 or 2,  respectively specifying that a first-order (mean-value) or a 2nd order~\cite{adhs21} (Taylor model) approximation will be used for under and robust approximations. 
+For example:
+\begin{verbatim}
 AEextension-order = 1
 \end{verbatim}
+\end{itemize}
 
 \subsection{Parameters specific to neural network controlled dynamical systems (systype can be either ode or discrete)}
 
@@ -505,7 +536,7 @@ Then for instance for retrieving on the host machine the elements after analysis
 \end{verbatim}
 
 
-Then for visualization (make sure \texttt{python3} is installed on your host machine), you can e.g. write: %\todo{J'ai l'impression qu'il faut tous les fichiers dans output et pas que approx...yaml?}
+Then for visualization (make sure \texttt{python3} is installed on your host machine - the scripts have been run successfully with python 3.6 to 3.8), you can e.g. write: 
 \begin{verbatim}
 > cd ../GUI ; python3 Visu_output.py --interactive=0 --printvar=-1-2 ; cd ../output ; ls
 eta.png
