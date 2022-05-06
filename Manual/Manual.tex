@@ -449,18 +449,30 @@ AEextension-order = 1
 
 \subsection{Parameters specific to neural network controlled dynamical systems (systype can be either ode or discrete)}
 
+Both ODEs and discrete-time systems can have control components defined as the output of a neural network (it should work for DDEs as well but has not been tested).  In this case, additionally to the parameters of ODEs or discrete-time systems,  the user can specify the following:
+\begin{itemize}
+\item Keyword \texttt{nnfile-sfx}: specifies the file containing the neural network.  It is given for now in the Sherlock sfx format (\url{https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf}). 
+For example:
 \begin{verbatim}
-# file containing the neural network in Sherlock sfx format (https://github.com/souradeep-111/sherlock/blob/master/sherlock-network-format.pdf) 
 nnfile-sfx = Examples/Networks/tora_tanh.sfx
-
-# when relevant, final offset and scaling of the output of the network:
-nn-offset = 0. # also read from nn file (erasing this one)
-nn-scaling = 11.  # also read from nn file (erasing this one)
-
-# control time step
+\end{verbatim}
+Note that we are currently working on onnx format integration, we hope to make the possibility available soon.
+\item Keywords \texttt{nn-offset} and \texttt{nn-scaling}: in some cases in the related work,  the output \texttt{control\_inputs} of the network is transformed to give the control as follows:
+\begin{verbatim}
+ nn_scaling_factor*(control_inputs[0]-nn_offset)
+\end{verbatim}
+These  final offset and scaling of the network output can be specified in the configuration file.
+For example:
+\begin{verbatim}
+nn-offset = 0. # also read at the end of sfx file if present (erasing this one)
+nn-scaling = 11.  # also read at the end of sfx file  if present (erasing this one)
+\end{verbatim}
+\item Keyword \texttt{control-step}: a real nuber specifying the period at which the neural network is evaluated on the current step to give a new control value,  which then remains constant on the whole control step. 
+For example:
+\begin{verbatim}
 control-step = 0.1
 \end{verbatim}
-
+\end{itemize}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
