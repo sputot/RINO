@@ -194,7 +194,7 @@ $./rino -configfile Examples/ConfigFiles/cfg_discrete_17.txt
 \end{verbatim}
  \end{itemize}
  
-\subsubsection{Neural network controlled dynamical systems (continuous or discrete time)}
+\subsubsection{Neural network controlled dynamical systems (continuous or discrete time) \label{nnex}}
 The  examples of ~\cite{cav22} can be run by
 \begin{itemize}[noitemsep]
 \item TORA:
@@ -566,6 +566,98 @@ xi_subplots_max.png
 \section{Examples \label{examples}}
 
 To be completed. 
+
+\subsection{Neural network controlled ODE (example B1)}
+
+We describe here the example named B1 in Section~\ref{nnex} of a neural network controlled continuous-time dynamical system,  called for instance with a neural network with sigmoid activation functions.  
+It is called by
+\begin{verbatim}
+$./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
+\end{verbatim}
+
+\subsubsection{Configuration file}
+The contents of the configuration file \texttt{cfg\_B1\_sigmoid.txt} are as follows:
+\begin{verbatim}
+# B1 sigmoid (sys 471)
+systype = ode
+syschoice = 471
+nnfile-sfx = Examples/Networks/B1_sigmoid.sfx
+nn-offset = 0.5. # also read from nn file (erasing this one)
+nn-scaling = 8.  # also read from nn file (erasing this one)
+time-horizon = 7.
+control-step = 0.2
+integration-step = 0.05
+order = 3
+initial-values = [0.8,0.9] [0.5,0.6]
+create-png = 0
+\end{verbatim}
+First note that not all possible parameters are set  in this configuration file,  default values are taken for the others. 
+\paragraph{System definition}
+The system is a continuous-time dynamical system (\texttt{systype=ode}),  the system ID is 471 (\texttt{syschoice = 471}). 
+The definition of this system can be found in file \texttt{ode\_def.h} in class \texttt{OdeFunc} by looking for ID 471:
+\small
+\lstset {language=C++}
+\begin{lstlisting}
+class OdeFunc {
+  template <class C> void operator()(vector<C> &yp, vector<C> params, 
+  vector<C> param_inputs, vector<C> control_inputs, vector<C> y) { 
+   [...]      
+    else if (syschoice == 471) {
+      yp[0] = y[1];
+      yp[1] = (nn_scaling_factor*(control_inputs[0]-nn_offset))*(y[1]*y[1])-y[0];
+    }
+   [...]
+\end{lstlisting}
+\normalsize
+This function defines the dynamic of the system by its time derivative.  In the present case,  it defines:
+ \[ 
+ \begin{array}{l} \dot x_1  = x_2 \\
+              \dot x_2 = u x_2^2 - x_1 \end{array} 
+\]
+In this example, there are no constant parameters (params) and no uncertain inputs or disturbances (param\_inputs).  There is however a control given as an affine transform of the output \texttt{control\_inputs[0]} of a neural network controller:
+\[ u := \mbox{ nn\_scaling\_factor*(control\_inputs[0]-nn\_offset) }\]
+The neural network controller in sfx file is described in file \texttt{Examples/Networks/B1\_sigmoid.sfx} as described by the \texttt{nnfile-sfx} line in the configuration file. The offset and scaling factors are also read from the configuration file (\texttt{nn-offset = 0.5} and \texttt{nn-scaling = 8}).
+
+Note that this definition of the system complemented in the C++ file \texttt{ode\_def.cpp} by the specification of the systems dimension in function void \texttt{define\_system\_dim():}
+\small
+\lstset {language=C++}
+\begin{lstlisting}
+void define_system_dim() {
+[...]
+ else if (syschoice == 471) {  
+    sysdim = 2;
+    inputsdim = 0;
+    nncontroldim = 1;
+ }
+[...]
+\end{lstlisting}
+\normalsize
+The system dimension is 2 ($x_1$ and $x_2$), the inputs dimension is 0 (no uncertain inputs or disturbances), and there is one control defined as the output of a neural network controller.
+
+\paragraph{System initialization and analysis parameters}
+The initial values for $x_1$ and $x_2$ at time 0 are given in box $[0.8,0.9] \times [0.5,0.6]$, as specified by the line starting with \texttt{initial-values} in the configuration file.  
+The time step is 0.05, the control period is 0.2, and the time horizon is 7.  The analysis will be performed with Taylor models of order 3 in time on each time step. 
+These settings, as specified by the configuration file,  override the (same here) values that may have been set in \texttt{ode\_def.cpp}, in function 
+
+\small
+\lstset {language=C++}
+\begin{lstlisting}
+void init_system()
+[...]
+  else if (syschoice == 471) {  
+      tau = 0.05; 
+      t_end = 7.;  
+      Taylor_order = 3;
+      initial_values[0] = interval(0.8,0.9);
+      initial_values[1] = interval(0.5,0.6);
+      control_period = 0.2;
+  }
+  [...]
+\end{lstlisting}
+\normalsize     
+
+\paragraph{Results and visualization}
+
 %\section{Authors and References}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
