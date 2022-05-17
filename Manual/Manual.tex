@@ -575,7 +575,7 @@ It is called by
 $./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
 \end{verbatim}
 
-\subsubsection{Configuration file}
+\subsubsection{Configuration file and system definition and initialization}
 The contents of the configuration file \texttt{cfg\_B1\_sigmoid.txt} are as follows:
 \begin{verbatim}
 # B1 sigmoid (sys 471)
@@ -656,11 +656,132 @@ void init_system()
 \end{lstlisting}
 \normalsize     
 
-\paragraph{Results and visualization}
+\subsubsection{Results and visualization}
+\paragraph{Running the analysis}
+When running the example by 
+\begin{verbatim}
+>./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt
+\end{verbatim}
+the analysis should output something like:
+\small
+ \begin{verbatim}
+ ****** Reading system choice from file Examples/ConfigFiles/cfg_B1_sigmoid.txt ******
+nn_scaling_factor =8reading network fromExamples/Networks/B1_sigmoid.sfx
+nn_offset=0.5
+nn_scaling_factor=8
+nb_inputs layer 0 = 2 nb_outputs = 20 activation function = 1
+nb_inputs layer 1 = 20 nb_outputs = 20 activation function = 1
+nb_inputs layer 2 = 20 nb_outputs = 1 activation function = 1
+inputsdim=0sysdim=2
+****** Reading system parameter from file Examples/ConfigFiles/cfg_B1_sigmoid.txt ******
+initial_value=[0.8, 0.9]
+initial_value=[0.5, 0.6]
+****** End parameter reading ******
 
+fullinputsdim=0
+mv: rename output to output_sauv/output: Directory not empty
+Estimate reachset:
+Estimated reachable set at tn = 0.05 is: z[0]=[0.824021, 0.928744]  z[1]=[0.456494, 0.553304]  
+Estimated reachable set at tn = 0.1 is: z[0]=[0.846037, 0.954955]  z[1]=[0.411477, 0.506155]  
+Estimated reachable set at tn = 0.15 is: z[0]=[0.865984, 0.978606]  z[1]=[0.365086, 0.458601]  
+Estimated reachable set at tn = 0.2 is: z[0]=[0.883804, 0.99967]  z[1]=[0.317469, 0.410684]  
+Estimated reachable set at tn = 0.25 is: z[0]=[0.89955, 1.01831]  z[1]=[0.272649, 0.369659]  
+Estimated reachable set at tn = 0.3 is: z[0]=[0.913247, 1.03463]  z[1]=[0.225815, 0.32679]  
+Estimated reachable set at tn = 0.35 is: z[0]=[0.924809, 1.04854]  z[1]=[0.177268, 0.282256]  
+Estimated reachable set at tn = 0.4 is: z[0]=[0.934162, 1.05994]  z[1]=[0.127347, 0.236258]  
+Estimated reachable set at tn = 0.45 is: z[0]=[0.941242, 1.06877]  z[1]=[0.0764235, 0.189017]  
+Estimated reachable set at tn = 0.5 is: z[0]=[0.946015, 1.075]  z[1]=[0.0250271, 0.142152]  
+
+[...]
+[...]
+[...]
+
+Estimated reachable set at tn = 7 is: z[0]=[0.108126, 0.14668]  z[1]=[0.175081, 0.195133]  
+At t=0 :
+x[0]=[0.8, 0.9]	x[1]=[0.5, 0.6]	
+
+nncontrol[i]=[0.452, 0.526]
+setting new bf at time 0
+without quadrature: Xouter=z[0]=[0.824, 0.929] z[1]=[0.451, 0.56] 
+Xinner=z[0]=[0.824, 0.929] z[1]=[0.463, 0.549] 
+with intersection with direct solution: t=0.05
+Xouter_maximal[0]=[0.824002, 0.928773] 	Xinner_maximal[0]=[0.824095, 0.928696] Sampled estim.[0]=[0.824021, 0.928744] 	 eta_o[0]=0.999548	 eta_i[0]=0.998832	 gamma[0]=0.99838
+Xouter_maximal[1]=[0.45599, 0.554644] 	Xinner_maximal[1]=[0.462626, 0.548631] Sampled estim.[1]=[0.456494, 0.553304] 	 eta_o[1]=0.981313	 eta_i[1]=0.888394	 gamma[1]=0.871792
+
+[...]
+[...]
+[...]
+
+without quadrature: Xouter=z[0]=[0.0962, 0.159] z[1]=[0.164, 0.209] 
+Xinner=z[0]=[0.121, 0.134] z[1]=[ EMPTY ] 
+with intersection with direct solution: t=7
+Xouter_maximal[0]=[0.101547, 0.153317] 	Xinner_maximal[0]=[0.120924, 0.133972] Sampled estim.[0]=[0.108126, 0.14668] 	 eta_o[0]=0.744716	 eta_i[0]=0.338445	 gamma[0]=0.252046
+Xouter_maximal[1]=[0.171882, 0.20041] 	Xinner_maximal[1]=[nan, nan] 	Sampled estim.[1]=[0.175081, 0.195133] 	 eta_o[1]=0.702897	 eta_i[1]=nan	 gamma[1]=nan
+
+elapsed time (sec) =0.589801
+......
+Result files are in the output directory
+Visualize them with by : cd GUI; python3 Visu_output.py --interactive=0 --printvar=all; cd ..
+The python script will save files as png files (in same directory output)
+ \end{verbatim}
+ \normalsize
+This output corresponds to the following steps:
+\begin{itemize}[noitemsep]
+\item it starts by reading the configuration file and the neural network,
+\item it  computes some sample trajectories to estimate the reachable set width at each time step, with same time step as for reachability analysis (the individual points of trajectories are output in the \texttt{samplesreachset.yaml} output file),
+\item it performs the reachability and outputs at each time step projections of under and over-approximations and error measures (eta and gamma); these results are also saved in the \texttt{approxreachset.yaml} output file,
+\item the final results at the end of the time horizon (here t=7) are printed in the \texttt{sumup.txt} output file.
+\end{itemize}
+All files can be found in the \texttt{output} directory.  For example, here, opening  \texttt{output/sumup.txt}:
+\small
+\begin{verbatim}
+-----------------------------------------------------------------------------------------------
+                           Summary   
+                      Command-line   ./rino -configfile Examples/ConfigFiles/cfg_B1_sigmoid.txt 
+----------------------------------------------------------------------------------------------- 
+                           Systype | ode
+                          Dynamics | 471
+                Initial conditions | [0.8, 0.9] [0.5, 0.6] 
+
+                            Inputs | 
+                     Time interval | [0,7]
+                      Control step  | 0.2
+                         Time step | 0.05
+                  System dimension  |  2
+               Taylor Models order |  3
+               Neural network file  |  Examples/Networks/B1_sigmoid.sfx
+----------------------------------------------------------------------------------------------
+Sampled estimate of final reachset |  [0.108, 0.147] [0.175, 0.195] 
+                Over-approximation  | [0.102, 0.153] [0.172, 0.2] 
+               Under-approximation |  [0.121, 0.134] [ EMPTY ] 
+----------------------------------------------------------------------------------------------
+       Elapsed analysis time (sec)  |  0.589801
+       Elapsed sampling time (sec) | 2.02754
+\end{verbatim}
+\normalsize
 %\section{Authors and References}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\paragraph{Visualization}
+You can visualize the  reachability results by running the following  from the RINO directory, provided the results files are in RINO/output (see Section \ref{visu} and in particular paragraph Docker specifics if running under docker):
+\begin{verbatim}
+>cd GUI; python3 Visu_output.py --interactive=0 --printvar=all; cd ..
+\end{verbatim}
+Listing files in the output directory produces:
+\small
+\begin{verbatim}
+approxreachset.yaml    x1.png                 x1x2_box_sample.png    x2_sample.png
+eta.png                x1_max.png             x1x2_finalstate.png    xi_max.png
+gamma.png              x1_max_sample.png      x1x2_sample.png        xi_subplots_max.png
+samplesreachset.yaml   x1_sample.png          x2.png
+sumup.txt              x1x2.png               x2_max.png
+sumup.yaml             x1x2_approx_sample.png x2_max_sample.png
+
+\end{verbatim}
+\normalsize
+The dimension of this system being equal to 2,  projections are computed for x1 and x2, and joint approximations for x1 and x2. 
+In this example,   there are no inputs which can be seen as disturbances or controls,  thus the robust and maximal reachable sets are identical, and pictures x1.png  and x1\_max.png are identical, and so are x1\_sample.png  and x1\_max\_sample.png (similarly for x2).
 
 
 \section{License}
