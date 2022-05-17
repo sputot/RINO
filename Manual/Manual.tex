@@ -14,6 +14,8 @@
 % Useful packages
 \usepackage{amsmath}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage[colorlinks=true, allcolors=blue]{hyperref}
 
 %\title{\includegraphics[width=0.3\textwidth]{rino2.jpg}  \hspace*{2cm} \Huge{RINO User Manual}  }
@@ -782,6 +784,25 @@ sumup.yaml             x1x2_approx_sample.png x2_max_sample.png
 \normalsize
 The dimension of this system being equal to 2,  projections are computed for x1 and x2, and joint approximations for x1 and x2. 
 In this example,   there are no inputs which can be seen as disturbances or controls,  thus the robust and maximal reachable sets are identical, and pictures x1.png  and x1\_max.png are identical, and so are x1\_sample.png  and x1\_max\_sample.png (similarly for x2).
+
+\begin{figure}
+\centering
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.99\linewidth]{x1_B1sig.png}
+  \caption{x1.png}
+  \label{fig:sub1}
+\end{subfigure}%
+\begin{subfigure}{.5\textwidth}
+  \centering
+  \includegraphics[width=.99\linewidth]{x2_B1sig.png}
+  \caption{x2.png}
+  \label{fig:sub2}
+\end{subfigure}
+\caption{Projected under and over-approximations for B1 example with sigmoid network (cfg\_B1\_sigmoid.txt)}
+\label{fig:test}
+\end{figure}
+
 
 
 \section{License}
