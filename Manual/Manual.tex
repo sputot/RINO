@@ -808,14 +808,22 @@ In Figure~\ref{fig:Proj_sample_B1}, the  approximations of the reachable set for
 \caption{ x1\_sample.png for the B1 example}
 \label{fig:Proj_sample_B1}
 \end{figure}
-The 2-dimensional under (in orange) and over-approximations (in green) together with sample points (in purple) are printed at each time step in Figure~\ref{fig:Proj_sample_B1}. The initial state is the yellow square in the upper right quarter. First note that for the over-approximation, we don't represent exactly the zonotope  computed at each time step, by evaluation of the Taylor model with zonotopic coefficients, but a skewed box over-approximation of this zonotope.  Note also that the cartesian product of the projected under-approximation on each component is not an under-approximation of the (2-dimensional) vector-valued function, but we have an algorithm to compute box or skewed box under-approximations as well, see e.g. ~\cite{lcss2020,adhs21}. Finally, at some point in the iterations, the precodnitioning which gives the directions of the skewed boxes can be no longer meaningful, after which we print boxes instead, as the result of a heuristics.  This is what happens here in the last part of the trajectories when green boxes are printed, which appear much less accurate than the skewed boxes printed at previous iterates (the heuristics probably still needs some calibration...). However remember that this loss of precision is only for printing, what is propagated is the underlying zonotopes which we approximate by these skewed boxes.  
+
+The 2-dimensional under (in orange) and over-approximations (in green) together with sample points (in purple) are printed at each time step in Figure~\ref{fig:x1x2_B1}. The initial state is the yellow square in the upper right quarter. First note that for the over-approximation, we don't represent exactly the zonotope  computed at each time step, by evaluation of the Taylor model with zonotopic coefficients, but a skewed box over-approximation of this zonotope.  Note also that the cartesian product of the projected under-approximation on each component is not an under-approximation of the (2-dimensional) vector-valued function, but we have an algorithm to compute box or skewed box under-approximations as well, see e.g. ~\cite{lcss2020,adhs21}. Finally, at some point in the iterations, the precodnitioning which gives the directions of the skewed boxes can be no longer meaningful, after which we print boxes instead, as the result of a heuristics.  This is what happens here in the last part of the trajectories when green boxes are printed, which appear much less accurate than the skewed boxes printed at previous iterates (the heuristics probably still needs some calibration...). However remember that this loss of precision is only for printing, what is propagated is the underlying zonotopes which we approximate by these skewed boxes.  
 \begin{figure}[htbp]
 \centering
   \includegraphics[width=.99\linewidth]{x1x2_approx_sample_B1sig.png}
 \caption{ x1x2\_approx\_sample.png for the B1 example}
-\label{fig:Proj_sample_B1}
+\label{fig:x1x2_B1}
 \end{figure}
 
+Finally, for each component of the system state, the precision metrics $\eta_o$ (ratio of the width of the over-approximation over the  width of the set estimated by sampling) and $\eta_i$	 (ratio of the  width of the set estimated by sampling over the width of the under-approximation) as functions of time are represented in Figure~\ref{fig:metrics_B1}.  The closer to 1, the better the estimations, both for under and over-approximation.  We can for instance note that the precision of the over-approximation for component x1 (plain blue line) is locally degraded around time t=5, which corresponds to the time where the width of the set tends towards 0 before increasing again (see Figure~\ref{fig:Proj_B1} a).  Similarly and in a stronger way for the under-approximation for component x1: we note that precision tends to 0, corresponding to the under-approximation becoming empty (which is natural when the set width tends to 0, in particular because of rounding errors in the computation), before increasing again. Note also that only the over-approximation are propagated through time, the under-approximations being at each step deduced from the over-approximation, which makes very much possible the fact for under-approximations to be empty at one step and non-empty at a further step.  Finally, while in this example, for each component the projected under-approximation is always less precise than the over-approximation, this is not necessarily a general rule. 
+\begin{figure}[htbp]
+\centering
+  \includegraphics[width=.99\linewidth]{eta_B1sig.png}
+\caption{ eta.png for the B1 example}
+\label{fig:metrics_B1}
+\end{figure}
 \section{License}
 
 This project is licensed under the GNU LGPLv3 license - see the \url{https://github.com/cosynus-lix/RINO/blob/master/LICENSE} file for details.
