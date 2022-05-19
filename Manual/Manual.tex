@@ -783,9 +783,8 @@ sumup.yaml             x1x2_approx_sample.png x2_max_sample.png
 \end{verbatim}
 \normalsize
 The dimension of this system being equal to 2,  projections are computed for x1 and x2, and joint approximations for x1 and x2. 
-In this example,   there are no inputs which can be seen as disturbances or controls,  thus the robust and maximal reachable sets are identical, and pictures x1.png  and x1\_max.png are identical, and so are x1\_sample.png  and x1\_max\_sample.png (similarly for x2).
-
-\begin{figure}
+In this example,   there are no inputs which can be seen as disturbances or controls,  thus the robust and maximal reachable sets are identical, and pictures x1.png  and x1\_max.png are identical, and so are x1\_sample.png  and x1\_max\_sample.png (similarly for x2).  Figure~\ref{fig:Proj_B1} shows the projected reachable sets on each component x1 and x2: the filled blue region is the under-approximation of the reachable set, while the plain black lines give the outside bounds of the over-approximation. 
+\begin{figure}[htbp]
 \centering
 \begin{subfigure}{.5\textwidth}
   \centering
@@ -799,11 +798,23 @@ In this example,   there are no inputs which can be seen as disturbances or cont
   \caption{x2.png}
   \label{fig:sub2}
 \end{subfigure}
-\caption{Projected under and over-approximations for B1 example with sigmoid network (cfg\_B1\_sigmoid.txt)}
-\label{fig:test}
+\caption{Projected under and over-approximations for the B1 example with sigmoid network (cfg\_B1\_sigmoid.txt)}
+\label{fig:Proj_B1}
 \end{figure}
-
-
+In Figure~\ref{fig:Proj_sample_B1}, the  approximations of the reachable set for x1 is printed together with (in purple dots) points of sampled trajectories.  The number of sample trajectories can be parameterized in the configuration file.  
+\begin{figure}[htbp]
+\centering
+  \includegraphics[width=.99\linewidth]{x1_sample_B1sig.png}
+\caption{ x1\_sample.png for the B1 example}
+\label{fig:Proj_sample_B1}
+\end{figure}
+The 2-dimensional under (in orange) and over-approximations (in green) together with sample points (in purple) are printed at each time step in Figure~\ref{fig:Proj_sample_B1}. The initial state is the yellow square in the upper right quarter. First note that for the over-approximation, we don't represent exactly the zonotope  computed at each time step, by evaluation of the Taylor model with zonotopic coefficients, but a skewed box over-approximation of this zonotope.  Note also that the cartesian product of the projected under-approximation on each component is not an under-approximation of the (2-dimensional) vector-valued function, but we have an algorithm to compute box or skewed box under-approximations as well, see e.g. ~\cite{lcss2020,adhs21}. Finally, at some point in the iterations, the precodnitioning which gives the directions of the skewed boxes can be no longer meaningful, after which we print boxes instead, as the result of a heuristics.  This is what happens here in the last part of the trajectories when green boxes are printed, which appear much less accurate than the skewed boxes printed at previous iterates (the heuristics probably still needs some calibration...). However remember that this loss of precision is only for printing, what is propagated is the underlying zonotopes which we approximate by these skewed boxes.  
+\begin{figure}[htbp]
+\centering
+  \includegraphics[width=.99\linewidth]{x1x2_approx_sample_B1sig.png}
+\caption{ x1x2\_approx\_sample.png for the B1 example}
+\label{fig:Proj_sample_B1}
+\end{figure}
 
 \section{License}
 
