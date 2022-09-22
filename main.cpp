@@ -70,6 +70,10 @@ int main(int argc, char* argv[])
     clock_t begin, end; //  = clock();
     double elapsed_secs_sampling;
     
+    cout.unsetf(ios::floatfield);            // floatfield not set
+    cout.precision(6);
+    
+    
 /*    essai_sherlock();
     syschoice = 101;
     function_range(NULL);
@@ -206,19 +210,19 @@ int main(int argc, char* argv[])
     out_summary << YAML::Key << "sysdim";
     out_summary << YAML::Value << sysdim;
     
-   
-    // discrete systems
-    if (systype == 2) {
-    
-    out_summary << YAML::Key << "nb_steps";
-    out_summary << YAML::Value << nb_steps;
     out_summary << YAML::Key << "nb_sample_per_dim";
     out_summary << YAML::Value << nb_sample_per_dim;
-    out_summary << YAML::Key << "skew";
-    out_summary << YAML::Value << skewing;
-    out_summary << YAML::Key << "iter_method";
-    out_summary << YAML::Value << iter_method;
+    out_summary << YAML::Key << "nbmax_sampled_dim";
+    out_summary << YAML::Value << nbmax_sampled_dim;
     
+    // discrete systems
+    if (systype == 2) {
+        out_summary << YAML::Key << "nb_steps";
+        out_summary << YAML::Value << nb_steps;
+        out_summary << YAML::Key << "skew";
+        out_summary << YAML::Value << skewing;
+        out_summary << YAML::Key << "iter_method";
+        out_summary << YAML::Value << iter_method;
     }
     
     if (systype == 0 || systype == 1) {
@@ -419,6 +423,7 @@ void read_system(int argc, char* argv[])
     systype = 1; // EDO = 0, DDE = 1, discrete systems = 2, DNN = 3
     syschoice = 1;
     nb_sample_per_dim = 20;
+    nbmax_sampled_dim = 4;
     
     char * str_systype = getCmdOption(argv, argv + argc, "-systype");
     if (str_systype)
@@ -426,14 +431,17 @@ void read_system(int argc, char* argv[])
         if (strcmp(str_systype,"ode")==0) {
             systype = 0;
             nb_sample_per_dim = 3;
+            nbmax_sampled_dim = 3;
         }
         else if (strcmp(str_systype,"dde")==0) {
             systype = 1;
             nb_sample_per_dim = 3;
+            nbmax_sampled_dim = 3;
         }
         else if (strcmp(str_systype,"discrete")==0) {
             systype = 2;
             nb_sample_per_dim = 20;
+            nbmax_sampled_dim = 10;
         }
     }
     
@@ -557,6 +565,20 @@ void read_system(int argc, char* argv[])
 vector<vector<interval>> estimate_reachset()
 {
     cout << "Estimate reachset:" << endl;
+    
+    /* pour systemes discrets mais a factoriser ?
+    int nbmax_sampled_dim = 4;
+    int nb_sampled_dim = min(jacdim,nbmax_sampled_dim);
+    vector<int> local_id(nb_sampled_dim);
+    
+    int nb_points = nb_sample_per_dim;
+    // limit the number of sampled points
+    for (int i=1; i < nb_sampled_dim ; i++)  // MODIF borne min : 1 => 0 (?)
+        nb_points = nb_points * (nb_sample_per_dim);
+    cout << "nb_points=" << nb_points << endl;
+    */
+    
+    
     if (systype == 2) {
         return estimate_robust_reachset_discrete(f);
     }

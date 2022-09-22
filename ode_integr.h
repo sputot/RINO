@@ -30,7 +30,6 @@
 using namespace std;
 
 
-
 // class used for computation of Taylor coefficients and Jacobian with FADBAD++
 class OdeVar
 {
@@ -124,8 +123,10 @@ public:
     
 };
 
-
-
+void printTM(OdeVar &ode_x, OdeVar &ode_xg, int order); // prints the Taylor Model for the value using the first terms from ode_x and remainder from ode_xg
+void printTMval(Ode &ode_x, Ode &ode_xg, int order); // prints the Taylor Model for the value using the first terms from ode_x and remainder from ode_xg
+void printAAFTM(OdeVar &ode_x, OdeVar &ode_xg, int order);
+void printAAFTMval(Ode &ode_x, Ode &ode_xg, int order);
 
 // TM valid on time interval [tn,tn+tau]
 class TM_val

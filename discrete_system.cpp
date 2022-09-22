@@ -146,9 +146,13 @@ void init_discrete_system(const char * config_filename)
         sysdim = CG.no_of_output_nodes;
 #endif
     }
-    else if (syschoice == 24) {
+    else if (syschoice == 24) {  // example to test robust rachability with quantifier alternation
         jacdim = 3; // inputs dim
         sysdim = 1; // outputs dim
+    }
+    else if (syschoice == 25) {  // example to test robust rachability with quantifier alternation
+        jacdim = 4; // inputs dim
+        sysdim = 2; // outputs dim
     }
     
     xinit = vector<interval>(jacdim);
@@ -289,7 +293,7 @@ void init_discrete_system(const char * config_filename)
         xinit[0] = interval(5,5.);
         xinit[1] = interval(-2.,-2.);
     }
-    else if (syschoice == 24) {
+    else if (syschoice == 24) {  // example to test robust rachability with quantifier alternation
         xinit[0] = interval(-1,1);
         xinit[1] = interval(-1,1);
         xinit[2] = interval(-1,1);
@@ -297,6 +301,24 @@ void init_discrete_system(const char * config_filename)
         nquant.var_id[0] = 1; nquant.exists[0] = false;
         nquant.var_id[1] = 0; nquant.exists[1] = true;
         nquant.var_id[2] = 2; nquant.exists[2] = true;
+        //nquant.var_id[0] = 0; nquant.exists[0] = true;
+        //nquant.var_id[1] = 1; nquant.exists[1] = false;
+        //nquant.var_id[2] = 2; nquant.exists[2] = true;
+    }
+    else if (syschoice == 25) {  // example to test robust rachability with quantifier alternation
+        xinit[0] = interval(-1,1);
+        xinit[1] = interval(-1,1);
+        xinit[2] = interval(-1,1);
+        xinit[2] = interval(-1,1);
+        
+        nquant.var_id[0] = 0; nquant.exists[0] = true;
+        nquant.var_id[1] = 1; nquant.exists[1] = false;
+        nquant.var_id[2] = 2; nquant.exists[2] = true;
+        nquant.var_id[3] = 3; nquant.exists[3] = true;
+        //nquant.var_id[0] = 0; nquant.exists[0] = true;
+        //nquant.var_id[1] = 1; nquant.exists[1] = false;
+        //nquant.var_id[2] = 2; nquant.exists[2] = true;
+        
     }
     
     for (int i=0 ; i<jacdim ; i++)
@@ -3854,44 +3876,105 @@ void twodim_discretization_by_quadrant(vector<interval> &radx) {
     }
 }
 
-// supposes jacdim = 2
-int global_id(int i1, int i2)
+
+
+
+int local2nquant_id(vector<int> &local_id, int nb_sampled_dim, int nb_sample_per_dim)
 {
-    int cur_point;
-    int id1 = nquant.var_id[0];
-    int id2 = nquant.var_id[1];
-    
-    /*if (id1 == 0)
-        cur_point = i1*nb_sample_per_dim + i2;
-    else
-        cur_point = i2*nb_sample_per_dim + i1;*/
-    
-    cur_point = i1 * pow(nb_sample_per_dim,1-nquant.var_id[0]) + i2 * pow(nb_sample_per_dim,1-nquant.var_id[1]);
-    
-    
-    return cur_point;
+    int nquant_id = 0;
+    for (int i=0; i<nb_sampled_dim; i++)
+        //cur_point += local_id[i] * pow(nb_sample_per_dim,local_id.size()-1-i);
+        nquant_id += local_id[i] * pow(nb_sample_per_dim,nb_sampled_dim-1-nquant.var_id[i]);
+    return nquant_id;
 }
 
-// supposes jacdim = 3
-int global_id(int i1, int i2, int i3)
+void global2local_id(int global_id, vector<int> &local_id, int nb_sampled_dim, int nb_sample_per_dim)
 {
-    int cur_point;
-    cur_point = i1 * pow(nb_sample_per_dim,2-nquant.var_id[0]) + i2 * pow(nb_sample_per_dim,2-nquant.var_id[1]) + i3 * pow(nb_sample_per_dim,2-nquant.var_id[2]);
-    return cur_point;
+    int cur_id = global_id;
+    for (int i=0 ; i<nb_sampled_dim; i++) {
+        //cout << cur_id % nb_sample_per_dim << " ";
+        local_id[nb_sampled_dim-1-i] = cur_id % nb_sample_per_dim;
+        cur_id = cur_id / nb_sample_per_dim;
+    }
 }
 
 
+
+void eval_nquant_range(vector<vector<interval>> &nquant_range_by_dim, vector<vector<double>> &output, vector<int> &local_id, int cur_depth, int nb_sampled_dim, int nb_sample_per_dim)
+{
+    //int nquant_id =
+    int cur_point;
+    vector<double> mino(sysdim), maxo(sysdim);
+    if (cur_depth == nb_sampled_dim-1) // maximum depth = rightmost variable/quantification
+    {   // taking the union of all samples on the last quantifier
+        if (nquant.exists[cur_depth]) {
+            // init to first point
+            local_id[nb_sampled_dim-1] = 0;
+            cur_point = local2nquant_id(local_id, nb_sampled_dim, nb_sample_per_dim);
+            for (int i=0 ; i<sysdim; i++) {
+               mino[i] = output[cur_point][i];
+               maxo[i] = output[cur_point][i];
+            }
+        
+            cout << "cur_point=" << cur_point << " output=" << output[cur_point];
+            for (int k=1 ; k<nb_sample_per_dim; k++) {
+                local_id[nb_sampled_dim-1] = k;
+                cur_point = local2nquant_id(local_id, nb_sampled_dim, nb_sample_per_dim);
+                for (int i=0 ; i<sysdim; i++) {
+                    mino[i] = min(mino[i],output[cur_point][i]);
+                    maxo[i] = max(maxo[i],output[cur_point][i]);
+                }
+                cout << "cur_point=" << cur_point << " output=" << output[cur_point];
+            }
+            for (int i=0 ; i<sysdim; i++)
+                nquant_range_by_dim[cur_depth][i] = interval(mino[i],maxo[i]);
+            cout << "range depth " << cur_depth << " is " << nquant_range_by_dim[cur_depth];
+        }
+        else { // forall quantifier
+            for (int i=0 ; i<sysdim; i++)
+                nquant_range_by_dim[cur_depth][i] = empty();
+        }
+    }
+    else // not on the rightmost variable/quantification
+    {
+        local_id[cur_depth] = 0;
+        eval_nquant_range(nquant_range_by_dim, output, local_id, cur_depth+1,  nb_sampled_dim, nb_sample_per_dim);
+        nquant_range_by_dim[cur_depth] = nquant_range_by_dim[cur_depth+1];
+        for (int k=1 ; k<nb_sample_per_dim; k++) {
+            local_id[cur_depth] = k;
+            eval_nquant_range(nquant_range_by_dim, output, local_id, cur_depth+1,  nb_sampled_dim, nb_sample_per_dim);
+            if (nquant.exists[cur_depth]) {
+                hull(nquant_range_by_dim[cur_depth],nquant_range_by_dim[cur_depth],nquant_range_by_dim[cur_depth+1]);
+            }
+            else {
+                intersectViVi(nquant_range_by_dim[cur_depth],nquant_range_by_dim[cur_depth+1]);
+            }
+        }
+        cout << "range depth " << cur_depth << " is " << nquant_range_by_dim[cur_depth];
+    }
+}
 
 // using nb_sample_per_dim and nquant
 vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
     // first with the hypothesis that we have a AE formula
     // int discr = 20;
-    int nb_points = nb_sample_per_dim+1;
     
-
+    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
+    vector<vector<interval>> rob_range(nb_steps+1,vector<interval>(sysdim));
+    
+    cout << "Initial condition x: " << xinit;
+    
+    //int nbmax_sampled_dim = 4;
+    int nb_sampled_dim = min(jacdim,nbmax_sampled_dim);
+    vector<int> local_id(nb_sampled_dim);
+    
+    int nb_points = nb_sample_per_dim;
     // limit the number of sampled points
-    for (int i=1; i < min(jacdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
-        nb_points = nb_points * (nb_sample_per_dim+1);
+    for (int i=1; i < nb_sampled_dim ; i++)  // MODIF borne min : 1 => 0 (?)
+        nb_points = nb_points * (nb_sample_per_dim);
+    
+    cout << "nb_points=" << nb_points << endl;
+    
         
     // estimation of the range of f
     vector<vector<double>> input(nb_points,vector<double>(jacdim));  //  the iterates f^n(x_j)
@@ -3903,70 +3986,29 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
     vector<vector<double>> max_output_rob(nb_steps+1,vector<double>(sysdim));  // store the min and max for each iterate
     vector<vector<double>> min_output_rob(nb_steps+1,vector<double>(sysdim));
     
-    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
-    vector<vector<interval>> rob_range(nb_steps+1,vector<interval>(sysdim));
-    
     vector<double> min_rob_temp(sysdim), max_rob_temp(sysdim);
     vector<vector<double>> min_rob_by_dim(jacdim,vector<double>(sysdim)), max_rob_by_dim(jacdim,vector<double>(sysdim));
     
-    cout << "Initial condition x: " << xinit;
+    vector<vector<interval>> nquant_range_by_dim(nb_sampled_dim,vector<interval>(sysdim));
 
     
     // choosing the sampling points in the initial box
-    int cur_point = 0;
-    for (int i1=0; i1 <= nb_sample_per_dim ; i1++)
+    for (int cur_point=0; cur_point < nb_points ; cur_point++)
     {
-        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-        if (jacdim > 1)
-        {
-            for (int i2=0; i2 <= nb_sample_per_dim ; i2++)
-            {
-                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                if (jacdim > 2)
-                {
-                    for (int i3=0; i3 <= nb_sample_per_dim ; i3++)
-                    {
-                        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                        input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                        input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/nb_sample_per_dim;
-                        // to limit the number of sampled points
-                        if (jacdim > 3) {
-                            for (int i4=0; i4 <= nb_sample_per_dim ; i4++)
-                            {
-                                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                                input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/nb_sample_per_dim;
-                                input[cur_point][3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/nb_sample_per_dim;
-                                
-                                // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
-                                if (jacdim > 4) {
-                                    if (xinit[4].inf() != xinit[4].sup())
-                                        printf("warning, case not fully implemented");
-                                    input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
-                                    
-                                }
-                        //        cur_point++; // AJOUT
-                            }
-                            
-                        }
-                        //output[cur_point] = f(input[cur_point]);
-                        cur_point++;
-                    }
-                }
-                else {
-                    cur_point++;
-                }
-            }
-        }
-        else {
-            cur_point++;
-        }
+        global2local_id(cur_point,local_id, nb_sampled_dim, nb_sample_per_dim);
+        for (int i=0 ; i<nb_sampled_dim; i++)
+            input[cur_point][i] = xinit[i].inf() + (2.0*local_id[i]*xinit[i].rad())/(nb_sample_per_dim-1);
+        for (int i=nb_sampled_dim ; i<sysdim; i++)
+            input[cur_point][i] = xinit[i].mid();
+        //cout << input[cur_point];
+        //cout << f(input[cur_point]) << endl;
+        //cout << local2global_id(local_id) << endl;
     }
-  //  cout << "nb_points=" << nb_points << " cur_point=" << cur_point << endl;
     
     
     
+    
+    int cur_point = 0;
     
     ofstream samplesreachsetfile;
     samplesreachsetfile.open("output/samplesreachset.yaml");
@@ -4009,260 +4051,25 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
         
         
         // computing the robust range when some variables are universally quantified
-        if (nquant.uncontrolled == jacdim)
+        if (nquant.uncontrolled == jacdim)  //  jacdim = inputs dim
         {
             for (int i=0; i < sysdim ; i++)
                 rob_range[iter][i] = empty();
         }
         else if (nquant.uncontrolled > 0)
         {
-            // initialisation
-            if (nquant.exists[jacdim-1]) {
-                for (int i=0; i < sysdim ; i++) {
-                    min_output_rob[iter][i] = min_output[iter][i];
-                    max_output_rob[iter][i] = max_output[iter][i];
-                }
-            }
-            else {
-                for (int i=0; i < sysdim ; i++) {
-                    min_output_rob[iter][i] = DBL_MAX; // min_output[iter][i];
-                    max_output_rob[iter][i] = -DBL_MAX; // max_output[iter][i];
-                }
-            }
-            
-            if (jacdim == 2)
-            {
-                for (int i1=0; i1 <= nb_sample_per_dim ; i1++) {
-                    cur_point = global_id(i1,0);
-                    for (int i=0; i < sysdim ; i++) {
-                        min_rob_temp[i] = output[cur_point][i];
-                        max_rob_temp[i] = output[cur_point][i];
-                    }
-                    for (int i2=0; i2 <= nb_sample_per_dim ; i2++) {
-                        cur_point = global_id(i1,i2);
-                        if (nquant.exists[1]) {
-                            for (int i=0; i < sysdim ; i++) {
-                                min_rob_temp[i] = min(min_rob_temp[i],output[cur_point][i]);
-                                max_rob_temp[i] = max(max_rob_temp[i],output[cur_point][i]);
-                            }
-                        }
-                        else {
-                            for (int i=0; i < sysdim ; i++) {
-                                min_rob_temp[i] = max(min_rob_temp[i],output[cur_point][i]);
-                                max_rob_temp[i] = min(max_rob_temp[i],output[cur_point][i]);
-                            }
-                        }
-                    }
-                    for (int i=0; i < sysdim ; i++) {
-                        //cout << "min_rob_temp " << min_rob_temp[i] << endl;
-                        //cout << "max_rob_temp " << max_rob_temp[i] << endl;
-                        if (min_rob_temp[i] > max_rob_temp[i]) {
-                            min_rob_temp[i] = DBL_MAX;
-                            max_rob_temp[i] = -DBL_MAX;
-                        }
-                    }
-                    if (nquant.exists[0]) { // we supose that forall[1] => [min max, max min]
-                        for (int i=0; i < sysdim ; i++) {
-                            if (min_rob_temp[i] > max_rob_temp[i]) {
-                                min_output_rob[iter][i] = DBL_MAX;
-                                max_output_rob[iter][i] = -DBL_MAX;
-                            }
-                            else
-                            {
-                                min_output_rob[iter][i] = min(min_output_rob[iter][i],max_rob_temp[i]);
-                                max_output_rob[iter][i] = max(max_output_rob[iter][i],min_rob_temp[i]);
-                            }
-                        }
-                    }
-                    else // we supose that exists[1] => [max min, min max]
-                    {
-                        for (int i=0; i < sysdim ; i++) {
-                            min_output_rob[iter][i] = max(min_output_rob[iter][i],min_rob_temp[i]);
-                            max_output_rob[iter][i] = min(max_output_rob[iter][i],max_rob_temp[i]);
-                        }
-                    }
-                    for (int i=0; i < sysdim ; i++) {
-                        cout << "min_output_rob " << min_output_rob[iter][i] << endl;
-                        cout << "max_output_rob " << max_output_rob[iter][i] << endl;
-                    }
-                }
-            }
-            else if (jacdim == 3)
-            {
-                for (int i1=0; i1 <= nb_sample_per_dim ; i1++) {
-                    cur_point = global_id(i1,0,0);
-                    // initializing bounds before loop i2
-                    for (int i=0; i < sysdim ; i++) {
-                        min_rob_by_dim[0][i] = output[cur_point][i];
-                        max_rob_by_dim[0][i] = output[cur_point][i];
-                    }
-                    for (int i2=0; i2 <= nb_sample_per_dim ; i2++) {
-                        cur_point = global_id(i1,i2,0);
-                        
-                        // initializing bounds before loop i3
-                        for (int i=0; i < sysdim ; i++) {
-                            min_rob_by_dim[1][i] = output[cur_point][i];
-                            max_rob_by_dim[1][i] = output[cur_point][i];
-                        }
-                        // updating bounds in loop i3
-                        for (int i3=0; i3 <= nb_sample_per_dim ; i3++) {
-                            cur_point = global_id(i1,i2,i3);
-                            
-                            if (nquant.exists[2]) {
-                                for (int i=0; i < sysdim ; i++) {
-                                    min_rob_by_dim[1][i] = min(min_rob_by_dim[1][i],output[cur_point][i]);
-                                    max_rob_by_dim[1][i] = max(max_rob_by_dim[1][i],output[cur_point][i]);
-                                }
-                            }
-                            else {
-                                for (int i=0; i < sysdim ; i++) {
-                                    min_rob_by_dim[1][i] = max(min_rob_by_dim[1][i],output[cur_point][i]);
-                                    max_rob_by_dim[1][i] = min(max_rob_by_dim[1][i],output[cur_point][i]);
-                                }
-                            }
-                        }
-                        for (int i=0; i < sysdim ; i++) {
-                            //cout << "min_rob_temp " << min_rob_temp[i] << endl;
-                            //cout << "max_rob_temp " << max_rob_temp[i] << endl;
-                            if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
-                                min_rob_by_dim[1][i] = DBL_MAX;
-                                max_rob_by_dim[1][i] = -DBL_MAX;
-                            }
-                        }
-                        
-                        
-                        if (nquant.exists[1]) {
-                            if (nquant.exists[2]) {
-                                for (int i=0; i < sysdim ; i++) {
-                                    if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
-                                        min_rob_by_dim[0][i] = DBL_MAX;
-                                        max_rob_by_dim[0][i] = -DBL_MAX;
-                                    }
-                                    else {
-                                        min_rob_by_dim[0][i] = min(min_rob_by_dim[0][i],min_rob_by_dim[1][i]);
-                                        max_rob_by_dim[0][i] = max(max_rob_by_dim[0][i],max_rob_by_dim[1][i]);
-                                    }
-                                }
-                            }
-                            else {
-                                for (int i=0; i < sysdim ; i++) {
-                                    if (min_rob_by_dim[1][i] > max_rob_by_dim[1][i]) {
-                                        min_rob_by_dim[0][i] = DBL_MAX;
-                                        max_rob_by_dim[0][i] = -DBL_MAX;
-                                    }
-                                    else {
-                                        min_rob_by_dim[0][i] = min(min_rob_by_dim[0][i],max_rob_by_dim[1][i]);
-                                        max_rob_by_dim[0][i] = max(max_rob_by_dim[0][i],min_rob_by_dim[1][i]);
-                                    }
-                                }
-                            }
-                        }
-                        else {
-                            if (nquant.exists[2]) {
-                                for (int i=0; i < sysdim ; i++) {
-                                    min_rob_by_dim[0][i] = max(min_rob_by_dim[0][i],min_rob_by_dim[1][i]);
-                                    max_rob_by_dim[0][i] = min(max_rob_by_dim[0][i],max_rob_by_dim[1][i]);
-                                }
-                            }
-                            else {
-                                for (int i=0; i < sysdim ; i++) {
-                                    min_rob_by_dim[0][i] = max(min_rob_by_dim[0][i],max_rob_by_dim[1][i]);
-                                    max_rob_by_dim[0][i] = min(max_rob_by_dim[0][i],min_rob_by_dim[1][i]);
-                                }
-                            }
-                        }
-                    }
-                    for (int i=0; i < sysdim ; i++) {
-                        //cout << "min_rob_temp " << min_rob_by_dim[0][i] << endl;
-                        //cout << "max_rob_temp " << max_rob_by_dim[0][i] << endl;
-                        if (min_rob_by_dim[0][i] > max_rob_by_dim[0][i]) {
-                            min_rob_by_dim[0][i] = DBL_MAX;
-                            max_rob_by_dim[0][i] = -DBL_MAX;
-                        }
-                            
-                    }
-                    if (nquant.exists[0]) {
-                        for (int i=0; i < sysdim ; i++) {
-                            if (min_rob_by_dim[0][i] > max_rob_by_dim[0][i]) {
-                                min_output_rob[iter][i] = DBL_MAX;
-                                max_output_rob[iter][i] = -DBL_MAX;
-                            }
-                            else if (nquant.exists[1])
-                            {
-                                min_output_rob[iter][i] = min(min_output_rob[iter][i],min_rob_by_dim[0][i]);
-                                max_output_rob[iter][i] = max(max_output_rob[iter][i],max_rob_by_dim[0][i]);
-                            }
-                            else
-                            {
-                                min_output_rob[iter][i] = min(min_output_rob[iter][i],max_rob_by_dim[0][i]);
-                                max_output_rob[iter][i] = max(max_output_rob[iter][i],min_rob_by_dim[0][i]);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (nquant.exists[1])
-                        {
-                            for (int i=0; i < sysdim ; i++) {
-                                min_output_rob[iter][i] = max(min_output_rob[iter][i],min_rob_by_dim[0][i]);
-                                max_output_rob[iter][i] = min(max_output_rob[iter][i],max_rob_by_dim[0][i]);
-                            }
-                        }
-                        else
-                        {
-                            for (int i=0; i < sysdim ; i++) {
-                                min_output_rob[iter][i] = max(min_output_rob[iter][i],max_rob_by_dim[0][i]);
-                                max_output_rob[iter][i] = min(max_output_rob[iter][i],min_rob_by_dim[0][i]);
-                            }
-                        }
-                    }
-                    for (int i=0; i < sysdim ; i++) {
-                        cout << "min_output_rob " << min_output_rob[iter][i] << endl;
-                        cout << "max_output_rob " << max_output_rob[iter][i] << endl;
-                    }
-                }
-            }
-            
-            for (int i=0; i < sysdim ; i++) {
-                //cout << "min_output_rob " << min_output_rob[iter][i] << endl;
-                //cout << "max_output_rob " << max_output_rob[iter][i] << endl;
-                if (min_output_rob[iter][i] > max_output_rob[iter][i])
-                    rob_range[iter][i] = empty();
-                else
-                    rob_range[iter][i] = interval(min_output_rob[iter][i],max_output_rob[iter][i]);
-            }
-            
-          /*  for (cur_point=0 ; cur_point<nb_points; cur_point++)
-            {
-                if (iter % printing_period == 0)
-                {
-                    out_samples << YAML::BeginMap;
-                    out_samples << YAML::Key << "tn";
-                    out_samples << YAML::Value << iter;
-                    out_samples << YAML::Key << "sample";
-                    out_samples << YAML::Value << output[cur_point];
-                    bool is_robust = true;
-                    for (int i=0; i < sysdim ; i++) {
-                        if (output[cur_point][i] < min_output_rob[iter][i] || output[cur_point][i] > max_output_rob[iter][i]) {
-                            is_robust = false;
-                            break;
-                        }
-                    }
-                    if (is_robust) {
-                        out_samples << YAML::Key << "robust_sample";
-                        out_samples << YAML::Value << output[cur_point];
-                    }
-                    out_samples << YAML::EndMap;
-                }
-            }
-            */
-            
-            
+            for (int k=0 ; k<nb_sample_per_dim; k++)
+                local_id[k] = 0;
+            eval_nquant_range(nquant_range_by_dim, output, local_id, 0 /* cur_depth*/, nb_sampled_dim, nb_sample_per_dim);
+            rob_range[iter] = nquant_range_by_dim[0];
+            cout << "rob_range=[" << rob_range[iter][0].inf() <<"," << rob_range[iter][0].sup() <<"]" << endl;
+            cout << endl;
         }
         else {
             for (int i=0; i < sysdim ; i++)
                 rob_range[iter][i] = range[iter][i];
         }
+        
         
         
         for (cur_point=0 ; cur_point<nb_points; cur_point++)
@@ -4298,154 +4105,13 @@ vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f) {
                 cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
             }
             cout << endl;
-            cout << "Estimated robust reachable set at step "<<iter<<" is: " << rob_range[iter];
-        }
-        
-    }
-    
-    out_samples << YAML::EndSeq;
-    out_samples << YAML::EndMap;
-    samplesreachsetfile << out_samples.c_str();
-    samplesreachsetfile.close();
-    
-    
-    return range;
-}
-
-
-
-// estimate the range of the n iterates f(x) ... f^n(xn)
-vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f) {
-   
-    // int discr = 20;
-    int nb_points = nb_sample_per_dim+1;
-    
-    // limit the number of sampled points
-    for (int i=1; i < min(jacdim,4) ; i++)  // MODIF borne min : 1 => 0 (?)
-        nb_points = nb_points * (nb_sample_per_dim+1);
-    
-    // estimation of the range of f
-    vector<vector<double>> input(nb_points,vector<double>(jacdim));  //  the iterates f^n(x_j)
-    vector<vector<double>> output(nb_points,vector<double>(sysdim));
-    
-    vector<vector<double>> max_output(nb_steps+1,vector<double>(sysdim));  // store the min and max for each iterate
-    vector<vector<double>> min_output(nb_steps+1,vector<double>(sysdim));
-    vector<vector<interval>> range(nb_steps+1,vector<interval>(sysdim));
-    
-    
-    cout << "Initial condition x: " << xinit;
-    cout << endl;
-    
-    // choosing the sampling points in the initial box
-    int cur_point = 0;
-    for (int i1=0; i1 <= nb_sample_per_dim ; i1++)
-    {
-        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-        if (jacdim > 1)
-        {
-            for (int i2=0; i2 <= nb_sample_per_dim ; i2++)
-            {
-                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                if (jacdim > 2)
-                {
-                    for (int i3=0; i3 <= nb_sample_per_dim ; i3++)
-                    {
-                        input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                        input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                        input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/nb_sample_per_dim;
-                        // to limit the number of sampled points
-                        if (jacdim > 3) {
-                            for (int i4=0; i4 <= nb_sample_per_dim ; i4++)
-                            {
-                                input[cur_point][0] = xinit[0].inf() + (2.0*i1*xinit[0].rad())/nb_sample_per_dim;
-                                input[cur_point][1] = xinit[1].inf() + (2.0*i2*xinit[1].rad())/nb_sample_per_dim;
-                                input[cur_point][2] = xinit[2].inf() + (2.0*i3*xinit[2].rad())/nb_sample_per_dim;
-                                input[cur_point][3] = xinit[3].inf() + (2.0*i4*xinit[3].rad())/nb_sample_per_dim;
-                                
-                                // input[cur_point][3] = (xinit[3].inf()+xinit[3].sup())/2.0;
-                                if (jacdim > 4) {
-                                  //  if (xinit[4].inf() != xinit[4].sup())
-                                  //      printf("warning, case not fully implemented");
-                                    input[cur_point][4] = (xinit[4].inf()+xinit[4].sup())/2.0;
-                                    
-                                }
-                        //        cur_point++; // AJOUT
-                            }
-                            
-                        }
-                        cur_point++;
-                    }
-                }
-                else
-                    cur_point++;
-            }
-        }
-        else
-            cur_point++;
-    }
-  //  cout << "nb_points=" << nb_points << " cur_point=" << cur_point << endl;
-    
-    
-    
-    
-    ofstream samplesreachsetfile;
-    samplesreachsetfile.open("output/samplesreachset.yaml");
-    
-    YAML::Emitter out_samples;
-    out_samples << YAML::BeginMap;
-        
-        out_samples << YAML::Key << "systype";
-        out_samples << YAML::Value << systype;
-        out_samples << YAML::Key << "sysdim";
-        out_samples << YAML::Value << sysdim;
-    
-    out_samples << YAML::Key << "samples";
-    out_samples << YAML::Value << YAML::BeginSeq;
-    
-    
-    for (int iter=1 ; iter <=nb_steps ; iter++)
-    {
-        for (int i=0; i < sysdim ; i++) {
-            max_output[iter] = f(input[0]);
-            min_output[iter] = f(input[0]);
-        }
-        
-        for (cur_point=0 ; cur_point<nb_points; cur_point++)
-        {
-            output[cur_point] = f(input[cur_point]);
-            
-            if (iter % printing_period == 0)
-            {
-                out_samples << YAML::BeginMap;
-                out_samples << YAML::Key << "tn";
-                out_samples << YAML::Value << iter;
-                out_samples << YAML::Key << "sample";
-                out_samples << YAML::Value << output[cur_point];
-                out_samples << YAML::EndMap;
-            }
-        
+            cout << "Estimated robust reachable set at step "<<iter<<" is: ";
             for (int i=0; i < sysdim ; i++) {
-                if (output[cur_point][i] < min_output[iter][i])
-                    min_output[iter][i] = output[cur_point][i];
-                if (output[cur_point][i] > max_output[iter][i])
-                    max_output[iter][i] = output[cur_point][i];
-            }
-            // initializing next step (iter)
-            for (int i=0; i < sysdim ; i++)
-                input[cur_point][i] = output[cur_point][i];
-        }
-        
-        if (iter % printing_period == 0)
-        {
-            cout << "Estimated reachable set f^n(x) at step " << iter << " is: ";
-            for (int i=0; i < sysdim ; i++) {
-                cout << "z["<<i << "]=[" << min_output[iter][i] << ", " << max_output[iter][i] <<"]  ";
+                cout << "z["<<i << "]=[" << rob_range[iter][i].inf() << ", " << rob_range[iter][i].sup() <<"]  ";
             }
             cout << endl;
         }
-        for (int i=0; i < sysdim ; i++)
-            range[iter][i] = interval(min_output[iter][i],max_output[iter][i]);
+        
     }
     
     out_samples << YAML::EndSeq;
@@ -4454,8 +4120,12 @@ vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f) {
     samplesreachsetfile.close();
     
     
-    return range;
+    return range;  // convert AAInterval to interval (I used AAInterval
 }
+
+
+
+
 
 
 

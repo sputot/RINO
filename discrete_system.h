@@ -219,10 +219,18 @@ public:
                 z[i] = out[out_nodes[i]];
 #endif
         }
-        else if (syschoice == 24) {
+        else if (syschoice == 24) { // for robust reachability with quantifier alternation
             z[0] = x[0]*x[0]/4. + (x[1]+1.)*(x[2]+2.) + (x[2]+3.)*(x[2]+3.);
         }
-            
+        else if (syschoice == 25) { // for robust reachability with quantifier alternation
+            z[0] = 2.0 + x[0] + 2.0*x[1] + 2.0*x[2] + x[3];
+            z[1] = -1.0 + x[0] - x[1] + x[2] + 3.0*x[3];
+        }
+        else if (syschoice == 26) { // Taylor models for Dubbins vehicle: for robust reachability with quantifier alternation
+            z[0] = 0.1*x[0] + (1.0 + 0.01*x[1])*x[7] + 1.31*1.e-7*x[2]*x[7]*x[7];
+            z[1] = 0.1*x[3] + (0.01*x[5] + 0.01*x[6]*x[7])*x[7] + 0.005*x[4]*x[7]*x[7];
+            z[2] = 0.01*x[5] + 0.01*x[6]*x[7];
+         }
         return z;
     }
 };
@@ -314,7 +322,6 @@ void preconditioned_joint_ranges_discretize_simultaneous(vector<interval> &z0, v
 void twodim_discretization_by_quadrant(vector<interval> &radx);
 
 // estimation of exact image by sampling
-vector<vector<interval>> estimate_reachset_discrete(DiscreteFunc &f);
 vector<vector<interval>> estimate_robust_reachset_discrete(DiscreteFunc &f);
 
 // for discrete-time dynamical systems

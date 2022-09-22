@@ -1767,6 +1767,13 @@ public:
               yp[1] = v*sin(y[2]);
               yp[2] = w;
           }
+          else if (syschoice == 55) // simple Dubbins for quantifier alternation
+          {
+              double v = 1;         // constant velocity
+              yp[0] = v*cos(y[2]) + param_inputs[0];        // px' = v.cos(theta) + b1 : disturbances b1
+              yp[1] = v*sin(y[2]) ;        // py' = v.sin(theta)
+              yp[2] = param_inputs[1] ;    // theta' = a : angular control
+          }
     }
 };
 

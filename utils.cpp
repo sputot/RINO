@@ -42,6 +42,7 @@ int nncontroldim;  // dimension of the neural network control - does not appear 
 bool create_png = 0;
 
 int nb_sample_per_dim = 20; // for range estimation by sampling: # of samples per dimension
+int nbmax_sampled_dim = 10; // // for range estimation by sampling: # max of dimensions sampled
 
 int points_per_graph = 50;
 int printing_period = 1;
@@ -142,6 +143,7 @@ void readfromfile_syschoice(const char * params_filename, char* sfx_filename, ch
         sscanf(buff, "nn-offset = %lf\n", &nn_offset);
         sscanf(buff, "nn-scaling = %lf\n", &nn_scaling_factor);
         sscanf(buff, "samples-per-dim = %d\n", &nb_sample_per_dim);
+        sscanf(buff, "dims-sampled = %d\n", &nbmax_sampled_dim);
         sscanf(buff, "points-per-graph = %d\n", &points_per_graph);
         sscanf(buff, "create-png = %d\n", &int_create_png);
         sscanf(buff, "nb-initial-subdivisions = %d\n", &nb_subdiv_init);
@@ -833,10 +835,10 @@ std::ostream& operator<<(std::ostream& os, const std::vector<double> &input)
     return os;
 }*/
 
-
-/*std::ostream& operator<<(std::ostream& os, const interval &input)
+/*
+std::ostream& operator<<(std::ostream& os, const interval &input)
 {
-    os.precision(6);
+    os.precision(8);
     os << "[" << input.inf() << ", " << input.sup() << "] ";
 }*/
 

@@ -68,10 +68,10 @@ void OdeVar::printAAFTM(int order) {
         cout << "x[" << j << "]=" << x[j][0].x() << " + ";
         
         for (int i=1;i<order;i++) {
-            new_index = (x[j][i].x()).sumup((unsigned)sysdim); // attention modifie x ...
+            //new_index = (x[j][i].x()).sumup((unsigned)sysdim); // attention modifie x ...
             cout << x[j][i].x() << " t^" << i << " + " ;
         }
-        new_index = (x[j][order].x()).sumup((unsigned)sysdim); // attention modifie x ...
+        //new_index = (x[j][order].x()).sumup((unsigned)sysdim); // attention modifie x ...
         cout << x[j][order].x() << " t^" << order << endl ;
     }
 }
@@ -97,6 +97,64 @@ void Ode::printTM(int order) {
     }
 }
 
+// prints the Taylor Model for the value and Jacobian using the first terms from ode_x and remainder from ode_xg
+void printTM(OdeVar &ode_x, OdeVar &ode_xg, int order) {
+    for (int j=0 ; j<sysdim ; j++) {
+        cout << "x[" << j << "]=" << ode_x.x[j][0].x().convert_int() << " + ";
+        
+        for (int i=1;i<order;i++) {
+            cout << ode_x.x[j][i].x().convert_int()  << " t^" << i << " + " ;
+        }
+        cout << ode_xg.x[j][order].x().convert_int()  << " t^" << order << endl ;
+    }
+    
+    
+    for (int j=0 ; j<sysdim ; j++) {
+        for (int k=0 ; k<sysdim ; k++) {
+                cout << "Jacx[" << j << "][" << k << "]=" << ode_x.x[j][0].d(k).convert_int() << " + ";
+                for (int i=1;i<order;i++) {
+                    cout << ode_x.x[j][i].d(k).convert_int() << " t^" << i << " + " ;
+                }
+            cout << ode_xg.x[j][order].d(k).convert_int()  << " t^" << order << endl ;
+        }
+    }
+}
+
+// prints the Taylor Model for the value using the first terms from ode_x and remainder from ode_xg
+void printTMval(Ode &ode_x, Ode &ode_xg, int order) {
+    for (int j=0 ; j<sysdim ; j++) {
+        cout << "x[" << j << "]=" << ode_x.x[j][0].convert_int() << " + ";
+        
+        for (int i=1;i<order;i++) {
+            cout << ode_x.x[j][i].convert_int()  << " t^" << i << " + " ;
+        }
+        cout << ode_xg.x[j][order].convert_int()  << " t^" << order << endl ;
+    }
+}
+
+// prints the Taylor Model for the value using the first terms from ode_x and remainder from ode_xg
+void printAAFTM(OdeVar &ode_x, OdeVar &ode_xg, int order) {
+    for (int j=0 ; j<sysdim ; j++) {
+        cout << "x[" << j << "]=" << ode_x.x[j][0].x() << " + ";
+        
+        for (int i=1;i<order;i++) {
+            cout << ode_x.x[j][i].x()  << " t^" << i << " + " ;
+        }
+        cout << ode_xg.x[j][order].x()  << " t^" << order << endl ;
+    }
+}
+
+// prints the Taylor Model for the value using the first terms from ode_x and remainder from ode_xg
+void printAAFTMval(Ode &ode_x, Ode &ode_xg, int order) {
+    for (int j=0 ; j<sysdim ; j++) {
+        cout << "x[" << j << "]=" << ode_x.x[j][0] << " + ";
+        
+        for (int i=1;i<order;i++) {
+            cout << ode_x.x[j][i]  << " t^" << i << " + " ;
+        }
+        cout << ode_xg.x[j][order]  << " t^" << order << endl ;
+    }
+}
 
 // building the Taylor model for the solution of ODE starting from the center of initial conditions
 // outputs are ode_x0 (Taylor coefficients from 0 to order-1) and ode_g0 (giving the remainder Taylor coefficient,
@@ -122,7 +180,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
     
         for (int i=0 ; i<sysdim ; i++)
             g_rough[i].sumup(tol_noise); // group terms smaller than eps*radius in a new error term
-    
+    //cout << "g_rough=" <<g_rough;
     
     // evaluate the Lie derivatives on this enclosure: we will use the last coefficients as remainder terms of Taylor model
     ode_g.reset();
@@ -151,6 +209,7 @@ void TM_val::build(OdeFunc _bf, vector<AAF> &params, vector<AAF> &param_inputs) 
             ode_g.param_inputs[j][i+1]=0;
         }
     }
+    
 }
 
 
@@ -173,13 +232,19 @@ void TM_val::eval(vector<AAF> &res, double h)
     for (int j=0 ; j<sysdim; j++)
         res[j] += ode_g.x[j][order]*taui;
     
+    cout << "TM for the center solution:" <<endl;
+    printTMval(ode_x,ode_g,order);
+    //cout << "x=" << endl; ode_x.printTM(order);
+    //cout << "g=" << endl; ode_g.printTM(order);
+}
+    
  // A REVOIR
 /*    for (int j=0 ; j<sysdim; j++)
     {
         if (is_variable[j]) // variable param with value always in the same range
         res[j] = ode_x.x[j][0];
     } */
-}
+
 
 // eval TM at tn+tau and store in xp1 and J
 void TM_val::eval()
@@ -373,7 +438,11 @@ void TM_Jac::eval_val(vector<AAF> &res, double h)
     for (int j=0 ; j<sysdim; j++)
         res[j] += odeVAR_g.x[j][order].x()*taui;
     
-    
+    cout << "TM for the solution on full initial sets and parameters" << endl;
+    printTM(odeVAR_x[sysdim+inputsdim-1],odeVAR_g,order);  // printAAFTMval(odeVAR_x[sysdim+inputsdim-1],odeVAR_g,order);
+    //cout << "TMJac.x=" << endl; odeVAR_x[sysdim+inputsdim-1].print(0,order); // odeVAR_x[sysdim+inputsdim-1].printTM(order);
+        // odeVAR_x[sysdim+inputsdim-1].printAAFTM(order);
+    //cout << "TMJac.g=" << endl; // odeVAR_g.printAAFTM(order); //odeVAR_g.print(0,order+1);
  /*   vector<F<AAF>> temp(sysdim);
     taui = h;
     
@@ -476,8 +545,8 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     
         // In fact we should compute this for all orders...
         
-  //      for (int j=0 ; j<sysdim; j++)
-   //             for (int k=0 ; k<jacdim; k++)
+    //    for (int j=0 ; j<sysdim; j++)
+    //            for (int k=0 ; k<jacdim; k++)
     //                cout << "i=" << i << " aux["<<j<<"]["<<k<<"]=" << aux[j][k].convert_int() << endl;
         
         scaleJacfz(aux,taui);
@@ -497,6 +566,9 @@ void TM_Jac::eval_Jac(vector<vector<AAF>> &J_res, double h)
     }
     
     //  print_interv("Jaci",Jaci);
+    //for (int j=0 ; j<sysdim; j++)
+   //           for (int k=0 ; k<jacdim; k++)
+   //               cout << "Jac_i["<<j<<"]["<<k<<"]=" << Jaci[j][k].convert_int() << endl;
     multJacfzJaczz0(aux,Jaci,J_rough); // Jac^i(g_rough)*J_rough
     
     //    print_interv("J_rough",J_rough);

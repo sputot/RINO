@@ -424,6 +424,11 @@ void define_system_dim()
         {
             sysdim = 3;
         }
+        else if (syschoice == 55)  // simple Dubbins for quantifier alternation
+        {
+            sysdim = 3;
+            inputsdim = 2;
+        }
     }
     /*************************************************************************** DDE ************************************************************/
     else if (systype == 1) // DDE
@@ -1762,6 +1767,17 @@ void init_system()
            initial_values[0] = interval(-1,1); //
            initial_values[1] = interval(-1,1); //
            initial_values[2] = interval(-1.0471975512,0);
+       }
+       else if (syschoice == 55)   // simple Dubbins for quantifier alternation
+       {
+           tau = 0.5;
+           t_end = 0.5;
+           Taylor_order = 2;
+           initial_values[0] = interval(-0.1,0.1);       // px
+           initial_values[1] = interval(-0.1,0.1);     // py
+           initial_values[2] = interval(-0.01,0.01);     // theta
+           inputs[0] = interval(-0.01,0.01); is_uncontrolled[0] = true;  // disturbance b1
+           inputs[1] = interval(-0.01,0.01); is_uncontrolled[1] = false;  //  control a
        }
 //        vector<vector<AAF>> J(sysdim, vector<AAF>(sysdim+inputsdim));  // should be jacdim but not yet defined ?
  //       for (int i=0; i<sysdim; i++)

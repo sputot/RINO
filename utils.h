@@ -32,6 +32,7 @@ extern int nncontroldim;  // dimension of the neural network control - does not 
 extern bool create_png; // whether or not the python script is called to create the .png result files
 
 extern int nb_sample_per_dim; // for range estimation by sampling: # of samples per dimension
+extern int nbmax_sampled_dim; // // for range estimation by sampling: # of dimensions sampled
 
 extern int points_per_graph; // number of steps in time printed on each graphs (and in yaml files)
 extern int printing_period; // deduced from nb of steps and points per graph
