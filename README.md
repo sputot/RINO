@@ -158,6 +158,9 @@ uncontrolled = 1
 # number of samples in each dimension taken for reachset estimation by trajectory samples
 samples-per-dim = 20
 
+# maximum number of inuts dimension sampled (center is taken for the remaining ones)
+dims-sampled = 3
+
 # for the visualization: if 0, the visualization script is not called
 create-png = 0
 
