@@ -920,6 +920,13 @@ std::ostream& operator<<(std::ostream& os,  F<F<AAF>> &input)
     return os;
 }
 
+void print_vect(std::ofstream& os,  const std::vector<interval> X, int prec)
+{
+  os << setprecision(prec);
+  for (int i=0 ; i<X.size() ; i++)
+    os << "[" << X[i].inf() << ", " << X[i].sup() << "] ";
+  os << endl;
+}
 
 /*
 std::ostream& operator<<(std::ostream& os,  F<AAF> &input)

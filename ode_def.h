@@ -144,7 +144,25 @@ public:
     template <class C>
       void operator()(vector<C> &yp, vector<C> params, vector<C> param_inputs, vector<C> control_inputs, vector<C> y) {
                     
-          if (syschoice == 1) // running example
+          if (syschoice == 12345)
+          {
+            // biological model
+            // dx(1,1) = -0.4*x(1) - x(1)*x(6);
+            // dx(2,1) = 0.4*x(1) - x(2);
+            // dx(3,1) = x(2) - 5*x(3)*x(4);
+            // dx(4,1) = 5*x(5)*x(6) - 5*x(3)*x(4);
+            // dx(5,1) = -5*x(5)*x(6) + 5*x(3)*x(4);
+            // dx(6,1) = 0.5*x(7) - 5*x(5)*x(6);
+            // dx(7,1) = -0.5*x(7) + 5*x(5)*x(6);
+            yp[0] = -0.4*y[0] - y[0]*y[5];
+            yp[1] = 0.4*y[0] - y[1];
+            yp[2] = y[1] - 5*y[2]*y[3];
+            yp[3] = 5*y[4]*y[5] - 5*y[2]*y[3];
+            yp[4] = -5*y[4]*y[5] + 5*y[2]*y[3];
+            yp[5] = 0.5*y[6] - 5*y[4]*y[5];
+            yp[6] = -0.5*y[6] + 5*y[4]*y[5];
+          }
+          else if (syschoice == 1) // running example
              yp[0] = (1+params[0]*y[0])*(1+params[0]*y[0]);
           else if (syschoice == 2)
           // Bruss corresponds to the Brusselator system  

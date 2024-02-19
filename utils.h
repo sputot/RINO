@@ -124,7 +124,7 @@ std::ostream& operator<<(std::ostream& os,  F<AAF> &input);
 std::ostream& operator<<(std::ostream& os,  F<F<AAF>> &input);
 
 
-
+void print_vect(std::ofstream& os,  const std::vector<interval> X, int prec);
 
 class ReachSet
 {

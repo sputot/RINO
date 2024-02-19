@@ -101,7 +101,8 @@ int main(int argc, char* argv[])
         print_init_discrete(xinit,skewing);
         if (nb_steps == 1)
             RS = function_range(f,xinit,sampled_reachset);
-        else {
+        else
+        {
             if (iter_method == 1)
                 RS = discrete_dynamical(f,xinit,sampled_reachset,AEextension_order,skewing);
             else // (iter_method == 2)
@@ -356,13 +357,16 @@ int main(int argc, char* argv[])
         summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
 
     }
-    
-    summaryfile << "Sampled estimate of final reachset │ " << RS.Xsampled; // sampled_reachset[sampled_reachset.size()-2];  // or iter-1 would be better
-    summaryfile << "                Over-approximation │ " << RS.Xouter;
-    summaryfile << "               Under-approximation │ " << RS.Xinner;
+
+    summaryfile << setprecision(6);
+    summaryfile << "Sampled estimate of final reachset │ "; print_vect(summaryfile,RS.Xsampled,6); // << RS.Xsampled; // sampled_reachset[sampled_reachset.size()-2];  // or iter-1 would be better
+   
+    // summaryfile << "                Over-approximation │ " << RS.Xouter;   // replaced by the below otherwise precision not set
+    summaryfile << "                Over-approximation │ "; print_vect(summaryfile,RS.Xouter,6);   
+    summaryfile << "               Under-approximation │ "; print_vect(summaryfile,RS.Xinner,6);  // << RS.Xinner;
     if (uncontrolled > 0) {
-    summaryfile << "         Robust over-approximation │ " << RS.Xouter_rob;
-    summaryfile << "        Robust under-approximation │ " << RS.Xinner_rob;
+      summaryfile << "         Robust over-approximation │ "; print_vect(summaryfile,RS.Xouter_rob,6); // << RS.Xouter_rob;
+      summaryfile << "        Robust under-approximation │ "; print_vect(summaryfile,RS.Xinner_rob,6);  // << RS.Xinner_rob;
     }
     summaryfile << "───────────────────────────────────┼──────────────────────────────────────" << std::endl;
     summaryfile << "       Elapsed analysis time (sec) │ " << elapsed_secs << endl;

@@ -82,8 +82,11 @@ void define_system_dim()
 
     if (systype == 0) // ODE
     {
-      
-        if (syschoice == 1)  // running example
+        if (syschoice == 12345)
+        {
+            sysdim = 7;
+        }
+        else if (syschoice == 1)  // running example
         {
             sysdim = 1;
             paramsdim = 1;
